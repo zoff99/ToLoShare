@@ -15,7 +15,7 @@ buildscript {
         // this is the AGP (Android Gradle Plugin) -------
         classpath 'com.android.tools.build:gradle:8.10.0'
         // this is the AGP (Android Gradle Plugin) -------
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0"
 
         // used to generate a POM file
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
