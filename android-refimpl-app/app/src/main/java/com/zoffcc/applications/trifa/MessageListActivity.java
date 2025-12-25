@@ -1,0 +1,2329 @@
+/**
+ * [TRIfA], Java part of Tox Reference Implementation for Android
+ * Copyright (C) 2017 Zoff <zoff@zoff.cc>
+ * <p>
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ * <p>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
+ */
+
+package com.zoffcc.applications.trifa;
+
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.github.piasy.rxandroidaudio.AudioRecorder;
+import com.mikepenz.fontawesome_typeface_library.FontAwesome;
+import com.mikepenz.google_material_typeface_library.GoogleMaterial;
+import com.mikepenz.iconics.IconicsDrawable;
+import com.vanniktech.emoji.EmojiPopup;
+import com.vanniktech.emoji.listeners.OnEmojiBackspaceClickListener;
+import com.vanniktech.emoji.listeners.OnEmojiPopupDismissListener;
+import com.vanniktech.emoji.listeners.OnEmojiPopupShownListener;
+import com.vanniktech.emoji.listeners.OnSoftKeyboardCloseListener;
+import com.vanniktech.emoji.listeners.OnSoftKeyboardOpenListener;
+import com.zoffcc.applications.sorm.Filetransfer;
+import com.zoffcc.applications.sorm.Message;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import androidx.annotation.Px;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
+
+import static com.zoffcc.applications.trifa.HelperFiletransfer.copy_outgoing_file_to_sdcard_dir;
+import static com.zoffcc.applications.trifa.HelperFiletransfer.insert_into_filetransfer_db;
+import static com.zoffcc.applications.trifa.HelperFiletransfer.update_filetransfer_db_full;
+import static com.zoffcc.applications.trifa.HelperFriend.is_friend_online;
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.display_toast;
+import static com.zoffcc.applications.trifa.HelperGeneric.do_fade_anim_on_fab;
+import static com.zoffcc.applications.trifa.HelperGeneric.get_g_opts;
+import static com.zoffcc.applications.trifa.HelperGeneric.get_uniq_tmp_filename;
+import static com.zoffcc.applications.trifa.HelperGeneric.initializeScreenshotSecurity;
+import static com.zoffcc.applications.trifa.HelperGeneric.seconds_time_format_or_empty;
+import static com.zoffcc.applications.trifa.HelperGeneric.set_g_opts;
+import static com.zoffcc.applications.trifa.HelperGeneric.tox_friend_send_message_wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.trim_to_utf8_length_bytes;
+import static com.zoffcc.applications.trifa.HelperMessage.insert_into_message_db;
+import static com.zoffcc.applications.trifa.HelperMsgNotification.change_msg_notification;
+import static com.zoffcc.applications.trifa.MainActivity.CallingWaitingActivity_ID;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__messageview_paging;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__use_incognito_keyboard;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
+import static com.zoffcc.applications.trifa.MainActivity.SD_CARD_TMP_DIR;
+import static com.zoffcc.applications.trifa.MainActivity.context_s;
+import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.message_list_activity;
+import static com.zoffcc.applications.trifa.MainActivity.selected_messages;
+import static com.zoffcc.applications.trifa.MainActivity.selected_messages_incoming_file;
+import static com.zoffcc.applications.trifa.MainActivity.selected_messages_text_only;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_typing;
+import static com.zoffcc.applications.trifa.MessageListFragment.search_messages_text;
+import static com.zoffcc.applications.trifa.MessageListFragment.show_only_files;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.FT_OUTGOING_FILESIZE_BYTE_USE_STORAGE_FRAMEWORK;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.FT_OUTGOING_FILESIZE_FRIEND_MAX_TOTAL;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.MAX_FRIEND_AUDIO_RECORDING_MSG_SECONDS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.NOTIFICATION_EDIT_ACTION.NOTIFICATION_EDIT_ACTION_REMOVE;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TEXT_QUOTE_STRING_1;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TEXT_QUOTE_STRING_2;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_FT_DIRECTION.TRIFA_FT_DIRECTION_OUTGOING;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_FILE;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_TYPE_TEXT;
+import static com.zoffcc.applications.trifa.ToxVars.TOX_FILE_CONTROL.TOX_FILE_CONTROL_PAUSE;
+import static com.zoffcc.applications.trifa.ToxVars.TOX_FILE_KIND.TOX_FILE_KIND_DATA;
+import static com.zoffcc.applications.trifa.ToxVars.TOX_MSGV3_MAX_MESSAGE_LENGTH;
+import static com.zoffcc.applications.trifa.TrifaToxService.orma;
+import static com.zoffcc.applications.trifa.TrifaToxService.wakeup_tox_thread;
+
+// import com.vanniktech.emoji.listeners.OnEmojiClickedListener;
+
+/** @noinspection ConstantValue*/
+public class MessageListActivity extends AppCompatActivity
+{
+    private static final String TAG = "trifa.MsgListActivity";
+    long friendnum = -1;
+    long friendnum_prev = -1;
+    static final int MEDIAPICK_ID_001 = 8002;
+    //
+    static com.vanniktech.emoji.EmojiEditText ml_new_message = null;
+    com.vanniktech.emoji.EmojiPopup emojiPopup = null;
+    ImageView insert_emoji = null;
+    TextView ml_maintext = null;
+    ViewGroup rootView = null;
+    //
+    static TextView ml_friend_typing = null;
+    ImageView ml_icon = null;
+    ImageView ml_status_icon = null;
+    ImageButton ml_phone_icon = null;
+    ImageButton ml_video_icon = null;
+    ImageButton ml_attach_button_01 = null;
+    ImageButton ml_button_recaudio = null;
+    ImageButton audio_rec_popup_button = null;
+    static TextView audio_rec_popup_time = null;
+    static ViewGroup audio_rec_popup_container = null;
+    static boolean ml_is_recording = false;
+    static boolean ml_is_rec_ok = false;
+    static int global_typing = 0;
+    Thread typing_flag_thread = null;
+    final static int TYPING_FLAG_DEACTIVATE_DELAY_IN_MILLIS = 1000; // 1 second
+    static boolean attachemnt_instead_of_send = true;
+    static ActionMode amode = null;
+    static MenuItem amode_save_menu_item = null;
+    static MenuItem amode_info_menu_item = null;
+    static boolean oncreate_finished = false;
+    CustomSpinner spinner_filter_msgs = null;
+    SearchView messageSearchView = null;
+
+    Handler mla_handler = null;
+    static Handler mla_handler_s = null;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        oncreate_finished = false;
+        Log.i(TAG, "onCreate");
+        super.onCreate(savedInstanceState);
+        Log.i(TAG, "onCreate:002");
+
+        amode = null;
+        amode_save_menu_item = null;
+        amode_info_menu_item = null;
+        selected_messages.clear();
+        selected_messages_text_only.clear();
+        selected_messages_incoming_file.clear();
+
+        try
+        {
+            // reset search and filter flags, sooner
+            show_only_files = false;
+            search_messages_text = null;
+        }
+        catch (Exception e)
+        {
+        }
+
+        mla_handler = new Handler(Looper.getMainLooper())
+        {
+            @Override
+            public void handleMessage(android.os.Message m)
+            {
+                try
+                {
+                    switch (m.what)
+                    {
+                        case 1:
+                            stop_self_typing_indicator();
+                            break;
+                        default:
+                            super.handleMessage(m);
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    super.handleMessage(m);
+                }
+            }
+        };
+
+        mla_handler_s = mla_handler;
+
+        Intent intent = getIntent();
+        friendnum = intent.getLongExtra("friendnum", -1);
+        // Log.i(TAG, "onCreate:003:friendnum=" + friendnum + " friendnum_prev=" + friendnum_prev);
+        friendnum_prev = friendnum;
+
+        setContentView(R.layout.activity_message_list);
+
+        message_list_activity = this;
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        rootView = (ViewGroup) findViewById(R.id.emoji_bar);
+        ml_new_message = (com.vanniktech.emoji.EmojiEditText) findViewById(R.id.ml_new_message);
+
+        messageSearchView = (SearchView) findViewById(R.id.search_view_messages);
+        messageSearchView.setQueryHint(getString(R.string.messages_search_default_text));
+        messageSearchView.setIconifiedByDefault(true);
+
+        spinner_filter_msgs = (CustomSpinner) findViewById(R.id.spinner_filter_msgs);
+        ArrayList<String> own_online_status_string_values = new ArrayList<String>(Arrays.asList("all", "files"));
+        ArrayAdapter<String> myAdapter = new FilterMsgsSpinnerAdapter(this, R.layout.own_status_spinner_item,
+                                                                      own_online_status_string_values);
+
+        if (spinner_filter_msgs != null)
+        {
+            spinner_filter_msgs.setAdapter(myAdapter);
+            spinner_filter_msgs.setSelection(0);
+            spinner_filter_msgs.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+            {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View v, int position, long id)
+                {
+                    try
+                    {
+                        if (id == 0)
+                        {
+                            // id: all messages
+                            messageSearchView.setQuery("", false);
+                            messageSearchView.setIconified(true);
+                            show_only_files = false;
+                            search_messages_text = null;
+                            MainActivity.message_list_fragment.update_all_messages(false, false,
+                                                                                   PREF__messageview_paging);
+                        }
+                        else if (id == 1)
+                        {
+                            // id: only files
+                            messageSearchView.setQuery("", false);
+                            messageSearchView.setIconified(true);
+                            show_only_files = true;
+                            search_messages_text = null;
+                            MainActivity.message_list_fragment.update_all_messages(false, false,
+                                                                                   PREF__messageview_paging);
+                        }
+                    }
+                    catch (Exception e2)
+                    {
+                        e2.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent)
+                {
+                }
+            });
+        }
+
+        try
+        {
+            // reset search and filter flags
+            messageSearchView.setQuery("", false);
+            messageSearchView.setIconified(true);
+            show_only_files = false;
+            search_messages_text = null;
+        }
+        catch (Exception e)
+        {
+        }
+
+        // give focus to text input
+        ml_new_message.requestFocus();
+        try
+        {
+            // hide softkeyboard initially
+            // since it takes a lot of screen space
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        }
+        catch (Exception e)
+        {
+        }
+
+        insert_emoji = (ImageView) findViewById(R.id.insert_emoji);
+        ml_friend_typing = (TextView) findViewById(R.id.ml_friend_typing);
+        ml_maintext = (TextView) findViewById(R.id.ml_maintext);
+        ml_icon = (ImageView) findViewById(R.id.ml_icon);
+        ml_status_icon = (ImageView) findViewById(R.id.ml_status_icon);
+        ml_phone_icon = (ImageButton) findViewById(R.id.ml_phone_icon);
+        ml_video_icon = (ImageButton) findViewById(R.id.ml_video_icon);
+        ml_attach_button_01 = (ImageButton) findViewById(R.id.ml_button_01);
+        ml_button_recaudio = (ImageButton) findViewById(R.id.ml_button_recaudio);
+        ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
+        audio_rec_popup_button = findViewById(R.id.audio_rec_popup_button);
+        audio_rec_popup_time = findViewById(R.id.audio_rec_popup_time);
+        audio_rec_popup_container = findViewById(R.id.audio_rec_popup_container);
+
+        audio_rec_popup_container.setVisibility(View.GONE);
+
+        ml_is_recording = false;
+        ml_is_rec_ok = false;
+        final ImageButton button01_ = ml_attach_button_01;
+        ml_icon.setImageResource(R.drawable.circle_red);
+        set_friend_connection_status_icon();
+        ml_status_icon.setImageResource(R.drawable.circle_green);
+        set_friend_status_icon();
+
+        messageSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+        {
+
+            @Override
+            public boolean onQueryTextSubmit(String query)
+            {
+                // Log.i(TAG, "search:1:" + query);
+
+                if ((query == null) || (query.length() == 0))
+                {
+                    try
+                    {
+                        // all messages
+                        show_only_files = false;
+                        search_messages_text = null;
+                        MainActivity.message_list_fragment.update_all_messages(false, false, PREF__messageview_paging);
+                    }
+                    catch (Exception e2)
+                    {
+                        e2.printStackTrace();
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // all messages and search string
+                        show_only_files = false;
+                        search_messages_text = query;
+                        MainActivity.message_list_fragment.update_all_messages(false, false, PREF__messageview_paging);
+                    }
+                    catch (Exception e2)
+                    {
+                        e2.printStackTrace();
+                    }
+                }
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String query)
+            {
+                // Log.i(TAG, "search:2:" + query);
+
+                if ((query == null) || (query.length() == 0))
+                {
+                    try
+                    {
+                        // all messages
+                        show_only_files = false;
+                        MessageListFragment.search_messages_text = null;
+                        MainActivity.message_list_fragment.update_all_messages(false, false, PREF__messageview_paging);
+                    }
+                    catch (Exception e2)
+                    {
+                        e2.printStackTrace();
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // all messages and search string
+                        show_only_files = false;
+                        MessageListFragment.search_messages_text = query;
+                        MainActivity.message_list_fragment.update_all_messages(false, false, PREF__messageview_paging);
+                    }
+                    catch (Exception e2)
+                    {
+                        e2.printStackTrace();
+                    }
+                }
+
+                return true;
+            }
+        });
+
+        setUpEmojiPopup();
+
+        final Drawable d1 = new IconicsDrawable(getBaseContext()).
+                icon(GoogleMaterial.Icon.gmd_sentiment_satisfied).
+                color(getResources().
+                        getColor(R.color.icon_colors)).
+                sizeDp(80);
+
+        insert_emoji.setImageDrawable(d1);
+        // insert_emoji.setImageResource(R.drawable.emoji_ios_category_people);
+
+        insert_emoji.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+                emojiPopup.toggle();
+            }
+        });
+
+        final Drawable add_attachement_icon = new IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_attachment).color(
+                getResources().getColor(R.color.icon_colors)).sizeDp(80);
+        final Drawable send_message_icon = new IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_send).color(
+                getResources().getColor(R.color.icon_colors)).sizeDp(80);
+
+        ml_friend_typing.setText("");
+        attachemnt_instead_of_send = true;
+        ml_attach_button_01.setImageDrawable(add_attachement_icon);
+
+        if (PREF__use_incognito_keyboard)
+        {
+            ml_new_message.setImeOptions(EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING);
+        }
+        else
+        {
+            ml_new_message.setImeOptions(EditorInfo.IME_ACTION_SEND);
+        }
+
+        // clear input text field
+        ml_new_message.setText("");
+
+        // add text change listener to input text field
+        ml_new_message.addTextChangedListener(new TextWatcher()
+        {
+            public void afterTextChanged(Editable s)
+            {
+                if (s.length() > 0)
+                {
+                    attachemnt_instead_of_send = false;
+                    button01_.setImageDrawable(send_message_icon);
+                }
+                else
+                {
+                    attachemnt_instead_of_send = true;
+                    button01_.setImageDrawable(add_attachement_icon);
+                }
+
+                // TODO bad hack!
+                // Log.i(TAG, "TextWatcher:afterTextChanged");
+                if (global_typing == 0)
+                {
+                    global_typing = 1;  // typing = 1
+
+                    Runnable myRunnable = new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            try
+                            {
+                                tox_self_set_typing(friendnum, global_typing);
+                                // Log.i(TAG, "typing:fn#" + friendnum + ":activated");
+                            }
+                            catch (Exception e)
+                            {
+                                Log.i(TAG, "typing:fn#" + friendnum + ":EE1" + e.getMessage());
+                            }
+                        }
+                    };
+
+                    if (main_handler_s != null)
+                    {
+                        main_handler_s.post(myRunnable);
+                    }
+                }
+
+                try
+                {
+                    typing_flag_thread.interrupt();
+                }
+                catch (Exception e)
+                {
+                    // e.printStackTrace();
+                }
+
+                typing_flag_thread = new Thread()
+                {
+                    @Override
+                    public void run()
+                    {
+                        boolean skip_flag_update = false;
+                        try
+                        {
+                            Thread.sleep(TYPING_FLAG_DEACTIVATE_DELAY_IN_MILLIS); // sleep for n seconds
+                        }
+                        catch (Exception e)
+                        {
+                            // e.printStackTrace();
+                            // ok, dont update typing flag
+                            skip_flag_update = true;
+                        }
+
+                        if (global_typing == 1)
+                        {
+                            if (skip_flag_update == false)
+                            {
+                                global_typing = 0;  // typing = 0
+                                Runnable myRunnable = new Runnable()
+                                {
+                                    @Override
+                                    public void run()
+                                    {
+                                        try
+                                        {
+                                            tox_self_set_typing(friendnum, global_typing);
+                                            // Log.i(TAG, "typing:fn#" + friendnum + ":DEactivated");
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Log.i(TAG, "typing:fn#" + friendnum + ":EE2" + e.getMessage());
+                                        }
+                                    }
+                                };
+
+                                if (main_handler_s != null)
+                                {
+                                    main_handler_s.post(myRunnable);
+                                }
+                            }
+                        }
+                    }
+                };
+                typing_flag_thread.start();
+                // TODO bad hack! sends way too many "typing" messages --------
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after)
+            {
+                // Log.i(TAG,"TextWatcher:beforeTextChanged");
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count)
+            {
+                // Log.i(TAG,"TextWatcher:onTextChanged");
+            }
+        });
+
+        // fill out input text field with shared text value
+        try
+        {
+            String fillouttext = intent.getStringExtra("fillouttext");
+            if ((fillouttext != null) && (fillouttext.length() > 0))
+            {
+                ml_new_message.setText("");
+                ml_new_message.append(fillouttext);
+            }
+        }
+        catch (Exception ignored)
+        {
+        }
+
+        final Drawable d2 = new IconicsDrawable(this).icon(FontAwesome.Icon.faw_phone).color(
+                getResources().getColor(R.color.icon_colors)).sizeDp(80);
+        ml_phone_icon.setImageDrawable(d2);
+
+        final Drawable d3 = new IconicsDrawable(this).icon(FontAwesome.Icon.faw_video).color(
+                getResources().getColor(R.color.icon_colors)).sizeDp(80);
+        ml_video_icon.setImageDrawable(d3);
+
+        if (PREF__window_security)
+        {
+            // prevent screenshots and also dont show the window content in recent activity screen
+            initializeScreenshotSecurity(this);
+        }
+
+        final long fn = friendnum;
+        Thread t = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                final String f_name = HelperFriend.get_friend_name_from_num(fn);
+
+                Runnable myRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        ml_maintext.setText(f_name);
+                    }
+                };
+
+                if (main_handler_s != null)
+                {
+                    main_handler_s.post(myRunnable);
+                }
+            }
+        };
+        t.start();
+
+        ml_button_recaudio.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                if (ml_is_rec_ok)
+                {
+                    return false;
+                }
+
+                if (ml_is_recording)
+                {
+                    return false;
+                }
+
+                // display_toast("LONG", false, 0);
+                final Thread ml_rec_audio_thread = new Thread()
+                {
+                    @Override
+                    public void run()
+                    {
+                        String audio_rec_filename_final = null;
+                        ml_is_recording = true;
+                        ml_is_rec_ok = false;
+                        ((ImageButton) v).setImageResource(R.drawable.baseline_stop_circle_24);
+                        v.setBackgroundColor(Color.parseColor("#FF0000"));
+
+                        set_recording_pop_text_s("0:00");
+                        set_recording_pop_visibilty_s(true);
+
+                        try
+                        {
+                            Log.i(TAG, "onCreate:record_audio:start");
+                            AudioRecorder mAudioRecorder = AudioRecorder.getInstance();
+                            final String fpubkey = tox_friend_get_public_key__wrapper(friendnum);
+                            String audio_rec_filename = SD_CARD_TMP_DIR + "/" + fpubkey + "_" + System.nanoTime();
+                            String audio_rec_filename_uniq_part  = get_uniq_tmp_filename(audio_rec_filename ,1000);
+                            audio_rec_filename_final = audio_rec_filename + "_" + audio_rec_filename_uniq_part + ".file.m4a";
+                            File f = new File(audio_rec_filename_final);
+                            boolean file_exists = true;
+                            try
+                            {
+                                file_exists = f.exists();
+                            }
+                            catch(Exception e)
+                            {
+                                ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
+                                v.setBackgroundColor(Color.TRANSPARENT);
+                                set_recording_pop_visibilty_s(false);
+                                ml_is_recording = false;
+                                ml_is_rec_ok = false;
+                                return;
+                            }
+
+                            long count = 0;
+                            while(file_exists)
+                            {
+                                audio_rec_filename = SD_CARD_TMP_DIR + "/" + fpubkey + "_" + System.nanoTime();
+                                audio_rec_filename_uniq_part  = get_uniq_tmp_filename(audio_rec_filename ,1000);
+                                audio_rec_filename_final = audio_rec_filename + "_" + audio_rec_filename_uniq_part + ".file.m4a";
+                                f = new File(audio_rec_filename_final);
+                                try
+                                {
+                                    file_exists = f.exists();
+                                }
+                                catch(Exception e)
+                                {
+                                    ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
+                                    v.setBackgroundColor(Color.TRANSPARENT);
+                                    set_recording_pop_visibilty_s(false);
+                                    ml_is_recording = false;
+                                    ml_is_rec_ok = false;
+                                    return;
+                                }
+
+                                try
+                                {
+                                    Thread.sleep(50);
+                                }
+                                catch(Exception e)
+                                {
+                                }
+                                count++;
+
+                                if (count > 50)
+                                {
+                                    // HINT: just in case of an endless loop, we return here
+                                    ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
+                                    v.setBackgroundColor(Color.TRANSPARENT);
+                                    set_recording_pop_visibilty_s(false);
+                                    ml_is_recording = false;
+                                    ml_is_rec_ok = false;
+                                    return;
+                                }
+                            }
+
+                            File mAudioFile = new File(audio_rec_filename_final);
+                            // Log.i(TAG, "onCreate:record_audio:file=" + audio_rec_filename_final);
+                            mAudioRecorder.prepareRecord(MediaRecorder.AudioSource.MIC, MediaRecorder.OutputFormat.MPEG_4,
+                                                         MediaRecorder.AudioEncoder.AAC, mAudioFile);
+                            boolean rec_start_result = mAudioRecorder.startRecord();
+                            if (!rec_start_result)
+                            {
+                                // HINT: some problem on starting the recording
+                                ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
+                                v.setBackgroundColor(Color.TRANSPARENT);
+                                set_recording_pop_visibilty_s(false);
+                                ml_is_recording = false;
+                                ml_is_rec_ok = false;
+                                return;
+                            }
+
+                            while (ml_is_recording)
+                            {
+                                try
+                                {
+                                    Thread.sleep(200);
+                                }
+                                catch (Exception ignored)
+                                {
+                                }
+
+                                set_recording_pop_text_s(seconds_time_format_or_empty(mAudioRecorder.progress()));
+
+                                if (mAudioRecorder.progress() > MAX_FRIEND_AUDIO_RECORDING_MSG_SECONDS)
+                                {
+                                    // HINT: stop after x seconds of recording so it does not record endless
+                                    Log.i(TAG, "onCreate:record_audio:auto_stop");
+                                    ml_is_rec_ok = true;
+                                    ml_is_recording = false;
+                                }
+                            }
+                            ((ImageButton) v).setImageResource(R.drawable.baseline_pending_24);
+                            v.setBackgroundColor(Color.TRANSPARENT);
+                            set_recording_pop_visibilty_s(false);
+                            int rec_result = mAudioRecorder.stopRecord();
+                            Log.i(TAG, "onCreate:record_audio:finished:res=" + rec_result);
+                            if (rec_result == -1)
+                            {
+                                ml_is_rec_ok = false;
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Log.i(TAG, "onCreate:record_audio:EE:" + e.getMessage());
+                            e.printStackTrace();
+                        }
+                        ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
+                        v.setBackgroundColor(Color.TRANSPARENT);
+                        set_recording_pop_visibilty_s(false);
+
+                        if (ml_is_rec_ok)
+                        {
+                            Log.i(TAG, "onCreate:record_audio:------ OK ------");
+                            Log.i(TAG, "onCreate:record_audio:------ OK ------");
+                            Log.i(TAG, "onCreate:record_audio:------ OK ------");
+
+                            if (audio_rec_filename_final != null)
+                            {
+                                Log.i(TAG, "onCreate:record_audio:add to FT queue ...");
+                                File f2 = new File(audio_rec_filename_final);
+                                add_outgoing_file(v.getContext(), MainActivity.message_list_activity.get_current_friendnum(),
+                                                  f2.getParent(), f2.getName(), null, f2.length(),
+                                                  false, true, true, false);
+                            }
+                        }
+
+                        try
+                        {
+                            if ((audio_rec_filename_final != null) && (audio_rec_filename_final.length() > 10))
+                            {
+                                new File(audio_rec_filename_final).delete();
+                            }
+                        }
+                        catch (Exception ignored)
+                        {
+                        }
+                        ml_is_rec_ok = false;
+                        ml_is_recording = false;
+                    }
+                };
+                ml_rec_audio_thread.start();
+
+                return true;
+            }
+        });
+
+        audio_rec_popup_button.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+                if (ml_is_rec_ok)
+                {
+                    return;
+                }
+
+                if (ml_is_recording)
+                {
+                    ml_is_rec_ok = true;
+                    ml_is_recording = false;
+                    return;
+                }
+            }
+        });
+
+        audio_rec_popup_time.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+                if (ml_is_rec_ok)
+                {
+                    return;
+                }
+
+                if (ml_is_recording)
+                {
+                    ml_is_rec_ok = true;
+                    ml_is_recording = false;
+                    return;
+                }
+            }
+        });
+
+        audio_rec_popup_container.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+                if (ml_is_rec_ok)
+                {
+                    return;
+                }
+
+                if (ml_is_recording)
+                {
+                    ml_is_rec_ok = true;
+                    ml_is_recording = false;
+                    return;
+                }
+            }
+        });
+
+        ml_button_recaudio.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+                if (ml_is_rec_ok)
+                {
+                    return;
+                }
+
+                if (ml_is_recording)
+                {
+                    ml_is_rec_ok = true;
+                    ml_is_recording = false;
+                    return;
+                }
+
+                display_toast(v.getContext().getString(R.string.MessageListActivity_longpress_to_record_audiomsg), false, 0);
+            }
+        });
+
+        Log.i(TAG, "onCreate:099");
+        oncreate_finished = true;
+    }
+
+    @Override
+    protected void onPause()
+    {
+        try
+        {
+            Log.i(TAG, "is_at_bottom=" + MainActivity.message_list_fragment.is_at_bottom);
+        }
+        catch (Exception e)
+        {
+        }
+
+        Log.i(TAG, "onPause");
+        super.onPause();
+
+        ml_button_recaudio.setImageResource(R.drawable.baseline_keyboard_voice_24);
+        ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
+        set_recording_pop_visibilty_s(false);
+        ml_is_recording = false;
+        ml_is_rec_ok = false;
+
+        stop_self_typing_indicator_s();
+
+        if (emojiPopup != null)
+        {
+            emojiPopup.dismiss();
+        }
+
+        // ** // MainActivity.message_list_fragment = null;
+        message_list_activity = null;
+        // Log.i(TAG, "onPause:001:friendnum=" + friendnum);
+        friendnum = -1;
+        // Log.i(TAG, "onPause:002:friendnum=" + friendnum);
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        ml_button_recaudio.setImageResource(R.drawable.baseline_keyboard_voice_24);
+        ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
+        ml_is_recording = false;
+        ml_is_rec_ok = false;
+    }
+
+    @Override
+    protected void onResume()
+    {
+        Log.i(TAG, "onResume");
+        super.onResume();
+
+        // Log.i(TAG, "onResume:001:friendnum=" + friendnum);
+
+        if (friendnum == -1)
+        {
+            friendnum = friendnum_prev;
+            // Log.i(TAG, "onResume:001:friendnum(-->friendnum_prev)=" + friendnum);
+        }
+
+        change_msg_notification(NOTIFICATION_EDIT_ACTION_REMOVE.value, tox_friend_get_public_key__wrapper(friendnum), null, null);
+
+        // ----- convert old messages which did not contain a sent timestamp -----
+        try
+        {
+            boolean need_migrate_old_msg_date = true;
+
+            if (get_g_opts("MIGRATE_OLD_MSG_DATE_done") != null)
+            {
+                if (get_g_opts("MIGRATE_OLD_MSG_DATE_done").equals("true"))
+                {
+                    need_migrate_old_msg_date = false;
+                }
+            }
+
+            if (need_migrate_old_msg_date == true)
+            {
+                orma.run_multi_sql(
+                        "update Message set sent_timestamp_ms=rcvd_timestamp_ms," + "sent_timestamp=rcvd_timestamp" +
+                        " where " + " sent_timestamp_ms='0'" + " and sent_timestamp='0'" + " and direction='0'" +
+                        " and msg_version='0'");
+                Log.i(TAG, "onCreate:migrate_old_msg_date");
+
+                // now remember that we did that, and don't do it again
+                set_g_opts("MIGRATE_OLD_MSG_DATE_done", "true");
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "onCreate:migrate_old_msg_date:EE:" + e.getMessage());
+        }
+        // ----- convert old messages which did not contain a sent timestamp -----
+
+
+        // ----- convert filetransfer messages which did not contain a sent timestamp -----
+        try
+        {
+            boolean need_migrate_old_ft_date = true;
+
+            if (get_g_opts("MIGRATE_OLD_FT_DATE_done") != null)
+            {
+                if (get_g_opts("MIGRATE_OLD_FT_DATE_done").equals("true"))
+                {
+                    need_migrate_old_ft_date = false;
+                }
+            }
+
+            if (need_migrate_old_ft_date == true)
+            {
+                orma.run_multi_sql(
+                        "update Message set sent_timestamp_ms=rcvd_timestamp_ms," + "sent_timestamp=rcvd_timestamp" +
+                        " where " + " sent_timestamp_ms='0'" + " and sent_timestamp='0'" + " and direction='0'" +
+                        " and TRIFA_MESSAGE_TYPE ='1'");
+                Log.i(TAG, "onCreate:migrate_old_ft_date");
+
+                // now remember that we did that, and don't do it again
+                set_g_opts("MIGRATE_OLD_FT_DATE_done", "true");
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "onCreate:migrate_old_ft_date:EE:" + e.getMessage());
+        }
+        // ----- convert filetransfer messages which did not contain a sent timestamp -----
+
+        try
+        {
+            Log.i(TAG, "is_at_bottom=" + MainActivity.message_list_fragment.is_at_bottom);
+        }
+        catch (Exception e)
+        {
+        }
+
+        message_list_activity = this;
+        wakeup_tox_thread();
+    }
+
+    static void set_recording_pop_text_s(final String t)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if (audio_rec_popup_time != null)
+                    {
+                         audio_rec_popup_time.setText(t);
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+            }
+        };
+
+        if (mla_handler_s != null)
+        {
+            mla_handler_s.post(myRunnable);
+        }
+    }
+
+    static void set_recording_pop_visibilty_s(final boolean visible)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if (audio_rec_popup_container != null)
+                    {
+                        if (visible)
+                        {
+                            audio_rec_popup_container.setVisibility(View.VISIBLE);
+                        }
+                        else
+                        {
+                            audio_rec_popup_container.setVisibility(View.GONE);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                }
+            }
+        };
+
+        if (mla_handler_s != null)
+        {
+            mla_handler_s.post(myRunnable);
+        }
+    }
+
+    static void stop_friend_typing_indicator_s()
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if (message_list_activity != null)
+                    {
+                        if (ml_friend_typing != null)
+                        {
+                            ml_friend_typing.setText("");
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "friend_typing_cb:EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (mla_handler_s != null)
+        {
+            mla_handler_s.post(myRunnable);
+        }
+    }
+
+    static void stop_self_typing_indicator_s()
+    {
+        try
+        {
+            // Log.i(TAG, "stop_self_typing_indicator_s");
+            android.os.Message m = new android.os.Message();
+            m.what = 1;
+            mla_handler_s.handleMessage(m);
+        }
+        catch (Exception e)
+        {
+            e.getMessage();
+        }
+    }
+
+    void stop_self_typing_indicator()
+    {
+        if (global_typing == 1)
+        {
+            global_typing = 0;  // typing = 0
+            try
+            {
+                // Log.i(TAG, "typing:fn#" + get_current_friendnum() + ":stop_self_typing_indicator");
+                tox_self_set_typing(get_current_friendnum(), global_typing);
+            }
+            catch (Exception e)
+            {
+                Log.i(TAG, "typing:fn#" + get_current_friendnum() + ":EE2.b" + e.getMessage());
+            }
+        }
+    }
+
+    private void setUpEmojiPopup()
+    {
+
+        //        .setOnEmojiClickedListener(new OnEmojiClickedListener()
+        //        {
+        //        @Override
+        //        public void onEmojiClicked(@NonNull final Emoji emoji)
+        //        {
+        //            Log.d(TAG, "Clicked on emoji");
+        //        }})
+
+        emojiPopup = EmojiPopup.Builder.fromRootView(rootView).setOnEmojiBackspaceClickListener(
+                new OnEmojiBackspaceClickListener()
+                {
+                    @Override
+                    public void onEmojiBackspaceClick(View v)
+                    {
+
+                    }
+
+                }).setOnEmojiPopupShownListener(new OnEmojiPopupShownListener()
+        {
+            @Override
+            public void onEmojiPopupShown()
+            {
+                final Drawable d1 = new IconicsDrawable(getBaseContext()).
+                        icon(FontAwesome.Icon.faw_keyboard).
+                        color(getResources().
+                                getColor(R.color.icon_colors)).
+                        sizeDp(80);
+
+                insert_emoji.setImageDrawable(d1);
+                // insert_emoji.setImageResource(R.drawable.about_icon_email);
+            }
+        }).setOnSoftKeyboardOpenListener(new OnSoftKeyboardOpenListener()
+        {
+            @Override
+            public void onKeyboardOpen(@Px final int keyBoardHeight)
+            {
+                // Log.d(TAG, "Opened soft keyboard");
+            }
+        }).setOnEmojiPopupDismissListener(new OnEmojiPopupDismissListener()
+        {
+            @Override
+            public void onEmojiPopupDismiss()
+            {
+                final Drawable d1 = new IconicsDrawable(getBaseContext()).
+                        icon(GoogleMaterial.Icon.gmd_sentiment_satisfied).
+                        color(getResources().
+                                getColor(R.color.icon_colors)).
+                        sizeDp(80);
+
+                insert_emoji.setImageDrawable(d1);
+                // insert_emoji.setImageResource(R.drawable.emoji_ios_category_people);
+            }
+        }).setOnSoftKeyboardCloseListener(new OnSoftKeyboardCloseListener()
+        {
+            @Override
+            public void onKeyboardClose()
+            {
+                // Log.d(TAG, "Closed soft keyboard");
+            }
+        }).
+                setBackgroundColor(getResources().getColor(R.color.md_grey_800)).
+                build(ml_new_message);
+    }
+
+    long get_current_friendnum()
+    {
+        return friendnum;
+    }
+
+    public void set_friend_status_icon()
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    int tox_user_status_friend = TrifaToxService.orma.selectFromFriendList().
+                            tox_public_key_stringEq(tox_friend_get_public_key__wrapper(friendnum)).
+                            toList().get(0).TOX_USER_STATUS;
+
+                    if (tox_user_status_friend == 0)
+                    {
+                        ml_status_icon.setImageResource(R.drawable.circle_green);
+                    }
+                    else if (tox_user_status_friend == 1)
+                    {
+                        ml_status_icon.setImageResource(R.drawable.circle_orange);
+                    }
+                    else
+                    {
+                        ml_status_icon.setImageResource(R.drawable.circle_red);
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.i(TAG, "CALL:start:(2):EE:" + e.getMessage());
+                }
+            }
+        };
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+    }
+
+    public void set_friend_connection_status_icon()
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if (is_friend_online(friendnum) == 0)
+                    {
+                        ml_icon.setImageResource(R.drawable.circle_red);
+                    }
+                    else
+                    {
+                        ml_icon.setImageResource(R.drawable.circle_green);
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.i(TAG, "CALL:start:(2):EE:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+    }
+
+    public void send_attatchment(View view)
+    {
+        Log.i(TAG, "send_attatchment:---start");
+
+        String msg = "";
+        // add attachement ------------
+        // add attachement ------------
+
+        stop_self_typing_indicator_s();
+        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
+        // browser.
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+        // Filter to only show results that can be "opened", such as a
+        // file (as opposed to a list of contacts or timezones)
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // Filter to show only images, using the image MIME data type.
+        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
+        // To search for all documents available via installed storage providers,
+        // it would be "*/*".
+        // intent.setType("image/*");
+        intent.setType("*/*");
+
+        // HINT: rework this to not use FLAG_GRANT_PERSISTABLE_URI_PERMISSION anymore
+        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+        {
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, "*/*");
+        }
+
+        startActivityForResult(intent, MEDIAPICK_ID_001);
+
+        // add attachement ------------
+        // add attachement ------------
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event)
+    {
+        if (event.getAction() == KeyEvent.ACTION_DOWN)
+        {
+            switch (event.getKeyCode())
+            {
+                case KeyEvent.KEYCODE_ENTER:
+                case KeyEvent.KEYCODE_NUMPAD_ENTER:
+                    if (!event.isShiftPressed())
+                    {
+                        // Log.i(TAG, "dispatchKeyEvent:KEYCODE_ENTER");
+                        send_message_onclick(null);
+                        return true;
+                    }
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    public static void add_quote_message_text(final String quote_text)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if ((ml_new_message.getText().toString() == null) ||
+                        (ml_new_message.getText().toString().length() == 0))
+                    {
+                        ml_new_message.append(TEXT_QUOTE_STRING_1 + quote_text + TEXT_QUOTE_STRING_2 + "\n");
+                    }
+                    else
+                    {
+                        String old_text = ml_new_message.getText().toString();
+                        ml_new_message.setText("");
+                        // need to do it this way, or else the text input cursor will not be in the correct place
+                        ml_new_message.append(
+                                old_text + "\n" + TEXT_QUOTE_STRING_1 + quote_text + TEXT_QUOTE_STRING_2 + "\n");
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.i(TAG, "add_quote_message_text:EE01:" + e.getMessage());
+                }
+            }
+        };
+
+        if (mla_handler_s != null)
+        {
+            mla_handler_s.post(myRunnable);
+        }
+    }
+
+    public void send_text_message(final String friend_pubkey, final String message)
+    {
+        // send typed message to friend
+        String msg = trim_to_utf8_length_bytes(message, TOX_MSGV3_MAX_MESSAGE_LENGTH);
+
+        Message m = new Message();
+        m.tox_friendpubkey = friend_pubkey;
+        m.direction = 1; // msg sent
+        m.TOX_MESSAGE_TYPE = 0;
+        m.TRIFA_MESSAGE_TYPE = TRIFA_MSG_TYPE_TEXT.value;
+        m.rcvd_timestamp = 0L;
+        m.is_new = false; // own messages are always "not new"
+        m.sent_timestamp = System.currentTimeMillis();
+        m.read = false;
+        m.text = msg;
+        m.msg_version = 0;
+        m.resend_count = 0; // we have tried to resend this message "0" times
+        m.sent_push = 0;
+        m.msg_idv3_hash = "";
+        m.msg_id_hash = "";
+        m.raw_msgv2_bytes = "";
+
+        if ((msg != null) && (!msg.equalsIgnoreCase("")))
+        {
+            MainActivity.send_message_result result = tox_friend_send_message_wrapper(friend_pubkey, 0, msg,
+                                                                                      (m.sent_timestamp / 1000));
+
+            if (result == null)
+            {
+                return;
+            }
+
+            long res = result.msg_num;
+
+            if (res > -1)
+            {
+                m.resend_count = 1; // we sent the message successfully
+                m.message_id = res;
+            }
+            else
+            {
+                m.resend_count = 0; // sending was NOT successfull
+                m.message_id = -1;
+            }
+
+            if (result.msg_v2)
+            {
+                m.msg_version = 1;
+            }
+            else
+            {
+                m.msg_version = 0;
+            }
+
+            if ((result.msg_hash_hex != null) && (!result.msg_hash_hex.equalsIgnoreCase("")))
+            {
+                // msgV2 message -----------
+                m.msg_id_hash = result.msg_hash_hex;
+                // msgV2 message -----------
+            }
+
+            if ((result.msg_hash_v3_hex != null) && (!result.msg_hash_v3_hex.equalsIgnoreCase("")))
+            {
+                // msgV3 message -----------
+                m.msg_idv3_hash = result.msg_hash_v3_hex;
+                // msgV3 message -----------
+            }
+
+            if ((result.raw_message_buf_hex != null) && (!result.raw_message_buf_hex.equalsIgnoreCase("")))
+            {
+                // save raw message bytes of this v2 msg into the database
+                // we need it if we want to resend it later
+                m.raw_msgv2_bytes = result.raw_message_buf_hex;
+            }
+
+            long row_id = insert_into_message_db(m, true);
+            m.id = row_id;
+            ml_new_message.setText("");
+            stop_self_typing_indicator_s();
+        }
+    }
+
+    /* HINT: send a message to a friend */
+    synchronized public void send_message_onclick(View view)
+    {
+        // Log.i(TAG, "send_message_onclick:---start");
+        String msg = "";
+        try
+        {
+            if (attachemnt_instead_of_send)
+            {
+                if (view != null)
+                {
+                    send_attatchment(view);
+                }
+            }
+            else
+            {
+                send_text_message(tox_friend_get_public_key__wrapper(friendnum), ml_new_message.getText().toString());
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        // Log.i(TAG,"send_message_onclick:---end");
+    }
+
+    static void add_attachment(Context c, Intent data, Intent orig_intent, long friendnum_local, boolean activity_friend_num, boolean auto_start)
+    {
+        Log.i(TAG, "add_attachment:001");
+
+        try
+        {
+            String fileName = null;
+
+            try
+            {
+                DocumentFile documentFile = DocumentFile.fromSingleUri(c, data.getData());
+
+                fileName = documentFile.getName();
+                // Log.i(TAG, "file_attach_for_send:documentFile:fileName=" + fileName);
+                // Log.i(TAG, "file_attach_for_send:documentFile:fileLength=" + documentFile.length());
+
+                ContentResolver cr = c.getApplicationContext().getContentResolver();
+                Cursor metaCursor = cr.query(data.getData(), null, null, null, null);
+                if (metaCursor != null)
+                {
+                    try
+                    {
+                        if (metaCursor.moveToFirst())
+                        {
+                            String file_path = metaCursor.getString(0);
+                            // Log.i(TAG, "file_attach_for_send:metaCursor_path:fp=" + file_path);
+                            // Log.i(TAG, "file_attach_for_send:metaCursor_path:column names=" +
+                            //            metaCursor.getColumnNames().length);
+                            int j;
+                            for (j = 0; j < metaCursor.getColumnNames().length; j++)
+                            {
+                                // Log.i(TAG, "file_attach_for_send:metaCursor_path:column name=" +
+                                //           metaCursor.getColumnName(j));
+                                // Log.i(TAG,
+                                //       "file_attach_for_send:metaCursor_path:column data=" + metaCursor.getString(j));
+                                if (metaCursor.getColumnName(j).equals(DocumentsContract.Document.COLUMN_DISPLAY_NAME))
+                                {
+                                    if (metaCursor.getString(j) != null)
+                                    {
+                                        if (metaCursor.getString(j).length() > 0)
+                                        {
+                                            fileName = metaCursor.getString(j);
+                                            // Log.i(TAG, "file_attach_for_send:filename new=" + fileName);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        metaCursor.close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            final String fileName_ = fileName;
+
+            if (fileName_ != null)
+            {
+                if (activity_friend_num)
+                {
+                    final Thread t = new Thread()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            if (friendnum_local == -1)
+                            {
+                                // ok, we need to wait for onResume to finish and give us the friendnum
+                                Log.i(TAG,
+                                      "add_outgoing_file:ok, we need to wait for onResume to finish and give us the friendnum");
+                                long loop = 0;
+                                while (loop < 100)
+                                {
+                                    loop++;
+                                    try
+                                    {
+                                        Thread.sleep(20);
+                                    }
+                                    catch (InterruptedException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+
+                                    if (MainActivity.message_list_activity != null)
+                                    {
+                                        if (MainActivity.message_list_activity.get_current_friendnum() > -1)
+                                        {
+                                            // got friendnum
+                                            Log.i(TAG, "add_outgoing_file:got friendnum");
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                loop = 0;
+                                while (loop < 1000)
+                                {
+                                    loop++;
+                                    try
+                                    {
+                                        Thread.sleep(20);
+                                    }
+                                    catch (InterruptedException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+
+                                    if (oncreate_finished)
+                                    {
+                                        Log.i(TAG, "add_outgoing_file:oncreate_finished");
+                                        break;
+                                    }
+                                }
+                            }
+
+                            try
+                            {
+                                Thread.sleep(50);
+                            }
+                            catch (InterruptedException e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            if (MainActivity.message_list_activity.get_current_friendnum() == -1)
+                            {
+                                // sorry, still no friendnum
+                                Log.i(TAG, "add_outgoing_file:sorry, still no friendnum");
+                                return;
+                            }
+
+                            add_outgoing_file(c, MainActivity.message_list_activity.get_current_friendnum(),
+                                              data.getData().toString(), fileName_, data.getData(), 0, false,
+                                              activity_friend_num, false, auto_start);
+                        }
+                    };
+                    t.start();
+                }
+                else
+                {
+                    add_outgoing_file(c, friendnum_local, data.getData().toString(), fileName_, data.getData(), 0, false,
+                                      activity_friend_num, false, auto_start);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "select_file:22:EE1:" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        Log.i(TAG, "onActivityResult:requestCode=" + requestCode + " resultCode=" + resultCode);
+
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == CallingWaitingActivity_ID)
+        {
+        }
+        else if (requestCode == MEDIAPICK_ID_001 && resultCode == Activity.RESULT_OK)
+        {
+            if (data == null)
+            {
+                //Display an error
+                return;
+            }
+            else
+            {
+                add_attachment(this, data, data, -1, true, false);
+            }
+            // InputStream inputStream = context.getContentResolver().openInputStream(data.getData());
+            //Now you can do whatever you want with your inpustream, save it as file, upload to a server, decode a bitmap...
+        }
+    }
+
+    static class outgoing_file_wrapped
+    {
+        String filepath_wrapped = null;
+        String filename_wrapped = null;
+        long file_size_wrapped = -1;
+    }
+
+    static void add_outgoing_file(Context c, long friendnum, String filepath, String filename, Uri uri, long file_size_manual, boolean real_file_path, boolean update_message_view, boolean use_file_size_manual, boolean auto_start)
+    {
+        // Log.i(TAG, "add_outgoing_file:001");
+
+        // Log.i(TAG,
+        //      "add_outgoing_file:filepath=" + filepath + " filename=" + filename + " uri=" + uri.toString() + " uri2=" +
+        //      uri);
+
+        long file_size = -1;
+        try
+        {
+            if (use_file_size_manual)
+            {
+                file_size = file_size_manual;
+                // Log.i(TAG, "add_outgoing_file:documentFile:file_size=" + file_size);
+            }
+            else
+            {
+                DocumentFile documentFile = DocumentFile.fromSingleUri(c, uri);
+                String fileName = documentFile.getName();
+                // Log.i(TAG, "add_outgoing_file:documentFile:fileName=" + fileName);
+                // Log.i(TAG, "add_outgoing_file:documentFile:fileLength=" + documentFile.length());
+                file_size = documentFile.length();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "add_outgoing_file:documentFile:EE003:" + e.getMessage());
+            // file length unknown?
+            return;
+        }
+
+        if (file_size < 1)
+        {
+            Log.i(TAG, "file length 0 ?");
+            // file length "zero"?
+            return;
+        }
+
+        if (file_size >= FT_OUTGOING_FILESIZE_FRIEND_MAX_TOTAL)
+        {
+            display_toast("File too large", true, 100);
+            Log.i(TAG, "add_outgoing_file:documentFile:file_size=File too large");
+            return;
+        }
+
+        //noinspection ConstantValue
+        if (file_size < FT_OUTGOING_FILESIZE_BYTE_USE_STORAGE_FRAMEWORK) // less than xxx Bytes filesize
+        {
+            Log.i(TAG, "add_outgoing_file:documentFile:0001");
+            outgoing_file_wrapped ofw = copy_outgoing_file_to_sdcard_dir(filepath, filename, file_size);
+
+            if (ofw == null)
+            {
+                Log.i(TAG, "add_outgoing_file:documentFile:ERR:0002");
+                return;
+            }
+
+            Filetransfer f = new Filetransfer();
+            f.tox_public_key_string = tox_friend_get_public_key__wrapper(friendnum);
+            f.direction = TRIFA_FT_DIRECTION_OUTGOING.value;
+            f.file_number = -1; // add later when we actually have the number
+            f.kind = TOX_FILE_KIND_DATA.value;
+            f.state = TOX_FILE_CONTROL_PAUSE.value;
+            f.path_name = ofw.filepath_wrapped;
+            f.file_name = ofw.filename_wrapped;
+            f.filesize = ofw.file_size_wrapped;
+            f.ft_accepted = false;
+            f.ft_outgoing_started = false;
+            f.current_position = 0;
+            f.storage_frame_work = false;
+
+            long ft_id = insert_into_filetransfer_db(f);
+            f.id = ft_id;
+
+            Log.i(TAG, "add_outgoing_file:MM2MM:2:" + ft_id);
+
+            // ---------- DEBUG ----------
+            Filetransfer ft_tmp = (Filetransfer) orma.selectFromFiletransfer().idEq(ft_id).get(0);
+            Log.i(TAG, "add_outgoing_file:MM2MM:4a:" + "fid=" + ft_tmp.id + " mid=" + ft_tmp.message_id);
+            // ---------- DEBUG ----------
+
+
+            // add FT message to UI
+            Message m = new Message();
+
+            m.tox_friendpubkey = tox_friend_get_public_key__wrapper(friendnum);
+            m.direction = 1; // msg outgoing
+            m.TOX_MESSAGE_TYPE = 0;
+            m.TRIFA_MESSAGE_TYPE = TRIFA_MSG_FILE.value;
+            m.filetransfer_id = ft_id;
+            m.filedb_id = -1;
+            m.state = TOX_FILE_CONTROL_PAUSE.value;
+            m.ft_accepted = false;
+            m.ft_outgoing_started = false;
+            if (auto_start)
+            {
+                m.ft_outgoing_queued = true;
+            }
+            else
+            {
+                m.ft_outgoing_queued = false;
+            }
+            m.filename_fullpath = new java.io.File(ofw.filepath_wrapped + "/" + ofw.filename_wrapped).getAbsolutePath();
+            m.sent_timestamp = System.currentTimeMillis();
+            m.text = ofw.filename_wrapped + "\n" + ofw.file_size_wrapped + " bytes";
+            m.storage_frame_work = false;
+            m.sent_push = 0;
+            m.is_new = false; // no notification for outgoing filetransfers
+            m.filetransfer_kind = TOX_FILE_KIND_DATA.value;
+
+            long new_msg_id = insert_into_message_db(m, update_message_view);
+            m.id = new_msg_id;
+
+            // ---------- DEBUG ----------
+            Log.i(TAG, "add_outgoing_file:MM2MM:3:" + new_msg_id);
+            Message m_tmp = (Message) orma.selectFromMessage().idEq(new_msg_id).get(0);
+            // Log.i(TAG, "add_outgoing_file:MM2MM:4:" + m.filetransfer_id + "::" + m_tmp);
+            // ---------- DEBUG ----------
+
+            f.message_id = new_msg_id;
+            // ** // update_filetransfer_db_messageid_from_id(f, ft_id);
+            update_filetransfer_db_full(f);
+
+            // ---------- DEBUG ----------
+            Filetransfer ft_tmp2 = (Filetransfer) orma.selectFromFiletransfer().idEq(ft_id).get(0);
+            Log.i(TAG, "add_outgoing_file:MM2MM:4b:" + "fid=" + ft_tmp2.id + " mid=" + ft_tmp2.message_id);
+            // ---------- DEBUG ----------
+
+        }
+        else
+        {
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+            // should never get here !!!!!!!!!!!!
+
+
+            // Log.i(TAG, "add_outgoing_file:friendnum(2)=" + friendnum);
+
+            Filetransfer f = new Filetransfer();
+            f.tox_public_key_string = tox_friend_get_public_key__wrapper(friendnum);
+            f.direction = TRIFA_FT_DIRECTION_OUTGOING.value;
+            f.file_number = -1; // add later when we actually have the number
+            f.kind = TOX_FILE_KIND_DATA.value;
+            f.state = TOX_FILE_CONTROL_PAUSE.value;
+            f.path_name = filepath;
+            f.file_name = filename;
+            f.filesize = file_size;
+            f.ft_accepted = false;
+            f.ft_outgoing_started = false;
+            f.current_position = 0;
+            f.storage_frame_work = true;
+
+            // Log.i(TAG, "add_outgoing_file:tox_public_key_string=" + f.tox_public_key_string);
+
+            long ft_id = insert_into_filetransfer_db(f);
+            f.id = ft_id;
+
+            // Message m_tmp = orma.selectFromMessage().tox_friendpubkeyEq(tox_friend_get_public_key__wrapper(3)).orderByMessage_idDesc().get(0);
+            Log.i(TAG, "add_outgoing_file:MM2MM:2:" + ft_id);
+
+            // ---------- DEBUG ----------
+            Filetransfer ft_tmp = orma.selectFromFiletransfer().idEq(ft_id).get(0);
+            Log.i(TAG, "add_outgoing_file:MM2MM:4a:" + "fid=" + ft_tmp.id + " mid=" + ft_tmp.message_id);
+            // ---------- DEBUG ----------
+
+
+            // add FT message to UI
+            Message m = new Message();
+
+            m.tox_friendpubkey = tox_friend_get_public_key__wrapper(friendnum);
+            m.direction = 1; // msg outgoing
+            m.TOX_MESSAGE_TYPE = 0;
+            m.TRIFA_MESSAGE_TYPE = TRIFA_MSG_FILE.value;
+            m.filetransfer_id = ft_id;
+            m.filedb_id = -1;
+            m.state = TOX_FILE_CONTROL_PAUSE.value;
+            m.ft_accepted = false;
+            m.ft_outgoing_started = false;
+            m.ft_outgoing_queued = false;
+            m.filename_fullpath = filepath;
+            m.sent_timestamp = System.currentTimeMillis();
+            m.text = filename + "\n" + file_size + " bytes";
+            m.storage_frame_work = true;
+            m.is_new = false; // no notification for outgoing filetransfers
+            m.filetransfer_kind = TOX_FILE_KIND_DATA.value;
+
+            long new_msg_id = insert_into_message_db(m, update_message_view);
+            m.id = new_msg_id;
+
+            // ---------- DEBUG ----------
+            Log.i(TAG, "add_outgoing_file:MM2MM:3:" + new_msg_id);
+            Message m_tmp = orma.selectFromMessage().idEq(new_msg_id).get(0);
+            // Log.i(TAG, "add_outgoing_file:MM2MM:4:" + m.filetransfer_id + "::" + m_tmp);
+            // ---------- DEBUG ----------
+
+            f.message_id = new_msg_id;
+            // ** // update_filetransfer_db_messageid_from_id(f, ft_id);
+            update_filetransfer_db_full(f);
+
+            // ---------- DEBUG ----------
+            Filetransfer ft_tmp2 = orma.selectFromFiletransfer().idEq(ft_id).get(0);
+            Log.i(TAG, "add_outgoing_file:MM2MM:4b:" + "fid=" + ft_tmp2.id + " mid=" + ft_tmp2.message_id);
+            // ---------- DEBUG ----------
+
+            // ---------- DEBUG ----------
+            // m_tmp = orma.selectFromMessage().idEq(new_msg_id).get(0);
+            // Log.i(TAG, "add_outgoing_file:MM2MM:5:" + m.filetransfer_id + "::" + m_tmp);
+            // ---------- DEBUG ----------
+
+            // --- ??? should we do this here?
+            //        try
+            //        {
+            //            // update "new" status on friendlist fragment
+            //            FriendList f2 = orma.selectFromFriendList().tox_public_key_stringEq(m.tox_friendpubkey).toList().get(0);
+            //            friend_list_fragment.modify_friend(f2, friendnum);
+            //        }
+            //        catch (Exception e)
+            //        {
+            //            e.printStackTrace();
+            //            Log.i(TAG, "update *new* status:EE1:" + e.getMessage());
+            //        }
+            // --- ??? should we do this here?
+        }
+    }
+
+
+    /**
+     * Get a file path from a Uri. This will get the the path for Storage Access
+     * Framework Documents, as well as the _data field for the MediaStore and
+     * other file-based ContentProviders.
+     *
+     * @param context The context.
+     * @param uri     The Uri to query.
+     * @author paulburke
+     */
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    public static String getPath(final Context context, final Uri uri)
+    {
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri))
+        {
+            Log.i(TAG, "getPath:001:uri=" + uri);
+
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri))
+            {
+                Log.i(TAG, "getPath:002");
+                final String docId = DocumentsContract.getDocumentId(uri);
+                Log.i(TAG, "getPath:003:docId=" + docId);
+                final String[] split = docId.split(":");
+                Log.i(TAG, "getPath:004:split=" + split[0] + " " + split[1]);
+                final String type = split[0];
+                Log.i(TAG, "getPath:005:type=" + type);
+
+                if ("primary".equalsIgnoreCase(type))
+                {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
+                else
+                {
+                    // TODO handle non-primary volumes
+                    try
+                    {
+                        String strSDCardPath = System.getenv("SECONDARY_STORAGE");
+                        Log.i(TAG, "getPath:SECONDARY_STORAGE=" + strSDCardPath);
+
+                        if ((strSDCardPath == null) || (strSDCardPath.length() == 0))
+                        {
+                            Log.i(TAG, "getPath:006");
+                            strSDCardPath = System.getenv("EXTERNAL_SDCARD_STORAGE");
+                            Log.i(TAG, "getPath:EXTERNAL_SDCARD_STORAGE=" + strSDCardPath);
+                        }
+
+                        if (strSDCardPath == null)
+                        {
+                            // ok, last try
+                            strSDCardPath = "/storage/" + type;
+                            return strSDCardPath + "/" + split[1];
+                        }
+
+                        //If may get a full path that is not the right one, even if we don't have the SD Card there.
+                        //We just need the "/mnt/extSdCard/" i.e and check if it's writable
+                        Log.i(TAG, "getPath:007");
+                        if (strSDCardPath != null)
+                        {
+                            Log.i(TAG, "getPath:008");
+                            if (strSDCardPath.contains(":"))
+                            {
+                                Log.i(TAG, "getPath:009");
+                                strSDCardPath = strSDCardPath.substring(0, strSDCardPath.indexOf(":"));
+                            }
+                            // File externalFilePath = new File(strSDCardPath);
+                            Log.i(TAG, "getPath:strSDCardPath=" + strSDCardPath);
+
+                            return strSDCardPath + "/" + split[1];
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        Log.i(TAG, "getPath:EE3:" + e.getMessage());
+                    }
+                }
+            }
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri))
+            {
+
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"),
+                                                                  Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri))
+            {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type))
+                {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                }
+                else if ("video".equals(type))
+                {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                }
+                else if ("audio".equals(type))
+                {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[]{split[1]};
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme()))
+        {
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme()))
+        {
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the value of the data column for this Uri. This is useful for
+     * MediaStore Uris, and other file-based ContentProviders.
+     *
+     * @param context       The context.
+     * @param uri           The Uri to query.
+     * @param selection     (Optional) Filter used in the query.
+     * @param selectionArgs (Optional) Selection arguments used in the query.
+     * @return The value of the _data column, which is typically a file path.
+     */
+
+    public static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs)
+    {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {column};
+
+        try
+        {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
+            if (cursor != null && cursor.moveToFirst())
+            {
+                final int column_index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(column_index);
+            }
+        }
+        finally
+        {
+            if (cursor != null)
+            {
+                cursor.close();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is ExternalStorageProvider.
+     */
+    public static boolean isExternalStorageDocument(Uri uri)
+    {
+        return "com.android.externalstorage.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is DownloadsProvider.
+     */
+    public static boolean isDownloadsDocument(Uri uri)
+    {
+        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is MediaProvider.
+     */
+    public static boolean isMediaDocument(Uri uri)
+    {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    static boolean onClick_message_helper(final View v, boolean is_selected, final Message message_)
+    {
+        try
+        {
+            if (is_selected)
+            {
+                v.setBackgroundColor(Color.TRANSPARENT);
+                is_selected = false;
+                selected_messages.remove(message_.id);
+                selected_messages_text_only.remove(message_.id);
+                selected_messages_incoming_file.remove(message_.id);
+                if (selected_messages_incoming_file.size() == selected_messages.size())
+                {
+                    amode_save_menu_item.setVisible(true);
+                }
+                else
+                {
+                    amode_save_menu_item.setVisible(false);
+                }
+
+                if (selected_messages.size() == 1)
+                {
+                    amode_info_menu_item.setVisible(true);
+                }
+                else
+                {
+                    amode_info_menu_item.setVisible(false);
+                }
+
+                if (selected_messages.isEmpty())
+                {
+                    // last item was de-selected
+                    amode.finish();
+                }
+                else
+                {
+                    if (amode != null)
+                    {
+                        amode.setTitle("" + selected_messages.size() + " selected");
+                    }
+                }
+            }
+            else
+            {
+                if (!selected_messages.isEmpty())
+                {
+                    v.setBackgroundColor(Color.GRAY);
+                    is_selected = true;
+                    selected_messages.add(message_.id);
+                    if (message_.TRIFA_MESSAGE_TYPE == TRIFA_MSG_TYPE_TEXT.value)
+                    {
+                        selected_messages_text_only.add(message_.id);
+                    }
+                    else if (message_.TRIFA_MESSAGE_TYPE == TRIFA_MSG_FILE.value)
+                    {
+                        if (message_.direction == 0)
+                        {
+                            selected_messages_incoming_file.add(message_.id);
+                        }
+                    }
+
+                    if (selected_messages_incoming_file.size() == selected_messages.size())
+                    {
+                        amode_save_menu_item.setVisible(true);
+                    }
+                    else
+                    {
+                        amode_save_menu_item.setVisible(false);
+                    }
+
+                    if (selected_messages.size() == 1)
+                    {
+                        amode_info_menu_item.setVisible(true);
+                    }
+                    else
+                    {
+                        amode_info_menu_item.setVisible(false);
+                    }
+
+                    if (amode != null)
+                    {
+                        amode.setTitle("" + selected_messages.size() + " selected");
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return is_selected;
+    }
+
+    static class long_click_message_return
+    {
+        boolean is_selected;
+        boolean ret_value;
+    }
+
+    static long_click_message_return onLongClick_message_helper(Context context, final View v, boolean is_selected, final Message message_)
+    {
+        long_click_message_return ret = new long_click_message_return();
+
+        try
+        {
+            if (is_selected)
+            {
+                ret.is_selected = true;
+            }
+            else
+            {
+                if (selected_messages.isEmpty())
+                {
+                    try
+                    {
+                        amode = message_list_activity.startSupportActionMode(new ToolbarActionMode(context));
+                        amode_save_menu_item = amode.getMenu().findItem(R.id.action_save);
+                        amode_info_menu_item = amode.getMenu().findItem(R.id.action_info);
+                        v.setBackgroundColor(Color.GRAY);
+                        ret.is_selected = true;
+                        selected_messages.add(message_.id);
+                        if (message_.TRIFA_MESSAGE_TYPE == TRIFA_MSG_TYPE_TEXT.value)
+                        {
+                            selected_messages_text_only.add(message_.id);
+                        }
+                        else if (message_.TRIFA_MESSAGE_TYPE == TRIFA_MSG_FILE.value)
+                        {
+                            if (message_.direction == 0)
+                            {
+                                selected_messages_incoming_file.add(message_.id);
+                            }
+                        }
+
+                        if (selected_messages_incoming_file.size() == selected_messages.size())
+                        {
+                            amode_save_menu_item.setVisible(true);
+                        }
+                        else
+                        {
+                            amode_save_menu_item.setVisible(false);
+                        }
+
+                        if (selected_messages.size() == 1)
+                        {
+                            amode_info_menu_item.setVisible(true);
+                        }
+                        else
+                        {
+                            amode_info_menu_item.setVisible(false);
+                        }
+
+                        if (amode != null)
+                        {
+                            amode.setTitle("" + selected_messages.size() + " selected");
+                        }
+                        ret.ret_value = true;
+                        return ret;
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        ret.ret_value = true;
+        return ret;
+    }
+
+    static void show_messagelist_for_friend(Context c, String friend_pubkey, String fill_out_text)
+    {
+        Intent intent = new Intent(c, MessageListActivity.class);
+        if (fill_out_text != null)
+        {
+            intent.putExtra("fillouttext", fill_out_text);
+        }
+        intent.putExtra("friendnum", tox_friend_by_public_key__wrapper(friend_pubkey));
+        c.startActivity(intent);
+    }
+
+    public void scroll_to_bottom(View v)
+    {
+        try
+        {
+            MainActivity.message_list_fragment.listingsView.scrollToPosition(
+                    MainActivity.message_list_fragment.adapter.getItemCount() - 1);
+        }
+        catch (Exception ignored)
+        {
+        }
+
+        MessageListFragment.is_at_bottom = true;
+
+        try
+        {
+            do_fade_anim_on_fab(MainActivity.message_list_fragment.unread_messages_notice_button, false,
+                                this.getClass().getName());
+            MainActivity.message_list_fragment.unread_messages_notice_button.setSupportBackgroundTintList(
+                    (ContextCompat.getColorStateList(context_s, R.color.message_list_scroll_to_bottom_fab_bg_normal)));
+        }
+        catch (Exception ignored)
+        {
+        }
+    }
+}

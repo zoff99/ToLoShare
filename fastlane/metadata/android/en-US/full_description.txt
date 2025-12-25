@@ -1,0 +1,6 @@
+<b>ToFShare - Share Files via Tox</b><br>
+
+A way to easily share files via Tox.
+Currently Images are displayed in a gallery style listing.
+
+

@@ -1,0 +1,144 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="general">
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/pref_dark_mode_titles"
+            android:entryValues="@array/pref_dark_mode_values"
+            android:key="dark_mode_pref"
+            android:summary="change default theme to dark mode"
+            android:title="Dark Mode" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="start_on_boot"
+            android:summary="@string/pref_description_start_on_boot"
+            android:title="@string/pref_title_start_on_boot" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="use_push_service"
+            android:summary="@string/pref_description_use_push_service"
+            android:title="@string/pref_title_use_push_service" />
+
+        <Preference
+            android:key="download_push_msg_app"
+            android:summary="__"
+            android:title="@string/pref_title_download_push_msg_app" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="allow_push_server_ntfy"
+            android:summary="@string/pref_description_allow_push_server_ntfy"
+            android:title="@string/pref_title_allow_push_server_ntfy" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="compact_friendlist"
+            android:summary="@string/pref_description_compact_friendlist"
+            android:title="@string/pref_title_compact_friendlist" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="use_incognito_keyboard"
+            android:summary="@string/pref_description_use_incognito_keyboard2"
+            android:title="@string/pref_title_use_incognito_keyboard2" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="window_security"
+            android:summary="@string/pref_description_window_security"
+            android:title="@string/pref_title_window_security" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="auto_accept_image"
+            android:summary="@string/pref_description_auto_accept_image"
+            android:title="@string/pref_title_auto_accept_image" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="auto_accept_video"
+            android:summary="@string/pref_description_auto_accept_video"
+            android:title="@string/pref_title_auto_accept_video" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="auto_accept_all_upto"
+            android:summary="@string/pref_description_auto_accept_all_upto"
+            android:title="@string/pref_title_auto_accept_all_upto" />
+
+        <!-- set default value to PREF_GLOBAL_FONT_SIZE_DEFAULT -->
+        <ListPreference
+            android:defaultValue="2"
+            android:entries="@array/pref_global_font_size_titles"
+            android:entryValues="@array/pref_global_font_size_values"
+            android:key="global_font_size"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/pref_description_global_font_size"
+            android:title="@string/pref_title_global_font_size" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="allow_file_sharing_to_trifa_via_intent"
+            android:summary="@string/pref_description_allow_file_sharing_to_trifa_via_intent"
+            android:title="@string/pref_title_allow_file_sharing_to_trifa_via_intent" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="allow_open_encrypted_file_via_intent"
+            android:summary="@string/pref_description_allow_open_encrypted_file_via_intent"
+            android:title="@string/pref_title_allow_open_encrypted_file_via_intent" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="orbot_enabled"
+            android:summary="@string/pref_description_orbot_enabled"
+            android:title="@string/pref_title_orbot_enabled" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="local_discovery_enabled"
+            android:summary="@string/pref_description_local_discovery_enabled"
+            android:title="@string/pref_title_local_discovery_enabled" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="udp_enabled"
+            android:summary="@string/pref_description_udp_enabled"
+            android:title="@string/pref_title_udp_enabled" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="force_udp_only"
+            android:summary="@string/pref_description_force_udp_only"
+            android:title="@string/pref_title_force_udp_only" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="network">
+        <Preference
+            android:key="custom_bootstrap_nodes"
+            android:summary="__"
+            android:title="@string/pref_title_custom_bootstrap_nodes" />
+    </PreferenceCategory>
+
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="X_battery_saving_mode"
+        android:summary="@string/pref_description_X_battery_saving_mode_new"
+        android:title="@string/pref_title_X_battery_saving_mode_new" />
+
+    <PreferenceCategory android:title="! unsafe !">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="U_keep_nospam"
+            android:summary="@string/pref_description_U_keep_nospam"
+            android:title="@string/pref_title_U_keep_nospam" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
