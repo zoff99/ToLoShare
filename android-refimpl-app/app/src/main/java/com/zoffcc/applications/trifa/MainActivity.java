@@ -3087,7 +3087,7 @@ public class MainActivity extends AppCompatActivity
     // ------- for runtime permissions -------
     // ------- for runtime permissions -------
     // ------- for runtime permissions -------
-    @NeedsPermission({Manifest.permission.POST_NOTIFICATIONS, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE })
+    @NeedsPermission({Manifest.permission.POST_NOTIFICATIONS, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION })
     void dummyForPermissions001()
     {
     }
