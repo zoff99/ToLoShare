@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.osmdroid.util.GeoPoint;
+
 import java.util.Date;
 
 import androidx.annotation.Nullable;
@@ -21,8 +23,15 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.remote_location_overlay;
+import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
 public class CaptureService extends Service
 {
@@ -37,6 +46,8 @@ public class CaptureService extends Service
     LocationManager locationManager = null;
     LocationListenerCompat mLocationListener = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
+    final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
+    final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
 
     @Override
     public void onCreate()
@@ -114,6 +125,18 @@ public class CaptureService extends Service
             public void onLocationChanged(Location location)
             {
                 Log.i(TAG, "onLocationChanged: " + location);
+                try
+                {
+                    final byte[] data_bin = getGeoMsg(location);
+                    int data_bin_len = data_bin.length;
+                    data_bin[0] = (byte) CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND.value; // GEO_COORDS_CUSTOM_LOSSLESS_ID;
+                    final int res = tox_friend_send_lossless_packet(0, data_bin, data_bin_len);
+                    Log.i(TAG, "res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
 
                 Runnable myRunnable = new Runnable()
                 {
@@ -167,6 +190,23 @@ public class CaptureService extends Service
 
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
+    }
+
+    static byte[] getGeoMsg(Location location)
+    {
+        String temp_string = "X" + // the pkt ID will be added here later. needs to be exactly 1 char!
+                             GEO_COORD_PROTO_MAGIC +
+                             GEO_COORD_PROTO_VERSION  + ":BEGINGEO:" +
+                             location.getLatitude() + ":" +
+                             location.getLongitude() + ":" +
+                             location.getAltitude() + ":" +
+                             location.getAccuracy() + ":" +
+                             location.getBearing() + ":ENDGEO";
+        // Log.i(TAG, "raw:" + temp_string);
+        // Log.i(TAG, "rawlen:" + temp_string.length());
+
+        byte[] data_bin = temp_string.getBytes(); // TODO: use specific characterset
+        return data_bin;
     }
 
     public void stopLocationTracking()

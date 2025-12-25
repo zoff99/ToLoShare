@@ -44,6 +44,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -76,6 +78,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.iconics.IconicsDrawable;
@@ -99,6 +102,7 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import org.unifiedpush.android.connector.UnifiedPush;
@@ -107,6 +111,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,7 +146,9 @@ import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 import static androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE;
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
+import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
+import static com.zoffcc.applications.trifa.HelperFriend.get_friend_name_from_num;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.send_friend_msg_receipt_v2_wrapper;
@@ -169,6 +176,7 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.CONNECTION_STATUS_MANUA
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.DELETE_SQL_AND_VFS_ON_ERROR;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GLOBAL_AUDIO_BITRATE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GLOBAL_INIT_PLAY_DELAY;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GLOBAL_VIDEO_BITRATE;
@@ -246,9 +254,12 @@ public class MainActivity extends AppCompatActivity
     final static boolean VFS_CUSTOM_WRITE_CACHE = true; // set "true" for release builds
     final static boolean DEBUG_USE_LOGFRIEND = false; // set "false" for release builds
     public final static boolean DEBUG_BSN_ON_PROFILE = false; // set "false" for release builds
+    static boolean WANT_DEBUG_THREAD = false; // set "false" for release builds
     // --------- global config ---------
     // --------- global config ---------
     // --------- global config ---------
+
+    static boolean DEBUG_THREAD_STARTED = false;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -275,7 +286,10 @@ public class MainActivity extends AppCompatActivity
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
-    private MapView map = null;
+
+    private static MapView map = null;
+    static DirectedLocationOverlay remote_location_overlay = null;
+
     static int AudioMode_old;
     static int RingerMode_old;
     static boolean isSpeakerPhoneOn_old;
@@ -561,6 +575,10 @@ public class MainActivity extends AppCompatActivity
         map.setMultiTouchControls(true);
         map.getOverlays().add(mRotationGestureOverlay);
         */
+
+        remote_location_overlay = new DirectedLocationOverlay(this);
+        remote_location_overlay.setShowAccuracy(true);
+        map.getOverlays().add(remote_location_overlay);
 
         MyLocationNewOverlay mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
         mLocationOverlay.enableMyLocation();
@@ -3260,6 +3278,8 @@ public class MainActivity extends AppCompatActivity
                                  PREF__ipv6_enabled_to_int, PREF__force_udp_only_to_int, PREF__ngc_video_bitrate,
                                  PREF__ngc_video_max_quantizer,
                                  PREF__ngc_audio_bitrate, PREF__ngc_audio_samplerate, PREF__ngc_audio_channels);
+
+                            //zzzzzzz// tox_callback_friend_lossless_packet_per_pktid(GEO_COORDS_CUSTOM_LOSSLESS_ID);
                         }
 
                         tox_service_fg.tox_thread_start_fg();
@@ -3381,6 +3401,8 @@ public class MainActivity extends AppCompatActivity
                      PREF__force_udp_only_to_int, PREF__ngc_video_bitrate, PREF__ngc_video_max_quantizer,
                      PREF__ngc_audio_bitrate, PREF__ngc_audio_samplerate, PREF__ngc_audio_channels);
 
+                //zzzzzzz// tox_callback_friend_lossless_packet_per_pktid(GEO_COORDS_CUSTOM_LOSSLESS_ID);
+
                 tox_service_fg.tox_thread_start_fg();
             }
         }
@@ -3427,6 +3449,68 @@ public class MainActivity extends AppCompatActivity
         {
             map.onResume();
         }
+
+
+        if (WANT_DEBUG_THREAD)
+        {
+            if (!DEBUG_THREAD_STARTED)
+            {
+                DEBUG_THREAD_STARTED = true;
+                final Thread t_debug_location = new Thread()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            while (true)
+                            {
+                                float lat = 48.22194736160127f - (float) (Math.random() * 0.02f);
+                                float lon = 16.39440515983681f - (float) (Math.random() * 0.02f);
+                                float acc = 20.5f - (float) (Math.random() * 19.0f);
+                                float bearing = (float) (Math.random() * 360.0f);
+                        /*
+                        remote_location_overlay.setLocation(new GeoPoint(lat, lon));
+                        remote_location_overlay.setAccuracy(Math.round(acc));
+                        remote_location_overlay.setBearing(bearing);
+                        map.invalidate();
+                        */
+
+                                try
+                                {
+                                    Location location = new Location(LocationManager.GPS_PROVIDER);
+                                    location.setLatitude(lat);
+                                    location.setLongitude(lon);
+                                    location.setBearing(bearing);
+                                    location.setAccuracy(acc);
+                                    final byte[] data_bin = getGeoMsg(location);
+                                    int data_bin_len = data_bin.length;
+                                    data_bin[0] = (byte) CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND.value; // GEO_COORDS_CUSTOM_LOSSLESS_ID;
+                                    String friend_pubkey = orma.selectFromFriendList().orderByTox_public_key_stringAsc().get(
+                                            0).tox_public_key_string;
+                                    // Log.i(TAG, "toxpubkey=" + friend_pubkey + " " + bytes_to_hex(data_bin));
+                                    final int res = tox_friend_send_lossless_packet(
+                                            tox_friend_by_public_key__wrapper(friend_pubkey), data_bin, data_bin_len);
+                                    // Log.i(TAG, "res=" + res);
+                                }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+
+                                Thread.sleep(2500);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                t_debug_location.start();
+            }
+        }
+
 
         /*
          // **************************************
@@ -4169,6 +4253,8 @@ public class MainActivity extends AppCompatActivity
     public static native int tox_self_get_connection_status();
 
     public static native void init_tox_callbacks();
+
+    public static native int tox_callback_friend_lossless_packet_per_pktid(int pktid);
 
     public static native long tox_iteration_interval();
 
@@ -5010,14 +5096,54 @@ public class MainActivity extends AppCompatActivity
         // Log.i(TAG, "friend_lossless_packet_cb::IN:fn=" + get_friend_name_from_num(friend_number) + " len=" + length +
         //           " data=" + bytes_to_hex(data));
 
-        if (length > 0)
+        // Log.i(TAG, "GEO: " + data[0]);
+        // Log.i(TAG, "GEO: " + data);
+
+        try
         {
-            if (data[0] == (byte) CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND.value)
+            if (length > 0)
             {
+                if (data[0] ==
+                    (byte) CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND.value) //GEO_COORDS_CUSTOM_LOSSLESS_ID)
+                {
+                    final String geo_data_raw = new String(Arrays.copyOfRange(data, 1, data.length),
+                                                           StandardCharsets.UTF_8);
+                    // Log.i(TAG, "GEO: " + geo_data_raw);
+
+                    // example data: TzGeo00:BEGINGEO:48.13:16.45:0.0:22.03:124.1:ENDGEO
+
+                    String[] separated = geo_data_raw.split(":");
+                    if (separated[0].equals("TzGeo00"))
+                    {
+                        if (separated[1].equals("BEGINGEO"))
+                        {
+                            float lat = Float.parseFloat(separated[2]);
+                            float lon = Float.parseFloat(separated[3]);
+                            // float alt = Float.parseFloat(separated[4]); // not used
+                            float acc = Float.parseFloat(separated[5]);
+                            float bearing = Float.parseFloat(separated[6]);
+                            remote_location_overlay.setLocation(new GeoPoint(lat, lon));
+                            remote_location_overlay.setAccuracy(Math.round(acc));
+                            remote_location_overlay.setBearing(bearing);
+                            map.invalidate();
+                        }
+                    }
+
+                /*
+                float lat = 48.22194736160127f - (float)(Math.random() * 0.02f);
+                float lon = 16.39440515983681f - (float)(Math.random() * 0.02f);
+                float acc = 20.5f - (float)(Math.random() * 19.0f);
+                float bearing = (float)(Math.random() * 360.0f);
+                remote_location_overlay.setLocation(new GeoPoint(lat, lon));
+                remote_location_overlay.setAccuracy(Math.round(acc));
+                remote_location_overlay.setBearing(bearing);
+                map.invalidate();
+                */
+                }
             }
-            else if (data[0] == (byte) CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND.value)
-            {
-            }
+        }
+        catch(Exception e)
+        {
         }
     }
 
@@ -5042,6 +5168,8 @@ public class MainActivity extends AppCompatActivity
         {
             Log.i(TAG, "global_last_activity_for_battery_savings_ts:007:*PING*");
         }
+
+        // Log.i(TAG, "android_tox_callback_friend_message_cb_method: " + friend_message);
 
         String msgV3hash_hex_string = null;
         if (msgV3hash_bin != null)

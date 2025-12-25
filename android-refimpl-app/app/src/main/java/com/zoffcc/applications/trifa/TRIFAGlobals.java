@@ -341,6 +341,8 @@ public class TRIFAGlobals
         }
     }
 
+    public static int GEO_COORDS_CUSTOM_LOSSLESS_ID = 183;
+
     public static enum NOTIFICATION_EDIT_ACTION
     {
         NOTIFICATION_EDIT_ACTION_CLEAR(0), NOTIFICATION_EDIT_ACTION_ADD(1), NOTIFICATION_EDIT_ACTION_REMOVE(
