@@ -289,6 +289,7 @@ public class MainActivity extends AppCompatActivity
 
     private static MapView map = null;
     static DirectedLocationOverlay remote_location_overlay = null;
+    static MyLocationNewOverlay mLocationOverlay = null;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -580,7 +581,7 @@ public class MainActivity extends AppCompatActivity
         remote_location_overlay.setShowAccuracy(true);
         map.getOverlays().add(remote_location_overlay);
 
-        MyLocationNewOverlay mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
+        mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
         mLocationOverlay.enableMyLocation();
         map.getOverlays().add(mLocationOverlay);
 
@@ -1739,11 +1740,13 @@ public class MainActivity extends AppCompatActivity
 
         if (PREF__normal_main_view)
         {
+            mLocationOverlay.disableMyLocation();
             map.onPause();
         }
         else
         {
             map.onResume();
+            mLocationOverlay.enableMyLocation();
         }
 
         switch_normal_main_view.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
@@ -1760,11 +1763,13 @@ public class MainActivity extends AppCompatActivity
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
                     map.onResume();
+                    mLocationOverlay.enableMyLocation();
                     // TODO: this hides the main drawer. how to fix?
                     main_gallery_container.bringToFront();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
+                    mLocationOverlay.disableMyLocation();
                     map.onPause();
                 }
             }
@@ -3433,6 +3438,7 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
 
         global_showing_mainview = false;
+        mLocationOverlay.disableMyLocation();
         map.onPause();
 
         MainActivity.friend_list_fragment = null;
@@ -3448,6 +3454,7 @@ public class MainActivity extends AppCompatActivity
         if (!PREF__normal_main_view)
         {
             map.onResume();
+            mLocationOverlay.enableMyLocation();
         }
 
 
