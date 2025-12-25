@@ -225,6 +225,12 @@
                 android:value="serverless peer-to-peer messaging" />
         </service>
 
+        <service android:name=".CaptureService"
+            android:foregroundServiceType="location"
+            android:enabled="true"
+            android:exported="false">
+        </service>
+
         <service
             android:name=".WatchdogService"
             android:foregroundServiceType="specialUse"

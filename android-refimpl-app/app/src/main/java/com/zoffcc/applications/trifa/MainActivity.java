@@ -120,6 +120,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import info.guardianproject.iocipher.FileInputStream;
@@ -130,6 +131,7 @@ import info.guardianproject.netcipher.proxy.StatusCallback;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 
+import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 import static androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE;
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
@@ -1627,6 +1629,28 @@ public class MainActivity extends AppCompatActivity
         {
             Log.i(TAG, "M:STARTUP:start ToxThread");
             tox_thread_start();
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+            {
+                Intent capture_i = new Intent(this, CaptureService.class);
+                if (!TOX_SERVICE_STARTED)
+                {
+                    Log.i(TAG, "M:STARTUP:start CaptureService");
+                    startService(capture_i);
+                }
+            }
+        }
+        else
+        {
+            Intent capture_i = new Intent(this, CaptureService.class);
+            if (!TOX_SERVICE_STARTED)
+            {
+                Log.i(TAG, "M:STARTUP:start CaptureService");
+                startService(capture_i);
+            }
         }
 
         // --- forground service ---
