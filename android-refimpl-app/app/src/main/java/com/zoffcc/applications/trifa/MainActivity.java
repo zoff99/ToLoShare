@@ -95,6 +95,8 @@ import com.zoffcc.applications.sorm.FriendList;
 import com.zoffcc.applications.sorm.Message;
 import com.zoffcc.applications.sorm.OrmaDatabase;
 
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.views.MapView;
 import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.io.File;
@@ -266,11 +268,10 @@ public class MainActivity extends AppCompatActivity
     static ViewGroup waiting_container = null;
     static ViewGroup main_gallery_container = null;
     static TextView debug_text = null;
-    static MainGalleryAdapter main_gallery_adapter = null;
-    static RecyclerView main_gallery_recycler = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
+    private MapView map = null;
     static int AudioMode_old;
     static int RingerMode_old;
     static boolean isSpeakerPhoneOn_old;
@@ -526,14 +527,24 @@ public class MainActivity extends AppCompatActivity
         {
         }
 
+        //load/initialize the osmdroid configuration, this can be done
+        Context ctx = getApplicationContext();
+        org.osmdroid.config.Configuration.getInstance().
+                load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
+        //setting this before the layout is inflated is a good idea
+        //it 'should' ensure that the map has a writable location for the map cache, even without permissions
+        //if no tiles are displayed, you can try overriding the cache path using Configuration.getInstance().setCachePath
+        //see also StorageUtils
+        //note, the load method also sets the HTTP User Agent to your application's package name, abusing osm's
+        //tile servers will get you banned based on this string
+
         Log.i(TAG, "M:STARTUP:setContentView start");
         setContentView(R.layout.activity_main);
         Log.i(TAG, "M:STARTUP:setContentView end");
 
-        main_gallery_recycler = findViewById(R.id.main_gallery_recycler);
-        main_gallery_images = new ArrayList<>();
-        main_gallery_adapter = new MainGalleryAdapter(this, main_gallery_images);
-        main_gallery_manager = new GridLayoutManager(this, 3);
+        map = (MapView) findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
         waiting_container = this.findViewById(R.id.waiting_container);
         main_gallery_container = this.findViewById(R.id.main_gallery_container);
@@ -1694,29 +1705,8 @@ public class MainActivity extends AppCompatActivity
                 if (!PREF__normal_main_view) {
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
-                    main_gallery_recycler.setAdapter(main_gallery_adapter);
-                    main_gallery_recycler.setOnScrollListener(new RecyclerView.OnScrollListener() {
-                        @Override
-                        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                            super.onScrollStateChanged(recyclerView, newState);
-                            if (newState == SCROLL_STATE_IDLE)
-                            {
-                                GridLayoutManager layoutManager = ((GridLayoutManager)main_gallery_recycler.getLayoutManager());
-                                main_gallery_lastScrollPosition = layoutManager.findFirstVisibleItemPosition();
-                            }
-                        }
-
-                        @Override
-                        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy)
-                        {
-                            GridLayoutManager layoutManager = ((GridLayoutManager)main_gallery_recycler.getLayoutManager());
-                            main_gallery_lastScrollPosition = layoutManager.findFirstVisibleItemPosition();
-                        }
-                    });
-                    main_gallery_recycler.setLayoutManager(main_gallery_manager);
                     // TODO: this hides the main drawer. how to fix?
                     main_gallery_container.bringToFront();
-                    load_main_gallery_images();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -1727,29 +1717,8 @@ public class MainActivity extends AppCompatActivity
         if (!PREF__normal_main_view) {
             waiting_container.setVisibility(View.GONE);
             main_gallery_container.setVisibility(View.VISIBLE);
-            main_gallery_recycler.setAdapter(main_gallery_adapter);
-            main_gallery_recycler.setOnScrollListener(new RecyclerView.OnScrollListener() {
-                @Override
-                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                    super.onScrollStateChanged(recyclerView, newState);
-                    if (newState == SCROLL_STATE_IDLE)
-                    {
-                        GridLayoutManager layoutManager = ((GridLayoutManager)main_gallery_recycler.getLayoutManager());
-                        main_gallery_lastScrollPosition = layoutManager.findFirstVisibleItemPosition();
-                    }
-                }
-
-                @Override
-                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy)
-                {
-                    GridLayoutManager layoutManager = ((GridLayoutManager)main_gallery_recycler.getLayoutManager());
-                    main_gallery_lastScrollPosition = layoutManager.findFirstVisibleItemPosition();
-                }
-            });
-            main_gallery_recycler.setLayoutManager(main_gallery_manager);
             // TODO: this hides the main drawer. how to fix?
             main_gallery_container.bringToFront();
-            load_main_gallery_images();
         } else {
             waiting_container.setVisibility(View.VISIBLE);
             main_gallery_container.setVisibility(View.GONE);
@@ -3403,6 +3372,9 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG, "onPause");
         super.onPause();
         global_showing_mainview = false;
+
+        map.onPause();
+
         MainActivity.friend_list_fragment = null;
     }
 
@@ -3412,6 +3384,8 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG, "onResume");
         super.onResume();
         global_showing_mainview = true;
+
+        map.onResume();
 
         /*
          // **************************************
@@ -5879,84 +5853,6 @@ public class MainActivity extends AppCompatActivity
         img.startAnimation(fadeOut);
     }
 
-
-    @SuppressLint("NotifyDataSetChanged")
-    static void load_main_gallery_images()
-    {
-        try
-        {
-            final String default_friend_pubkey = get_set_is_default_ft_contact(null, false);
-            if (default_friend_pubkey != null)
-            {
-                List<com.zoffcc.applications.sorm.Message> incoming_files = orma.selectFromMessage().
-                        tox_friendpubkeyEq(default_friend_pubkey).
-                        directionEq(TRIFA_FT_DIRECTION_INCOMING.value).
-                        TRIFA_MESSAGE_TYPEEq(TRIFA_MSG_FILE.value).
-                        stateEq(TOX_FILE_CONTROL_CANCEL.value).
-                        orderBySent_timestampAsc().
-                        toList();
-
-                //noinspection SizeReplaceableByIsEmpty
-                if ((incoming_files != null) && (incoming_files.size() > 0))
-                {
-                    main_gallery_images.clear();
-                    ListIterator<Message> ifile = incoming_files.listIterator(incoming_files.size());
-                    while (ifile.hasPrevious())
-                    {
-                        Message m_ifile = (Message) ifile.previous();
-                        if ((m_ifile.filename_fullpath != null) && (m_ifile.filename_fullpath.length() > 2))
-                        {
-                            // Log.i(TAG, "load_main_gallery_images:" + m_ifile.filename_fullpath);
-                            main_gallery_images.add(m_ifile.filename_fullpath);
-                        }
-                    }
-                }
-
-            }
-        }
-        catch(Exception e)
-        {
-        }
-
-
-        try
-        {
-            main_gallery_recycler.getAdapter().notifyDataSetChanged();
-        }
-        catch(Exception e)
-        {
-        }
-    }
-
-    static void append_new_item_main_gallery_images(final String filename_fullpath)
-    {
-        try
-        {
-            final String default_friend_pubkey = get_set_is_default_ft_contact(null, false);
-            if (default_friend_pubkey != null)
-            {
-                if ((filename_fullpath != null) && (filename_fullpath.length() > 2))
-                {
-                    try
-                    {
-                        main_gallery_images.add(0, filename_fullpath);
-                        main_gallery_recycler.getAdapter().notifyItemInserted(0);
-                        if (main_gallery_lastScrollPosition == 0)
-                        {
-                            // HINT: only scroll to first item, if we where at the TOP before already
-                            main_gallery_recycler.scrollToPosition(0);
-                        }
-                    }
-                    catch(Exception e)
-                    {
-                    }
-                }
-            }
-        }
-        catch(Exception e)
-        {
-        }
-    }
 
     // --------- make app crash ---------
     // --------- make app crash ---------

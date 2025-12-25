@@ -191,7 +191,7 @@
                     android:paddingRight="5dp"
                     android:text="..."
                     android:textColor="@color/md_black_1000"
-                    android:textSize="26sp"
+                    android:textSize="24sp"
                     android:visibility="visible"
                     tools:ignore="HardcodedText" />
 
@@ -201,23 +201,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <!--<androidx.recyclerview.widget.RecyclerView-->
-                <com.l4digital.fastscroll.FastScrollRecyclerView
-                    android:id="@+id/main_gallery_recycler"
-                    android:layout_marginRight="25dp"
-                    android:paddingRight="10dp"
-                    android:divider="@null"
-                    android:dividerHeight="2dp"
-                    app:bubbleColor="@color/fast_scroller_color"
-                    app:bubbleSize="normal"
-                    app:bubbleTextColor="#ffffff"
-                    app:bubbleTextSize="20sp"
-                    app:handleColor="@color/fast_scroller_color"
-                    app:hideScrollbar="true"
-                    app:showTrack="false"
-                    app:trackColor="@color/fast_scroller_color"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                <org.osmdroid.views.MapView android:id="@+id/map"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" />
             </FrameLayout>
 
         </LinearLayout>
