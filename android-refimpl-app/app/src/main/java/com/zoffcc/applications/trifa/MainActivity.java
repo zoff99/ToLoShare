@@ -95,7 +95,9 @@ import com.zoffcc.applications.sorm.FriendList;
 import com.zoffcc.applications.sorm.Message;
 import com.zoffcc.applications.sorm.OrmaDatabase;
 
+import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.unifiedpush.android.connector.UnifiedPush;
 
@@ -546,6 +548,12 @@ public class MainActivity extends AppCompatActivity
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
+
+        // set a default starting point in the middle of europe
+        IMapController mapController = map.getController();
+        mapController.setZoom(12);
+        GeoPoint startPoint = new GeoPoint(48.18164, 16.3661);
+        mapController.setCenter(startPoint);
 
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
         waiting_container = this.findViewById(R.id.waiting_container);
