@@ -177,6 +177,24 @@
 
             </FrameLayout>
 
+            <LinearLayout
+                android:layout_weight="5"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/debug_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:text="..."
+                    android:textColor="@color/md_black_1000"
+                    android:textSize="28sp"
+                    android:visibility="visible"
+                    tools:ignore="HardcodedText" />
+
             <FrameLayout
                 android:id="@+id/main_gallery_container"
                 android:layout_weight="5"
@@ -201,6 +219,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </FrameLayout>
+
+        </LinearLayout>
 
         </LinearLayout>
 

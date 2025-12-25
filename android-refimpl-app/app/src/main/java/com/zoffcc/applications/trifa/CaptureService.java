@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.util.Date;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,10 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
+
+import static com.zoffcc.applications.trifa.MainActivity.debug_text;
+import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.message_list_activity;
 
 public class CaptureService extends Service
 {
@@ -109,6 +114,29 @@ public class CaptureService extends Service
             public void onLocationChanged(Location location)
             {
                 Log.i(TAG, "onLocationChanged: " + location);
+
+                Runnable myRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            debug_text.setText(" " + location.getProvider() + " " + location.getLatitude() + " " +
+                                               location.getLongitude() + " " + location.getAccuracy() +
+                                               "\n" + MainActivity.df_date_time_long.format(new Date(System.currentTimeMillis())));
+                        }
+                        catch (Exception e)
+                        {
+                            Log.i(TAG, "friend_typing_cb:EE.b:" + e.getMessage());
+                        }
+                    }
+                };
+
+                if (main_handler_s != null)
+                {
+                    main_handler_s.post(myRunnable);
+                }
             }
 
             @Override
@@ -134,6 +162,7 @@ public class CaptureService extends Service
                 Log.i(TAG, "onProviderDisabled: " + provider);
             }
         };
+
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
     }

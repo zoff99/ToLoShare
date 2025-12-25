@@ -265,6 +265,7 @@ public class MainActivity extends AppCompatActivity
     static SwitchCompat switch_normal_main_view = null;
     static ViewGroup waiting_container = null;
     static ViewGroup main_gallery_container = null;
+    static TextView debug_text = null;
     static MainGalleryAdapter main_gallery_adapter = null;
     static RecyclerView main_gallery_recycler = null;
     static int main_gallery_lastScrollPosition = 0;
@@ -536,6 +537,7 @@ public class MainActivity extends AppCompatActivity
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
         waiting_container = this.findViewById(R.id.waiting_container);
         main_gallery_container = this.findViewById(R.id.main_gallery_container);
+        debug_text = this.findViewById(R.id.debug_text);
 
         mt = (TextView) this.findViewById(R.id.main_maintext);
         mt.setText("...");
