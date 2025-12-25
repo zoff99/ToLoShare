@@ -10,7 +10,7 @@
             android:title="Dark Mode" />
 
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="start_on_boot"
             android:summary="@string/pref_description_start_on_boot"
             android:title="@string/pref_title_start_on_boot" />
