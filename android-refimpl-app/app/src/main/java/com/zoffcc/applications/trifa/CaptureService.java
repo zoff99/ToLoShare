@@ -15,9 +15,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.util.Date;
-import java.util.List;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
@@ -61,6 +59,8 @@ public class CaptureService extends Service
         {
             CharSequence name = "gps_service";
             notification_channel_gpsservice = new NotificationChannel(channelId_gps, name, NotificationManager.IMPORTANCE_DEFAULT);
+            notification_channel_gpsservice.enableVibration(false);
+            notification_channel_gpsservice.setSound(null, null);
             nmn_gps.createNotificationChannel(notification_channel_gpsservice);
         }
 
@@ -70,6 +70,7 @@ public class CaptureService extends Service
                 setContentText("ToLoShare").
                 setSmallIcon(R.mipmap.ic_launcher).
                 setPriority(NotificationCompat.PRIORITY_DEFAULT).
+                setSound(null).
                 setCategory(NotificationCompat.CATEGORY_LOCATION_SHARING).
                 setAutoCancel(false);
 
