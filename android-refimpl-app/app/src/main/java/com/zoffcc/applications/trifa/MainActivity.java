@@ -262,6 +262,7 @@ public class MainActivity extends AppCompatActivity
     // --------- global config ---------
 
     static boolean DEBUG_THREAD_STARTED = false;
+    static boolean GEO_TIME_THREAD_STARTED = false;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -290,10 +291,16 @@ public class MainActivity extends AppCompatActivity
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
 
-    private static MapView map = null;
+    static MapView map = null;
     static DirectedLocationOverlay remote_location_overlay = null;
     static MyLocationNewOverlay mLocationOverlay = null;
     static long last_remote_location_ts_millis = 0;
+    static String own_location_txt = "";
+    static String own_location_time_txt = "";
+    static long own_location_last_ts_millis = 0;
+    static String remote_location_txt = "";
+    static String remote_location_time_txt = "";
+    static long remote_location_last_ts_millis = 0;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -3463,6 +3470,78 @@ public class MainActivity extends AppCompatActivity
         }
 
 
+        if (!GEO_TIME_THREAD_STARTED)
+        {
+            GEO_TIME_THREAD_STARTED = true;
+            final Thread t_geo_time_thread = new Thread()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        while (true)
+                        {
+                            try
+                            {
+                                final long current_ts_millis = System.currentTimeMillis();
+
+                                if (last_remote_location_ts_millis > 0)
+                                {
+                                    long remote_diff = new Date(current_ts_millis).getTime() -
+                                                       new Date(last_remote_location_ts_millis).getTime();
+                                    long remote_seconds = TimeUnit.MILLISECONDS.toSeconds(remote_diff);
+                                    long remote_minutes = TimeUnit.MILLISECONDS.toMinutes(remote_diff);
+
+                                    if (remote_minutes > 0)
+                                    {
+                                        remote_location_time_txt = remote_minutes + " minutes ago";
+                                        set_debug_text_2(remote_location_txt + remote_location_time_txt);
+                                    }
+                                    else
+                                    {
+                                        remote_location_time_txt = remote_seconds + " seconds ago";
+                                        set_debug_text(own_location_txt + remote_location_time_txt);
+                                    }
+                                }
+
+                                if (own_location_last_ts_millis > 0)
+                                {
+                                    long location_diff = new Date(current_ts_millis).getTime() -
+                                                         new Date(own_location_last_ts_millis).getTime();
+                                    long location_seconds = TimeUnit.MILLISECONDS.toSeconds(location_diff);
+                                    long location_minutes = TimeUnit.MILLISECONDS.toMinutes(location_diff);
+
+                                    if (location_minutes > 0)
+                                    {
+                                        own_location_time_txt = location_minutes + " minutes ago";
+                                        set_debug_text(own_location_txt + own_location_time_txt);
+                                    }
+                                    else
+                                    {
+                                        own_location_time_txt = location_seconds + " seconds ago";
+                                        set_debug_text(own_location_txt + own_location_time_txt);
+                                    }
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            Thread.sleep(30 * 1000);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            t_geo_time_thread.start();
+        }
+
+
         if (WANT_DEBUG_THREAD)
         {
             if (!DEBUG_THREAD_STARTED)
@@ -3522,6 +3601,7 @@ public class MainActivity extends AppCompatActivity
                 t_debug_location.start();
             }
         }
+
 
 
         /*
@@ -5154,30 +5234,34 @@ public class MainActivity extends AppCompatActivity
                                         long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
                                         long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
 
+                                        remote_location_last_ts_millis = current_ts_millis;
+
                                         if (minutes > 0)
                                         {
-                                            debug_text_2.setText("remote location: " + "\n" +
-                                                                 "lat: " + lat + "\n" +
-                                                                 "lon: " + lon + "\n" +
-                                                                 "accur: " + acc + "\n" +
-                                                                 minutes + " minutes ago");
+                                            remote_location_txt = "remote location: " + "\n" +
+                                                                  "lat: " + lat + "\n" +
+                                                                  "lon: " + lon + "\n" +
+                                                                  "accur: " + acc + "\n";
+                                            remote_location_time_txt = minutes + " minutes ago";
                                         }
                                         else if (seconds < 1)
                                         {
-                                            debug_text_2.setText("remote location: " + "\n" +
-                                                                 "lat: " + lat + "\n" +
-                                                                 "lon: " + lon + "\n" +
-                                                                 "accur: " + acc + "\n" +
-                                                                 "time: " + MainActivity.df_date_time_long.format(new Date(System.currentTimeMillis())));
+                                            remote_location_txt = "remote location: " + "\n" +
+                                                                  "lat: " + lat + "\n" +
+                                                                  "lon: " + lon + "\n" +
+                                                                  "accur: " + acc + "\n";
+                                            remote_location_time_txt = "time: " + MainActivity.df_date_time_long.format(new Date(remote_location_last_ts_millis));
                                         }
                                         else
                                         {
-                                            debug_text_2.setText("remote location: " + "\n" +
-                                                                 "lat: " + lat + "\n" +
-                                                                 "lon: " + lon + "\n" +
-                                                                 "accur: " + acc + "\n" +
-                                                                 seconds + " seconds ago");
+                                            remote_location_txt = "remote location: " + "\n" +
+                                                                  "lat: " + lat + "\n" +
+                                                                  "lon: " + lon + "\n" +
+                                                                  "accur: " + acc + "\n";
+                                            remote_location_time_txt = seconds + " seconds ago";
                                         }
+
+                                        set_debug_text_2(remote_location_txt + remote_location_time_txt);
                                     }
                                     catch (Exception e)
                                     {
@@ -6014,6 +6098,54 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPreExecute()
         {
+        }
+    }
+
+    synchronized static void set_debug_text(final String t)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    debug_text.setText(t);
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+    }
+
+    synchronized static void set_debug_text_2(final String t)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    debug_text_2.setText(t);
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
         }
     }
 

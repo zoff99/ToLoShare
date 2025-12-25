@@ -27,12 +27,19 @@ import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_ke
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.map;
+import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
+import static com.zoffcc.applications.trifa.MainActivity.own_location_time_txt;
+import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.remote_location_overlay;
+import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
+import static com.zoffcc.applications.trifa.MainActivity.set_debug_text_2;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
+/** @noinspection CommentedOutCode*/
 public class CaptureService extends Service
 {
     final static String TAG = "CaptureService";
@@ -119,7 +126,7 @@ public class CaptureService extends Service
     @SuppressLint("MissingPermission")
     public void startLocationTracking()
     {
-        LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
+        locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
         mLocationListener = new LocationListenerCompat() {
             @Override
             public void onLocationChanged(Location location)
@@ -138,30 +145,13 @@ public class CaptureService extends Service
                     e.printStackTrace();
                 }
 
-                Runnable myRunnable = new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            debug_text.setText("provider: " + location.getProvider() + "\n" +
-                                               "lat: " + location.getLatitude() + "\n" +
-                                               "lon: " + location.getLongitude() + "\n" +
-                                               "accur: " + location.getAccuracy() + "\n" +
-                                               "time: " + MainActivity.df_date_time_long.format(new Date(System.currentTimeMillis())));
-                        }
-                        catch (Exception e)
-                        {
-                            Log.i(TAG, "EE.b:" + e.getMessage());
-                        }
-                    }
-                };
-
-                if (main_handler_s != null)
-                {
-                    main_handler_s.post(myRunnable);
-                }
+                own_location_txt = "provider: " + location.getProvider() + "\n" +
+                                   "lat: " + location.getLatitude() + "\n" +
+                                   "lon: " + location.getLongitude() + "\n" +
+                                   "accur: " + location.getAccuracy() + "\n";
+                own_location_last_ts_millis = System.currentTimeMillis();
+                own_location_time_txt = "time: " + MainActivity.df_date_time_long.format(new Date(own_location_last_ts_millis));
+                set_debug_text(own_location_txt + own_location_time_txt);
             }
 
             @Override
@@ -174,10 +164,16 @@ public class CaptureService extends Service
             public void onProviderEnabled(String provider)
             {
                 Log.i(TAG, "onProviderEnabled: " + provider);
-                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                if (lastKnownLocation != null)
+                try
                 {
-                    Log.i(TAG, "onProviderEnabled: lastKnownLocation = " + lastKnownLocation);
+                    Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    if (lastKnownLocation != null)
+                    {
+                        Log.i(TAG, "onProviderEnabled: lastKnownLocation = " + lastKnownLocation);
+                    }
+                }
+                catch(Exception e)
+                {
                 }
             }
 
@@ -190,6 +186,9 @@ public class CaptureService extends Service
 
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
+
+        // locationManager.requestLocationUpdates(
+        //         LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
     }
 
     static byte[] getGeoMsg(Location location)
