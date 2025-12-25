@@ -153,7 +153,7 @@ public class CaptureService extends Service
                         }
                         catch (Exception e)
                         {
-                            Log.i(TAG, "friend_typing_cb:EE.b:" + e.getMessage());
+                            Log.i(TAG, "EE.b:" + e.getMessage());
                         }
                     }
                 };

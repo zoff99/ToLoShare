@@ -117,6 +117,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -124,6 +125,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -283,6 +285,7 @@ public class MainActivity extends AppCompatActivity
     static ViewGroup waiting_container = null;
     static ViewGroup main_gallery_container = null;
     static TextView debug_text = null;
+    static TextView debug_text_2 = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
@@ -290,6 +293,7 @@ public class MainActivity extends AppCompatActivity
     private static MapView map = null;
     static DirectedLocationOverlay remote_location_overlay = null;
     static MyLocationNewOverlay mLocationOverlay = null;
+    static long last_remote_location_ts_millis = 0;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -595,6 +599,7 @@ public class MainActivity extends AppCompatActivity
         waiting_container = this.findViewById(R.id.waiting_container);
         main_gallery_container = this.findViewById(R.id.main_gallery_container);
         debug_text = this.findViewById(R.id.debug_text);
+        debug_text_2 = this.findViewById(R.id.debug_text_2);
 
         mt = (TextView) this.findViewById(R.id.main_maintext);
         mt.setText("...");
@@ -5124,6 +5129,8 @@ public class MainActivity extends AppCompatActivity
                     {
                         if (separated[1].equals("BEGINGEO"))
                         {
+                            long current_ts_millis = System.currentTimeMillis();
+
                             float lat = Float.parseFloat(separated[2]);
                             float lon = Float.parseFloat(separated[3]);
                             // float alt = Float.parseFloat(separated[4]); // not used
@@ -5133,19 +5140,60 @@ public class MainActivity extends AppCompatActivity
                             remote_location_overlay.setAccuracy(Math.round(acc));
                             remote_location_overlay.setBearing(bearing);
                             map.invalidate();
+
+                            Runnable myRunnable = new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    try
+                                    {
+
+                                        long diff = new Date(current_ts_millis).getTime() - new Date(last_remote_location_ts_millis).getTime();
+
+                                        long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
+                                        long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
+
+                                        if (minutes > 0)
+                                        {
+                                            debug_text_2.setText("remote location: " + "\n" +
+                                                                 "lat: " + lat + "\n" +
+                                                                 "lon: " + lon + "\n" +
+                                                                 "accur: " + acc + "\n" +
+                                                                 minutes + " minutes ago");
+                                        }
+                                        else if (seconds < 1)
+                                        {
+                                            debug_text_2.setText("remote location: " + "\n" +
+                                                                 "lat: " + lat + "\n" +
+                                                                 "lon: " + lon + "\n" +
+                                                                 "accur: " + acc + "\n" +
+                                                                 "time: " + MainActivity.df_date_time_long.format(new Date(System.currentTimeMillis())));
+                                        }
+                                        else
+                                        {
+                                            debug_text_2.setText("remote location: " + "\n" +
+                                                                 "lat: " + lat + "\n" +
+                                                                 "lon: " + lon + "\n" +
+                                                                 "accur: " + acc + "\n" +
+                                                                 seconds + " seconds ago");
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.i(TAG, "EE.b:" + e.getMessage());
+                                    }
+                                }
+                            };
+
+                            if (main_handler_s != null)
+                            {
+                                main_handler_s.post(myRunnable);
+                            }
+
+                            last_remote_location_ts_millis = current_ts_millis;
                         }
                     }
-
-                /*
-                float lat = 48.22194736160127f - (float)(Math.random() * 0.02f);
-                float lon = 16.39440515983681f - (float)(Math.random() * 0.02f);
-                float acc = 20.5f - (float)(Math.random() * 19.0f);
-                float bearing = (float)(Math.random() * 360.0f);
-                remote_location_overlay.setLocation(new GeoPoint(lat, lon));
-                remote_location_overlay.setAccuracy(Math.round(acc));
-                remote_location_overlay.setBearing(bearing);
-                map.invalidate();
-                */
                 }
             }
         }

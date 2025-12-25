@@ -191,7 +191,19 @@
                     android:paddingRight="5dp"
                     android:text="..."
                     android:textColor="@color/md_black_1000"
-                    android:textSize="24sp"
+                    android:textSize="16sp"
+                    android:visibility="visible"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/debug_text_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:text="..."
+                    android:textColor="@color/md_black_1000"
+                    android:textSize="16sp"
                     android:visibility="visible"
                     tools:ignore="HardcodedText" />
 
