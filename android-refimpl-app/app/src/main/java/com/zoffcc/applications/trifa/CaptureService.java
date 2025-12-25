@@ -25,7 +25,6 @@ import androidx.core.location.LocationListenerCompat;
 
 import static com.zoffcc.applications.trifa.MainActivity.debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
-import static com.zoffcc.applications.trifa.MainActivity.message_list_activity;
 
 public class CaptureService extends Service
 {
@@ -122,9 +121,11 @@ public class CaptureService extends Service
                     {
                         try
                         {
-                            debug_text.setText(" " + location.getProvider() + " " + location.getLatitude() + " " +
-                                               location.getLongitude() + " " + location.getAccuracy() +
-                                               "\n" + MainActivity.df_date_time_long.format(new Date(System.currentTimeMillis())));
+                            debug_text.setText("provider: " + location.getProvider() + "\n" +
+                                               "lat: " + location.getLatitude() + "\n" +
+                                               "lon: " + location.getLongitude() + "\n" +
+                                               "accur: " + location.getAccuracy() + "\n" +
+                                               "time: " + MainActivity.df_date_time_long.format(new Date(System.currentTimeMillis())));
                         }
                         catch (Exception e)
                         {
