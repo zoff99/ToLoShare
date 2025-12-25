@@ -99,6 +99,11 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.compass.CompassOverlay;
+import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.io.File;
@@ -487,6 +492,7 @@ public class MainActivity extends AppCompatActivity
 
     Spinner spinner_own_status = null;
 
+    /** @noinspection CommentedOutCode*/
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -548,6 +554,17 @@ public class MainActivity extends AppCompatActivity
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
+
+        /*
+        RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
+        mRotationGestureOverlay.setEnabled(true);
+        map.setMultiTouchControls(true);
+        map.getOverlays().add(mRotationGestureOverlay);
+        */
+
+        MyLocationNewOverlay mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
+        mLocationOverlay.enableMyLocation();
+        map.getOverlays().add(mLocationOverlay);
 
         // set a default starting point in the middle of europe
         IMapController mapController = map.getController();
