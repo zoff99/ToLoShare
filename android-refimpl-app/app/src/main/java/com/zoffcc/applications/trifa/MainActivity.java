@@ -544,6 +544,8 @@ public class MainActivity extends AppCompatActivity
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setBuiltInZoomControls(true);
+        map.setMultiTouchControls(true);
 
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
         waiting_container = this.findViewById(R.id.waiting_container);
