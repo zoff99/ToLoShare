@@ -1702,6 +1702,15 @@ public class MainActivity extends AppCompatActivity
         PREF__normal_main_view = settings.getBoolean("normal_main_view", true);
         switch_normal_main_view.setChecked(PREF__normal_main_view);
 
+        if (PREF__normal_main_view)
+        {
+            map.onPause();
+        }
+        else
+        {
+            map.onResume();
+        }
+
         switch_normal_main_view.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
             @SuppressLint("ApplySharedPref")
@@ -1715,11 +1724,13 @@ public class MainActivity extends AppCompatActivity
                 if (!PREF__normal_main_view) {
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
+                    map.onResume();
                     // TODO: this hides the main drawer. how to fix?
                     main_gallery_container.bringToFront();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
+                    map.onPause();
                 }
             }
         });
@@ -3381,8 +3392,8 @@ public class MainActivity extends AppCompatActivity
     {
         Log.i(TAG, "onPause");
         super.onPause();
-        global_showing_mainview = false;
 
+        global_showing_mainview = false;
         map.onPause();
 
         MainActivity.friend_list_fragment = null;
@@ -3393,9 +3404,12 @@ public class MainActivity extends AppCompatActivity
     {
         Log.i(TAG, "onResume");
         super.onResume();
-        global_showing_mainview = true;
 
-        map.onResume();
+        global_showing_mainview = true;
+        if (!PREF__normal_main_view)
+        {
+            map.onResume();
+        }
 
         /*
          // **************************************
