@@ -1648,7 +1648,7 @@ public class MainActivity extends AppCompatActivity
         ////// WATCHDOG //////
         */
 
-        register_for_push(this);
+        ///////******//////// register_for_push(this);
 
 
 
