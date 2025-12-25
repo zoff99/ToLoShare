@@ -135,7 +135,7 @@ public class CaptureService extends Service
             }
         };
         locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 500, 10, mLocationListener);
+                LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
     }
 
     public void stopLocationTracking()
