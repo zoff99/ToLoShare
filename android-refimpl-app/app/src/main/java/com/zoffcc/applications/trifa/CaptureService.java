@@ -33,6 +33,7 @@ import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_mi
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_friend_list_size;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
 /** @noinspection CommentedOutCode*/
@@ -190,8 +191,13 @@ public class CaptureService extends Service
                     final byte[] data_bin = getGeoMsg(location);
                     int data_bin_len = data_bin.length;
                     data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
-                    final int res = tox_friend_send_lossless_packet(0, data_bin, data_bin_len);
-                    // Log.i(TAG1, "res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+
+                    long[] friends = MainActivity.tox_self_get_friend_list();
+                    for (int fc = 0; fc < friends.length; fc++)
+                    {
+                        final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
+                        // Log.i(TAG1, "res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+                    }
                 }
                 catch(Exception e)
                 {
