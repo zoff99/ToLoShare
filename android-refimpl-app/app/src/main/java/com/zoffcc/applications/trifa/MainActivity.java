@@ -43,6 +43,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
@@ -593,6 +594,8 @@ public class MainActivity extends AppCompatActivity
         map.getOverlays().add(remote_location_overlay);
 
         mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
+        mLocationOverlay.setDirectionIcon(
+                ((BitmapDrawable) getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
         mLocationOverlay.enableMyLocation();
         map.getOverlays().add(mLocationOverlay);
 
