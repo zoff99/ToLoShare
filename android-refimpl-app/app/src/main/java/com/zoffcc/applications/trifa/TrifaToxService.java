@@ -1,0 +1,1632 @@
+/**
+ * [TRIfA], Java part of Tox Reference Implementation for Android
+ * Copyright (C) 2017 - 2019 Zoff <zoff@zoff.cc>
+ * <p>
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ * <p>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
+ */
+
+package com.zoffcc.applications.trifa;
+
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
+import android.util.Log;
+
+import com.zoffcc.applications.sorm.FriendList;
+import com.zoffcc.applications.sorm.Message;
+import com.zoffcc.applications.sorm.OrmaDatabase;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
+import androidx.core.app.ServiceCompat;
+import info.guardianproject.iocipher.VirtualFileSystem;
+
+import static com.zoffcc.applications.trifa.BootstrapNodeEntryDB.get_tcprelay_nodelist_from_db;
+import static com.zoffcc.applications.trifa.BootstrapNodeEntryDB.get_udp_nodelist_from_db;
+import static com.zoffcc.applications.trifa.CombinedFriendsAndConferences.COMBINED_IS_FRIEND;
+import static com.zoffcc.applications.trifa.HelperFiletransfer.set_all_filetransfers_inactive;
+import static com.zoffcc.applications.trifa.HelperFiletransfer.start_outgoing_ft;
+import static com.zoffcc.applications.trifa.HelperFriend.add_friend_real_norequest;
+import static com.zoffcc.applications.trifa.HelperFriend.friend_call_push_url;
+import static com.zoffcc.applications.trifa.HelperFriend.get_friend_msgv3_capability;
+import static com.zoffcc.applications.trifa.HelperFriend.is_friend_online;
+import static com.zoffcc.applications.trifa.HelperFriend.is_friend_online_real;
+import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
+import static com.zoffcc.applications.trifa.HelperFriend.set_all_friends_offline;
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.IPisValid;
+import static com.zoffcc.applications.trifa.HelperGeneric.append_logger_msg;
+import static com.zoffcc.applications.trifa.HelperGeneric.battery_saving_can_sleep;
+import static com.zoffcc.applications.trifa.HelperGeneric.bootstrap_single_wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.bytebuffer_to_hexstring;
+import static com.zoffcc.applications.trifa.HelperGeneric.del_g_opts;
+import static com.zoffcc.applications.trifa.HelperGeneric.get_battery_percent;
+import static com.zoffcc.applications.trifa.HelperGeneric.get_combined_connection_status;
+import static com.zoffcc.applications.trifa.HelperGeneric.get_g_opts;
+import static com.zoffcc.applications.trifa.HelperGeneric.get_toxconnection_wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.hex_to_bytes;
+import static com.zoffcc.applications.trifa.HelperGeneric.isIPPortValid;
+import static com.zoffcc.applications.trifa.HelperGeneric.is_valid_tox_public_key;
+import static com.zoffcc.applications.trifa.HelperGeneric.long_date_time_format;
+import static com.zoffcc.applications.trifa.HelperGeneric.long_date_time_format_or_empty;
+import static com.zoffcc.applications.trifa.HelperGeneric.set_g_opts;
+import static com.zoffcc.applications.trifa.HelperGeneric.tox_friend_resend_msgv3_wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.tox_friend_send_message_wrapper;
+import static com.zoffcc.applications.trifa.HelperGeneric.trigger_proper_wakeup_from_tox_service_thread;
+import static com.zoffcc.applications.trifa.HelperGeneric.trigger_proper_wakeup_outside_tox_service_thread;
+import static com.zoffcc.applications.trifa.HelperGeneric.vfs__unmount;
+import static com.zoffcc.applications.trifa.HelperMessage.update_message_in_db_messageid;
+import static com.zoffcc.applications.trifa.HelperMessage.update_message_in_db_no_read_recvedts;
+import static com.zoffcc.applications.trifa.HelperMessage.update_message_in_db_resend_count;
+import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_cancel;
+import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_change;
+import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_change_wrapper;
+import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_setup;
+import static com.zoffcc.applications.trifa.MainActivity.DEBUG_BATTERY_OPTIMIZATION_LOGGING;
+import static com.zoffcc.applications.trifa.MainActivity.DEBUG_USE_LOGFRIEND;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__X_battery_saving_mode;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__force_udp_only;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__use_push_service;
+import static com.zoffcc.applications.trifa.MainActivity.SD_CARD_FILES_DEBUG_DIR;
+import static com.zoffcc.applications.trifa.MainActivity.VFS_ENCRYPT;
+import static com.zoffcc.applications.trifa.MainActivity.cache_fnum_pubkey;
+import static com.zoffcc.applications.trifa.MainActivity.cache_pubkey_fnum;
+import static com.zoffcc.applications.trifa.MainActivity.context_s;
+import static com.zoffcc.applications.trifa.MainActivity.get_my_toxid;
+import static com.zoffcc.applications.trifa.MainActivity.global_battery_percent;
+import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.tox_friend_get_connection_status;
+import static com.zoffcc.applications.trifa.MainActivity.tox_iterate;
+import static com.zoffcc.applications.trifa.MainActivity.tox_iteration_interval;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_capabilites;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_capabilities;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_connection_status;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_name;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_name_size;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_status_message;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_status_message_size;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_name;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_status_message;
+import static com.zoffcc.applications.trifa.MainActivity.tox_service_fg;
+import static com.zoffcc.applications.trifa.MainActivity.tox_util_friend_resend_message_v2;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP1;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP2;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP3;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.CHECK_BATTERY_PERCENT_DELTA_SECS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.HAVE_INTERNET_CONNECTIVITY;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.LOGFRIEND_ON_STARTUP_DONE_DB_KEY;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.LOGFRIEND_TOXID_DB_KEY;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.LOG_FRIEND_INIT_NAME;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.LOG_FRIEND_INIT_STATUSMSG;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.LOG_FRIEND_TOXID;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.MAX_TEXTMSG_RESEND_COUNT_OLDMSG_VERSION;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_TCP_IP;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_TCP_KEYHEX;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_TCP_PORT;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_UDP_IP;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_UDP_KEYHEX;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_UDP_PORT;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.RESEND_FILETRANSFERS_DELTA_SECS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.RESEND_MSGS_DELTA_SECS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_BOOTSTRAP_AGAIN_AFTER_OFFLINE_MILLIS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_BOOTSTRAP_MIN_INTERVAL_SECS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_MIN_NORMAL_ITERATE_DELTA_MS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_FILE;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_TYPE_TEXT;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.USE_MAX_NUMBER_OF_BOOTSTRAP_NODES;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.USE_MAX_NUMBER_OF_BOOTSTRAP_TCP_RELAYS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.bootstrap_node_list;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.bootstrapping;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_for_battery_savings_ts;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_incoming_ft_ts;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_outgoung_ft_ts;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_bootstrap_ts;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_my_name;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_my_status_message;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_my_toxid;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_self_connection_status;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_self_last_entered_battery_saving_timestamp;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_self_last_went_offline_timestamp;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_showing_mainview;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_showing_messageview;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.tcprelay_node_list;
+import static com.zoffcc.applications.trifa.ToxVars.TOX_CONNECTION.TOX_CONNECTION_NONE;
+import static com.zoffcc.applications.trifa.ToxVars.TOX_FILE_CONTROL.TOX_FILE_CONTROL_CANCEL;
+import static com.zoffcc.applications.trifa.ToxVars.TOX_HASH_LENGTH;
+
+public class TrifaToxService extends Service
+{
+    static final String TAG = "trifa.ToxService";
+    Notification notification2 = null;
+    NotificationManager nmn2 = null;
+    static Thread ToxServiceThread = null;
+    // static EchoCanceller canceller = null;
+    static boolean stop_me = false;
+    static OrmaDatabase orma = null;
+    static VirtualFileSystem vfs = null;
+    static boolean is_tox_started = false;
+    static boolean manually_logged_out = false;
+    static boolean global_toxid_text_set = false;
+    static boolean TOX_SERVICE_STARTED = false;
+    static Thread trifa_service_thread = null;
+    static long last_resend_pending_messages0_ms = -1;
+    static long last_resend_pending_messages1_ms = -1;
+    static long last_resend_pending_messages2_ms = -1;
+    static long last_resend_pending_messages3_ms = -1;
+    static long last_resend_pending_messages4_ms = -1;
+    static long last_check_battery_percent_ms = -1;
+    static long last_start_queued_fts_ms = -1;
+    static boolean need_wakeup_now = false;
+    static int tox_thread_starting_up = 0;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
+        Log.i(TAG, "onStartCommand");
+        // this gets called all the time!
+        tox_service_fg = this;
+        return START_NOT_STICKY; // START_STICKY;
+    }
+
+    @Override
+    public void onCreate()
+    {
+        Log.i(TAG, "onCreate");
+        // serivce is created ---
+        super.onCreate();
+
+        TOX_SERVICE_STARTED = true;
+        start_me();
+    }
+
+    /*
+     *
+     * ------ this really stops the whole thing ------
+     *
+     */
+    void stop_me(boolean exit_app)
+    {
+        Log.i(TAG, "stop_me:001:tox_thread_starting_up=" + tox_thread_starting_up);
+        stopForeground(true);
+
+        Log.i(TAG, "stop_me:002:tox_thread_starting_up=" + tox_thread_starting_up);
+        tox_notification_cancel(this);
+        Log.i(TAG, "stop_me:003");
+
+        final Context static_context = this;
+
+        if (exit_app)
+        {
+            try
+            {
+                Log.i(TAG, "stop_me:004:tox_thread_starting_up=" + tox_thread_starting_up);
+                Thread t = new Thread()
+                {
+                    @Override
+                    public void run()
+                    {
+                        Log.i(TAG, "stop_me:005:tox_thread_starting_up=" + tox_thread_starting_up);
+                        long i = 0;
+                        while (is_tox_started)
+                        {
+                            i++;
+                            if (i > 40)
+                            {
+                                break;
+                            }
+
+                            Log.i(TAG, "stop_me:006:tox_thread_starting_up=" + tox_thread_starting_up);
+
+                            try
+                            {
+                                Thread.sleep(150);
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+                        Log.i(TAG, "stop_me:006a:tox_thread_starting_up=" + tox_thread_starting_up);
+
+                        Log.i(TAG, "stop_me:unmount sql database");
+                        OrmaDatabase.shutdown();
+
+                        if (VFS_ENCRYPT)
+                        {
+                            Log.i(TAG, "stop_me:006b");
+                            try
+                            {
+                                Log.i(TAG, "stop_me:006c");
+                                if (vfs.isMounted())
+                                {
+                                    Log.i(TAG, "stop_me:006d");
+                                    Log.i(TAG, "VFS:detach:start:vfs.isMounted()=" + vfs.isMounted() + " " +
+                                               Thread.currentThread().getId() + ":" + Thread.currentThread().getName());
+                                    // vfs__detach();
+                                    Log.i(TAG, "stop_me:006e");
+                                    Thread.sleep(1);
+                                    Log.i(TAG, "VFS:unmount:start:vfs.isMounted()=" + vfs.isMounted() + " " +
+                                               Thread.currentThread().getId() + ":" + Thread.currentThread().getName());
+                                    vfs__unmount();
+                                    Log.i(TAG, "stop_me:006f");
+                                }
+                                else
+                                {
+                                    Log.i(TAG, "stop_me:006g");
+                                    Log.i(TAG, "VFS:unmount:NOT MOUNTED");
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                                Log.i(TAG, "VFS:unmount:EE:" + e.getMessage());
+                                Log.i(TAG, "stop_me:006h");
+                            }
+                        }
+
+                        Log.i(TAG, "stop_me:007");
+
+                        Log.i(TAG, "stop_me:008");
+                        tox_notification_cancel(static_context);
+                        Log.i(TAG, "stop_me:009");
+
+                        Log.i(TAG, "stop_me:010");
+                        stopSelf();
+                        Log.i(TAG, "stop_me:011");
+
+                        try
+                        {
+                            Log.i(TAG, "stop_me:012");
+                            Thread.sleep(300);
+                            Log.i(TAG, "stop_me:013");
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        Log.i(TAG, "stop_me:014");
+                        tox_notification_cancel(static_context);
+                        Log.i(TAG, "stop_me:015");
+
+                        // MainActivity.exit();
+                        try
+                        {
+                            System.exit(0);
+                        }
+                        catch (Exception ignored)
+                        {
+                        }
+
+                        Log.i(TAG, "stop_me:089");
+                    }
+                };
+                t.start();
+                Log.i(TAG, "stop_me:099");
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                try
+                {
+                    stopSelf();
+                }
+                catch (Exception e2)
+                {
+                    e2.printStackTrace();
+                }
+
+                try
+                {
+                    System.exit(0);
+                }
+                catch (Exception ignored)
+                {
+                }
+            }
+        }
+    }
+
+    static boolean stop_tox_fg_done = false;
+
+    void stop_tox_fg(final boolean want_exit)
+    {
+        stop_tox_fg_done = false;
+        Log.i(TAG, "stop_tox_fg:001");
+        Thread t = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                Log.i(TAG, "stop_tox_fg:002:a");
+                HelperGeneric.update_savedata_file_wrapper(); // save on tox shutdown
+                Log.i(TAG, "stop_tox_fg:002:b");
+                stop_me = true;
+
+                try
+                {
+                    ToxServiceThread.interrupt();
+                }
+                catch (Exception e)
+                {
+
+                }
+
+                Log.i(TAG, "stop_tox_fg:003");
+                try
+                {
+                    Log.i(TAG, "stop_tox_fg:004");
+                    ToxServiceThread.join();
+                    Log.i(TAG, "stop_tox_fg:005");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "stop_tox_fg:006:EE:" + e.getMessage());
+                    e.printStackTrace();
+                }
+
+                stop_me = false; // reset flag again!
+                Log.i(TAG, "stop_tox_fg:007");
+                tox_notification_change_wrapper(0, ""); // set to offline
+                Log.i(TAG, "stop_tox_fg:008");
+                set_all_friends_offline();
+
+                // so that the app knows we went offline
+                global_self_connection_status = TOX_CONNECTION_NONE.value;
+
+                Log.i(TAG, "stop_tox_fg:009");
+
+                if (want_exit)
+                {
+                    tox_notification_cancel(context_s);
+                    Log.i(TAG, "stop_tox_fg:clear_tox_notification");
+                }
+
+                try
+                {
+                    Log.i(TAG, "stop_tox_fg:010a");
+                    Thread.sleep(500);
+                    Log.i(TAG, "stop_tox_fg:010b");
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                stop_tox_fg_done = true;
+                is_tox_started = false;
+
+                Log.i(TAG, "stop_tox_fg:thread:done");
+            }
+        };
+
+        Log.i(TAG, "stop_tox_fg:HH:001");
+        t.start();
+        Log.i(TAG, "stop_tox_fg:HH:004");
+        Log.i(TAG, "stop_tox_fg:099");
+    }
+
+    void load_and_add_all_friends()
+    {
+
+        // --- load and update all friends ---
+        long[] friends = MainActivity.tox_self_get_friend_list();
+        Log.i(TAG, "loading_friend:number_of_friends=" + friends.length);
+
+        int fc = 0;
+        boolean exists_in_db = false;
+
+        for (fc = 0; fc < friends.length; fc++)
+        {
+            // Log.i(TAG, "loading_friend:" + fc + " friendnum=" + MainActivity.friends[fc]);
+            // Log.i(TAG, "loading_friend:" + fc + " pubkey=" + tox_friend_get_public_key__wrapper(MainActivity.friends[fc]));
+
+            FriendList f;
+            List<com.zoffcc.applications.sorm.FriendList> fl = orma.selectFromFriendList().tox_public_key_stringEq(
+                    tox_friend_get_public_key__wrapper(friends[fc])).toList();
+
+            // Log.i(TAG, "loading_friend:" + fc + " db entry size=" + fl);
+
+            if (fl.size() > 0)
+            {
+                f = (FriendList) fl.get(0);
+                // Log.i(TAG, "loading_friend:" + fc + " db entry=" + f);
+            }
+            else
+            {
+                f = null;
+            }
+
+            if (f == null)
+            {
+                Log.i(TAG, "loading_friend:c is null");
+
+                f = new FriendList();
+                f.tox_public_key_string = "" + (long) ((Math.random() * 10000000d));
+                try
+                {
+                    f.tox_public_key_string = tox_friend_get_public_key__wrapper(friends[fc]);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                f.name = "friend #" + fc;
+                exists_in_db = false;
+                // Log.i(TAG, "loading_friend:c is null fnew=" + f);
+            }
+            else
+            {
+                // Log.i(TAG, "loading_friend:found friend in DB " + f.tox_public_key_string + " f=" + f);
+                exists_in_db = true;
+            }
+
+            try
+            {
+                // get the real "live" connection status of this friend
+                // the value in the database may be old (and wrong)
+                int status_new = tox_friend_get_connection_status(friends[fc]);
+                int combined_connection_status_ = get_combined_connection_status(f.tox_public_key_string, status_new);
+
+                f.TOX_CONNECTION = combined_connection_status_;
+                f.TOX_CONNECTION_on_off = get_toxconnection_wrapper(f.TOX_CONNECTION);
+                f.TOX_CONNECTION_real = status_new;
+                f.TOX_CONNECTION_on_off_real = get_toxconnection_wrapper(f.TOX_CONNECTION_real);
+
+                f.added_timestamp = System.currentTimeMillis();
+
+                if ((status_new != 0) && (combined_connection_status_ != 0))
+                {
+                    // Log.i(TAG, "non_relay_status:ALL:" + friends[fc] + " pk=" +
+                    //           get_friend_name_from_pubkey(f.tox_public_key_string) + " status=" + status_new +
+                    //           " combined_connection_status_=" + combined_connection_status_);
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            if (exists_in_db == false)
+            {
+                // Log.i(TAG, "loading_friend:1:insertIntoFriendList:" + " f=" + f);
+                orma.insertIntoFriendList(f);
+                // Log.i(TAG, "loading_friend:2:insertIntoFriendList:" + " f=" + f);
+            }
+            else
+            {
+                // Log.i(TAG, "loading_friend:1:updateFriendList:" + " f=" + f);
+
+                // @formatter:off
+                orma.updateFriendList().
+                        tox_public_key_stringEq(tox_friend_get_public_key__wrapper(friends[fc])).
+                        name(f.name).
+                        status_message(f.status_message).
+                        TOX_CONNECTION(f.TOX_CONNECTION).
+                        TOX_CONNECTION_on_off(get_toxconnection_wrapper(f.TOX_CONNECTION)).
+                        TOX_CONNECTION_real(f.TOX_CONNECTION_real).
+                        TOX_CONNECTION_on_off_real(get_toxconnection_wrapper(f.TOX_CONNECTION_real)).
+                        TOX_USER_STATUS(f.TOX_USER_STATUS).
+                        execute();
+                // @formatter:on
+                // Log.i(TAG, "loading_friend:1:updateFriendList:" + " f=" + f);
+            }
+
+            try_update_friend_in_friendlist(friends[fc]);
+        }
+        // --- load and update all friends ---
+    }
+
+    static void try_update_friend_in_friendlist(long friendnum)
+    {
+        FriendList f_check;
+        List<com.zoffcc.applications.sorm.FriendList> fl_check = orma.selectFromFriendList().tox_public_key_stringEq(
+                tox_friend_get_public_key__wrapper(friendnum)).toList();
+        // Log.i(TAG, "loading_friend:check:" + " db entry=" + fl_check);
+        try
+        {
+            // Log.i(TAG, "loading_friend:check:" + " db entry=" + fl_check.get(0));
+
+            try
+            {
+                if (MainActivity.friend_list_fragment != null)
+                {
+                    // reload friend in friendlist
+                    CombinedFriendsAndConferences cc = new CombinedFriendsAndConferences();
+                    cc.is_friend = COMBINED_IS_FRIEND;
+                    cc.friend_item = (FriendList) fl_check.get(0);
+                    MainActivity.friend_list_fragment.modify_friend(cc, cc.is_friend);
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "loading_friend:check:EE:" + e.getMessage());
+        }
+    }
+
+    static void write_debug_file(String filename)
+    {
+        if (DEBUG_BATTERY_OPTIMIZATION_LOGGING)
+        {
+            try
+            {
+                Log.d("BATTOPTDEBUG", "" + filename);
+
+                File dir = new File(SD_CARD_FILES_DEBUG_DIR);
+                dir.mkdirs();
+                String filename2 = long_date_time_format(System.currentTimeMillis()) + "_" + filename;
+                File file = new File(dir, filename2);
+
+                FileOutputStream f = new FileOutputStream(file);
+                f.write(1);
+                f.close();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void tox_thread_start_fg()
+    {
+        Log.i(TAG, "tox_thread_start_fg");
+
+        ToxServiceThread = new Thread()
+        {
+            @Override
+            public void run()
+            {
+
+                tox_thread_starting_up = 0;
+
+                try
+                {
+                    this.setName("tox_iterate()");
+                }
+                catch (Exception e)
+                {
+                }
+
+                // ------ correct startup order ------
+                boolean old_is_tox_started = is_tox_started;
+                Log.i(TAG, "is_tox_started:==============================");
+                Log.i(TAG, "is_tox_started=" + is_tox_started);
+                Log.i(TAG, "is_tox_started:==============================");
+
+                is_tox_started = true;
+
+                Runnable myRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        if (!global_toxid_text_set)
+                        {
+                            global_toxid_text_set = true;
+                            // MainActivity.mt.setText(MainActivity.mt.getText() + "\n" + "my_ToxId=" + get_my_toxid());
+                        }
+                    }
+                };
+
+                if (main_handler_s != null)
+                {
+                    main_handler_s.post(myRunnable);
+                }
+
+                if (!old_is_tox_started)
+                {
+                    Log.i(TAG, "set_all_conferences_inactive:004");
+                    set_all_friends_offline();
+                    set_all_filetransfers_inactive();
+                    MainActivity.init_tox_callbacks();
+                    HelperGeneric.update_savedata_file_wrapper();
+                }
+                // ------ correct startup order ------
+
+                cache_pubkey_fnum.clear();
+                cache_fnum_pubkey.clear();
+
+                try
+                {
+                    orma.updateFriendList().ip_addr_str("").execute();
+                }
+                catch(Exception e)
+                {
+                }
+
+                tox_self_capabilites = tox_self_get_capabilities();
+                //Log.i(TAG, "tox_self_capabilites:" + tox_self_capabilites + " decoded:" +
+                //           TOX_CAPABILITY_DECODE_TO_STRING(TOX_CAPABILITY_DECODE(tox_self_capabilites)) + " " +
+                //           (1L << 63L));
+
+                // ----- convert old conference messages which did not contain a sent timestamp -----
+                try
+                {
+                    boolean need_migrate_old_conf_msg_date = true;
+
+                    if (get_g_opts("MIGRATE_OLD_CONF_MSG_DATE_done") != null)
+                    {
+                        if (get_g_opts("MIGRATE_OLD_CONF_MSG_DATE_done").equals("true"))
+                        {
+                            need_migrate_old_conf_msg_date = false;
+                        }
+                    }
+
+                    if (need_migrate_old_conf_msg_date == true)
+                    {
+                        try
+                        {
+                            orma.run_multi_sql(
+                                    "update ConferenceMessage set sent_timestamp=rcvd_timestamp" + " where " +
+                                    " sent_timestamp='0'");
+                            Log.i(TAG, "onCreate:migrate_old_conf_msg_date");
+                        }
+                        catch (Exception e)
+                        {
+                            Log.i(TAG, "onCreate:migrate_old_conf_msg_date:EE01");
+                        }
+                        // now remember that we did that, and don't do it again
+                        set_g_opts("MIGRATE_OLD_CONF_MSG_DATE_done", "true");
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.i(TAG, "onCreate:migrate_old_conf_msg_date:EE:" + e.getMessage());
+                }
+                // ----- convert old conference messages which did not contain a sent timestamp -----
+
+                // ----- convert old NULL's into false -----
+                try
+                {
+                    orma.run_multi_sql(
+                            "update ConferenceMessage set was_synced=false" + " where " + " was_synced is NULL");
+                    Log.i(TAG, "onCreate:migrate_was_synced");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:migrate_was_synced:EE01");
+                }
+                // ----- convert old NULL's into false -----
+
+                // ----- convert old NULL's into false -----
+                try
+                {
+                    orma.run_multi_sql(
+                            "update GroupDB set group_we_left=false" + " where " + " group_we_left is NULL");
+                    Log.i(TAG, "onCreate:migrate_group_we_left");
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.i(TAG, "onCreate:migrate_group_we_left:EE01");
+                }
+                // ----- convert old NULL's into false -----
+
+
+                // ----- convert old NULL's into 0 -----
+                try
+                {
+                    orma.run_multi_sql("update Message set sent_push='0' where sent_push is NULL");
+                    Log.i(TAG, "onCreate:sent_push");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:sent_push:EE01");
+                }
+                // ----- convert old NULL's into 0 -----
+
+                // ----- convert old NULL's into 0 -----
+                try
+                {
+                    orma.run_multi_sql(
+                            "update FriendList set msgv3_capability='0' where msgv3_capability is NULL");
+                    Log.i(TAG, "onCreate:msgv3_capability");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:msgv3_capability:EE01");
+                }
+                // ----- convert old NULL's into 0 -----
+
+                // ----- convert old NULL's into 0 -----
+                try
+                {
+                    orma.run_multi_sql(
+                            "update Message set filetransfer_kind='0' where filetransfer_kind is NULL");
+                    Log.i(TAG, "onCreate:filetransfer_kind");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:filetransfer_kind:EE01");
+                }
+                // ----- convert old NULL's into 0 -----
+
+                // ----- convert old NULL's into 0 -----
+                try
+                {
+                    orma.run_multi_sql(
+                            "update GroupMessage set TRIFA_SYNC_TYPE='0' where TRIFA_SYNC_TYPE is NULL");
+                    Log.i(TAG, "onCreate:TRIFA_SYNC_TYPE");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:TRIFA_SYNC_TYPE:EE01");
+                }
+                // ----- convert old NULL's into 0 -----
+
+                // ----- convert old NULL's into 0 -----
+                try
+                {
+                    orma.run_multi_sql("update GroupMessage set tox_group_peer_pubkey_syncer_01_sent_timestamp='0' where tox_group_peer_pubkey_syncer_01_sent_timestamp is NULL");
+                    Log.i(TAG, "onCreate:tox_group_peer_pubkey_syncer_01_sent_timestamp");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:tox_group_peer_pubkey_syncer_01_sent_timestamp:EE01");
+                }
+                try
+                {
+                    orma.run_multi_sql("update GroupMessage set tox_group_peer_pubkey_syncer_02_sent_timestamp='0' where tox_group_peer_pubkey_syncer_02_sent_timestamp is NULL");
+                    Log.i(TAG, "onCreate:tox_group_peer_pubkey_syncer_02_sent_timestamp");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:tox_group_peer_pubkey_syncer_02_sent_timestamp:EE01");
+                }
+                try
+                {
+                    orma.run_multi_sql("update GroupMessage set tox_group_peer_pubkey_syncer_03_sent_timestamp='0' where tox_group_peer_pubkey_syncer_03_sent_timestamp is NULL");
+                    Log.i(TAG, "onCreate:tox_group_peer_pubkey_syncer_03_sent_timestamp");
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "onCreate:tox_group_peer_pubkey_syncer_03_sent_timestamp:EE01");
+                }
+                // ----- convert old NULL's into 0 -----
+
+
+                // TODO --------
+                String my_tox_id_local = get_my_toxid();
+                global_my_toxid = my_tox_id_local;
+                if (tox_self_get_name_size() > 0)
+                {
+                    String tmp_name = tox_self_get_name();
+                    if (tmp_name != null)
+                    {
+                        if (tmp_name.length() > 0)
+                        {
+                            global_my_name = tmp_name;
+                            // Log.i(TAG, "AAA:003:" + global_my_name + " size=" + tox_self_get_name_size());
+                        }
+                    }
+                }
+                else
+                {
+                    tox_self_set_name("TRIfA " + my_tox_id_local.substring(0, 4));
+                    global_my_name = ("TRIfA " + my_tox_id_local.substring(0, 4));
+                    Log.i(TAG, "AAA:005");
+                }
+
+                if (tox_self_get_status_message_size() > 0)
+                {
+                    String tmp_status = tox_self_get_status_message();
+                    if (tmp_status != null)
+                    {
+                        if (tmp_status.length() > 0)
+                        {
+                            global_my_status_message = tmp_status;
+                            // Log.i(TAG, "AAA:008:" + global_my_status_message + " size=" + tox_self_get_status_message_size());
+                        }
+                    }
+                }
+                else
+                {
+                    tox_self_set_status_message("this is TRIfA");
+                    global_my_status_message = "this is TRIfA";
+                    Log.i(TAG, "AAA:010");
+                }
+                Log.i(TAG, "AAA:011");
+
+                HelperGeneric.update_savedata_file_wrapper();
+
+                load_and_add_all_friends();
+
+                // --------------- bootstrap ---------------
+                // --------------- bootstrap ---------------
+                // --------------- bootstrap ---------------
+                if (!old_is_tox_started)
+                {
+                    bootstrapping = true;
+                    global_self_last_went_offline_timestamp = System.currentTimeMillis();
+                    Log.i(TAG, "global_self_last_went_offline_timestamp[1]=" + global_self_last_went_offline_timestamp +
+                               " HAVE_INTERNET_CONNECTIVITY=" + HAVE_INTERNET_CONNECTIVITY);
+                    Log.i(TAG, "bootrapping:set to true[1]");
+                    try
+                    {
+                        tox_notification_change(context_s, nmn2, 0, ""); // set notification to "bootstrapping"
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                    try
+                    {
+                        TrifaToxService.write_debug_file("STARTUP__start__bootstrapping");
+                        bootstrap_me(true);
+                        TrifaToxService.write_debug_file("STARTUP__finish__bootstrapping");
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        Log.i(TAG, "bootstrap_me:001:EE:" + e.getMessage());
+                    }
+
+                    check_if_still_bootstrapping();
+                }
+
+                // --------------- bootstrap ---------------
+                // --------------- bootstrap ---------------
+                // --------------- bootstrap ---------------
+
+                long tox_iteration_interval_ms = tox_iteration_interval();
+                Log.i(TAG, "tox_iteration_interval_ms=" + tox_iteration_interval_ms);
+
+                MainActivity.tox_iterate();
+
+
+                // -------- add log friend --------
+                // -------- add log friend --------
+                // -------- add log friend --------
+                if (DEBUG_USE_LOGFRIEND)
+                {
+                    boolean need_add_log_pseudo_friend = true;
+                    try
+                    {
+                        if (get_g_opts(LOGFRIEND_ON_STARTUP_DONE_DB_KEY) != null)
+                        {
+                            if (get_g_opts(LOGFRIEND_ON_STARTUP_DONE_DB_KEY).equals("true"))
+                            {
+                                if (get_g_opts(LOGFRIEND_TOXID_DB_KEY) != null)
+                                {
+                                    if (get_g_opts(LOGFRIEND_TOXID_DB_KEY).length() > 2)
+                                    {
+                                        LOG_FRIEND_TOXID = get_g_opts(LOGFRIEND_TOXID_DB_KEY);
+                                        need_add_log_pseudo_friend = false;
+                                        Log.i(TAG, "need_add_log_pseudo_friend=false");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                    if (need_add_log_pseudo_friend)
+                    {
+                        Log.i(TAG, "need_add_log_pseudo_friend:start");
+
+                        ByteBuffer hash_bytes = ByteBuffer.allocateDirect(TOX_HASH_LENGTH);
+                        MainActivity.tox_messagev3_get_new_message_id(hash_bytes);
+                        LOG_FRIEND_TOXID = bytebuffer_to_hexstring(hash_bytes, true);
+                        if (LOG_FRIEND_TOXID == null)
+                        {
+                            del_g_opts(LOGFRIEND_ON_STARTUP_DONE_DB_KEY);
+                            del_g_opts(LOGFRIEND_TOXID_DB_KEY);
+                            Log.i(TAG, "need_add_log_pseudo_friend:some error generating the ID for log_pseudo_friend");
+                        }
+                        else
+                        {
+                            add_friend_real_norequest(LOG_FRIEND_TOXID);
+                            set_g_opts(LOGFRIEND_ON_STARTUP_DONE_DB_KEY, "true");
+                            set_g_opts(LOGFRIEND_TOXID_DB_KEY, LOG_FRIEND_TOXID);
+                            // Log.i(TAG, "need_add_log_pseudo_friend:get:" + LOG_FRIEND_TOXID + " :: " + (LOG_FRIEND_TOXID.substring(0, 32 * 2).toUpperCase()));
+                            FriendList f_log_friend = main_get_friend(
+                                    LOG_FRIEND_TOXID.substring(0, 32 * 2).toUpperCase());
+                            if (f_log_friend != null)
+                            {
+                                f_log_friend.status_message = LOG_FRIEND_INIT_STATUSMSG;
+                                f_log_friend.name = LOG_FRIEND_INIT_NAME;
+                                HelperFriend.update_friend_in_db_name(f_log_friend);
+                                HelperFriend.update_friend_in_db_status_message(f_log_friend);
+                                HelperFriend.update_single_friend_in_friendlist_view(f_log_friend);
+                                Log.i(TAG, "need_add_log_pseudo_friend=update meta data");
+                            }
+                            Log.i(TAG, "need_add_log_pseudo_friend=true (INSERT)");
+                            append_logger_msg("need_add_log_pseudo_friend=true (INSERT)");
+                        }
+                    }
+                    else
+                    {
+                        if ((LOG_FRIEND_TOXID != null) && (LOG_FRIEND_TOXID.length() > 2))
+                        {
+                            add_friend_real_norequest(LOG_FRIEND_TOXID);
+                            FriendList f_log_friend = main_get_friend(
+                                    LOG_FRIEND_TOXID.substring(0, 32 * 2).toUpperCase());
+                            if (f_log_friend != null)
+                            {
+                                f_log_friend.status_message = LOG_FRIEND_INIT_STATUSMSG;
+                                f_log_friend.name = LOG_FRIEND_INIT_NAME;
+                                HelperFriend.update_friend_in_db_name(f_log_friend);
+                                HelperFriend.update_friend_in_db_status_message(f_log_friend);
+                                HelperFriend.update_single_friend_in_friendlist_view(f_log_friend);
+                                Log.i(TAG, "need_add_log_pseudo_friend=update meta data");
+                            }
+                            Log.i(TAG, "need_add_log_pseudo_friend=true (refresh)");
+                        }
+                    }
+                }
+                // -------- add log friend --------
+                // -------- add log friend --------
+                // -------- add log friend --------
+
+                global_last_activity_for_battery_savings_ts = System.currentTimeMillis();
+                global_self_last_went_offline_timestamp = System.currentTimeMillis();
+                Log.i(TAG, "global_self_last_went_offline_timestamp[2]=" + global_self_last_went_offline_timestamp +
+                           " HAVE_INTERNET_CONNECTIVITY=" + HAVE_INTERNET_CONNECTIVITY);
+
+
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                append_logger_msg(TAG + "::" + "tox main loop START");
+                tox_thread_starting_up = 1;
+                while (!stop_me)
+                {
+                    try
+                    {
+                        if (tox_iteration_interval_ms < 1)
+                        {
+                            Thread.sleep(1);
+                        }
+                        else
+                        {
+                            if ((PREF__X_battery_saving_mode) && (battery_saving_can_sleep()))
+                            {
+                                need_wakeup_now = false;
+                                trifa_service_thread = Thread.currentThread();
+
+                                append_logger_msg(TAG + "::" + "entering BATTERY SAVINGS MODE ... BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS=" + BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS);
+
+                                append_logger_msg(TAG + "::" + "setting alarm ...");
+                                set_alarm_for_battery_saving_sleep();
+
+                                tox_notification_change_wrapper(TOX_CONNECTION_NONE.value, "");
+                                set_all_friends_offline();
+                                global_self_last_went_offline_timestamp = System.currentTimeMillis();
+                                global_self_connection_status = TOX_CONNECTION_NONE.value;
+
+                                long sleep_in_sec = BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS;
+                                // add some random value, so that the sleep is not always exactly the same
+                                sleep_in_sec = sleep_in_sec + (int) (Math.random() * 15000d) + 5000;
+                                sleep_in_sec = sleep_in_sec / 1000;
+                                sleep_in_sec = sleep_in_sec / 10; // now in 10s of seconds!!
+                                append_logger_msg(TAG + "::" + "entering BATTERY SAVINGS MODE ... sleep for " + (10 * sleep_in_sec) + "s");
+
+                                for (int ii = 0; ii < sleep_in_sec; ii++)
+                                {
+                                    if (global_showing_messageview)
+                                    {
+                                        // if the user opens the message view, or any group view -> go online, to be able to send messages
+                                        trigger_proper_wakeup_from_tox_service_thread();
+                                        append_logger_msg(TAG + "::finish BATTERY SAVINGS MODE (Message view opened)");
+                                        break;
+                                    }
+
+                                    if (need_wakeup_now)
+                                    {
+                                        trigger_proper_wakeup_from_tox_service_thread();
+                                        append_logger_msg(TAG + "::" + "need_wakeup_now trigger 001");
+                                        break;
+                                    }
+
+                                    try
+                                    {
+                                        // android OS will freeze the app (CPU cycles) here
+                                        // android OS will freeze the app (CPU cycles) here
+                                        Thread.sleep(10 * 1000); // sleep very long!!
+                                        // android OS will freeze the app (CPU cycles) here
+                                        // android OS will freeze the app (CPU cycles) here
+                                    }
+                                    catch (Exception es)
+                                    {
+                                        append_logger_msg(TAG + "::" + "BATTERY_SAVINGS_MODE__finish__interrupted");
+                                        break;
+                                    }
+                                }
+                                append_logger_msg(TAG + "::" + "finish BATTERY SAVINGS MODE, connecting again");
+
+                                update_friends_and_groups();
+
+                                need_wakeup_now = false;
+                                trifa_service_thread = null;
+
+                                int TOX_CONNECTION_a = tox_self_get_connection_status();
+                                global_self_connection_status = TOX_CONNECTION_a;
+
+                                bootstrapping = true;
+                                global_self_last_went_offline_timestamp = System.currentTimeMillis();
+                                tox_notification_change_wrapper(TOX_CONNECTION_a,"");
+                                bootstrap_me(true);
+                                tox_iterate();
+                                check_if_still_bootstrapping();                            }
+                            else
+                            {
+                                Thread.sleep(tox_iteration_interval_ms);
+                            }
+                        }
+
+                        // ----------
+                        check_if_need_bootstrap_again();
+                    }
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                    MainActivity.tox_iterate();
+
+                    if (global_last_activity_outgoung_ft_ts > -1)
+                    {
+                        if ((global_last_activity_outgoung_ft_ts + 200) > System.currentTimeMillis())
+                        {
+                            // iterate faster if outgoing filetransfers are active
+                            tox_iteration_interval_ms = 5;
+                        }
+                        else
+                        {
+                            tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
+                        }
+                    }
+                    else if (global_last_activity_incoming_ft_ts > -1)
+                    {
+                        if ((global_last_activity_incoming_ft_ts + 200) > System.currentTimeMillis())
+                        {
+                            // iterate faster if incoming filetransfers are active
+                            tox_iteration_interval_ms = 5;
+                        }
+                        else
+                        {
+                            tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
+                        }
+                    }
+                    else
+                    {
+                        tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
+                    }
+
+                    if ((last_check_battery_percent_ms + (CHECK_BATTERY_PERCENT_DELTA_SECS * 1000L)) < System.currentTimeMillis())
+                    {
+                        last_check_battery_percent_ms = System.currentTimeMillis();
+                        global_battery_percent = get_battery_percent();
+                    }
+                }
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+                // ------- MAIN TOX LOOP ---------------------------------------------------------------
+
+                append_logger_msg(TAG + "::" + "tox main loop stop");
+
+                tox_thread_starting_up = 2;
+
+                try
+                {
+                    Thread.sleep(100); // wait a bit, for "something" to finish up in the native code
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                try
+                {
+                    // this stops Tox
+                    MainActivity.tox_kill();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                try
+                {
+                    Thread.sleep(100); // wait a bit, for "something" to finish up in the native code
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                //Log.i(TAG, "VFS:detachThread:(TrifaToxService):" + Thread.currentThread().getId() + ":" +
+                //           Thread.currentThread().getName());
+                //vfs.detachThread();
+                //Log.i(TAG, "VFS:detachThread:(TrifaToxService):OK");
+            }
+        };
+
+        ToxServiceThread.start();
+    }
+
+    private void update_friends_and_groups()
+    {
+        // update all friends again
+        try
+        {
+            load_and_add_all_friends();
+        }
+        catch (Exception e)
+        {
+        }
+    }
+
+    private void set_alarm_for_battery_saving_sleep()
+    {
+        // ---------------------------------------------------------
+        Intent intent_wakeup = new Intent(getApplicationContext(), WakeupAlarmReceiver.class);
+        // intentWakeFullBroacastReceiver.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 1001,
+                                                               intent_wakeup,
+                                                               PendingIntent.FLAG_CANCEL_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+        getApplicationContext();
+        AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(
+                ALARM_SERVICE);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            //alarmManager.setExactAndAllowWhileIdle(
+            //        AlarmManager.ELAPSED_REALTIME_WAKEUP,
+            //        SystemClock.elapsedRealtime() +
+            //        BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS +
+            //        (int) (Math.random() * 15000d) + 5000, alarmIntent);
+
+            Log.i(TAG, "get BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS:" +
+                       BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS);
+
+            try
+            {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                {
+                    if (alarmManager.canScheduleExactAlarms())
+                    {
+                        Log.i(TAG, "canScheduleExactAlarms:true");
+                    }
+                    else
+                    {
+                        Log.i(TAG, "canScheduleExactAlarms:**FALSE**");
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+            }
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+                                                   System.currentTimeMillis() +
+                                                   BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS +
+                                                   (int) (Math.random() * 15000d) + 5000,
+                                                   alarmIntent);
+        }
+        else
+        {
+            //alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+            //                      SystemClock.elapsedRealtime() +
+            //                      BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS +
+            //                      (int) (Math.random() * 15000d) + 5000,
+            //                      alarmIntent);
+
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() +
+                                                           BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS +
+                                                           (int) (Math.random() * 15000d) +
+                                                           5000, alarmIntent);
+        }
+    }
+
+    private void check_if_still_bootstrapping()
+    {
+        try
+        {
+            if (tox_self_get_connection_status() != TOX_CONNECTION_NONE.value)
+            {
+                bootstrapping = false;
+                append_logger_msg(TAG + "::check_if_still_bootstrapping:false");
+            }
+        }
+        catch(Exception e)
+        {
+            append_logger_msg(TAG + "::check_if_still_bootstrapping:EE:001");
+        }
+
+        try
+        {
+            tox_notification_change_wrapper(tox_self_get_connection_status(),"");
+            append_logger_msg(TAG + "::tox_notification_change:" + tox_self_get_connection_status());
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            append_logger_msg(TAG + "::check_if_still_bootstrapping:EE:002");
+        }
+    }
+
+    private void check_if_need_bootstrap_again()
+    {
+        if (global_self_connection_status == TOX_CONNECTION_NONE.value)
+        {
+            if (HAVE_INTERNET_CONNECTIVITY)
+            {
+                if (global_self_last_went_offline_timestamp != -1)
+                {
+                    if (global_self_last_went_offline_timestamp + TOX_BOOTSTRAP_AGAIN_AFTER_OFFLINE_MILLIS <
+                        System.currentTimeMillis())
+                    {
+                        Log.i(TAG, "offline and we have internet connectivity --> bootstrap again ...");
+                        global_self_last_went_offline_timestamp = System.currentTimeMillis();
+
+                        bootstrapping = true;
+                        Log.i(TAG, "bootrapping:set to true[2]");
+                        try
+                        {
+                            tox_notification_change(context_s, nmn2, 0, "sleep: " +
+                                                                        (int) ((BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS /
+                                                                                1000) / 60) + "min (" +
+                                                                        BATTERY_OPTIMIZATION_LAST_SLEEP1 + "/" +
+                                                                        BATTERY_OPTIMIZATION_LAST_SLEEP2 + "/" +
+                                                                        BATTERY_OPTIMIZATION_LAST_SLEEP3 + ") " +
+                                                                        long_date_time_format_or_empty(
+                                                                                global_self_last_entered_battery_saving_timestamp)); // set notification to "bootstrapping"
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        try
+                        {
+                            TrifaToxService.write_debug_file("RUN__start__bootstrapping");
+                            bootstrap_me(false);
+                            TrifaToxService.write_debug_file(
+                                    "RUN__finish__bootstrapping:" + tox_self_get_connection_status());
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            Log.i(TAG, "bootstrap_me:001:EE:" + e.getMessage());
+                        }
+
+                        check_if_still_bootstrapping();
+                    }
+                }
+            }
+        }
+    }
+
+    void start_me()
+    {
+        Log.i(TAG, "start_me");
+        notification2 = tox_notification_setup(this, nmn2);
+        int type = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        {
+            type = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
+        }
+        ServiceCompat.startForeground(this,
+                                      HelperToxNotification.ONGOING_NOTIFICATION_ID,
+                                      notification2,
+                                      type);
+    }
+
+    static void bootstap_from_custom_nodes()
+    {
+        try
+        {
+            final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context_s);
+            final String bs_udp_ip = settings.getString(PREF_KEY_CUSTOM_BOOTSTRAP_UDP_IP, "");
+            final String bs_udp_port = settings.getString(PREF_KEY_CUSTOM_BOOTSTRAP_UDP_PORT, "");
+            final String bs_udp_keyhex = settings.getString(PREF_KEY_CUSTOM_BOOTSTRAP_UDP_KEYHEX, "");
+            final String bs_tcp_ip = settings.getString(PREF_KEY_CUSTOM_BOOTSTRAP_TCP_IP, "");
+            final String bs_tcp_port = settings.getString(PREF_KEY_CUSTOM_BOOTSTRAP_TCP_PORT, "");
+            final String bs_tcp_keyhex = settings.getString(PREF_KEY_CUSTOM_BOOTSTRAP_TCP_KEYHEX, "");
+
+            if ((bs_udp_ip.length() > 0) && (bs_udp_port.length() > 0) && (IPisValid(bs_udp_ip)) &&
+                (isIPPortValid(bs_udp_port)) && (is_valid_tox_public_key(bs_udp_keyhex)))
+            {
+                Log.i(TAG, "bootstap_from_custom_nodes:bootstrap_single:ip=" + bs_udp_ip + " port=" +
+                           Integer.parseInt(bs_udp_port) + " key=" + bs_udp_keyhex.toUpperCase());
+                int bootstrap_result = bootstrap_single_wrapper(bs_udp_ip, Integer.parseInt(bs_udp_port),
+                                                                bs_udp_keyhex.toUpperCase());
+                Log.i(TAG, "bootstap_from_custom_nodes:bootstrap_single:res=" + bootstrap_result);
+            }
+
+            if ((bs_tcp_ip.length() > 0) && (bs_tcp_port.length() > 0) && (IPisValid(bs_tcp_ip)) &&
+                (isIPPortValid(bs_tcp_port)) && (is_valid_tox_public_key(bs_tcp_keyhex)))
+            {
+                Log.i(TAG, "bootstap_from_custom_nodes:add_tcp_relay_single:ip=" + bs_tcp_ip + " port=" +
+                           Integer.parseInt(bs_tcp_port) + " key=" + bs_tcp_keyhex.toUpperCase());
+                int bootstrap_result = HelperGeneric.add_tcp_relay_single_wrapper(bs_tcp_ip,
+                                                                                  Integer.parseInt(bs_tcp_port),
+                                                                                  bs_tcp_keyhex.toUpperCase());
+                Log.i(TAG, "bootstap_from_custom_nodes:add_tcp_relay_single:res=" + bootstrap_result);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.i(TAG, "bootstap_from_custom_nodes:EE01:" + e.getMessage());
+        }
+    }
+
+    static void bootstrap_me(boolean force)
+    {
+        append_logger_msg(TAG + "::" + "calling bootstrap_me()");
+        if (force)
+        {
+            global_last_bootstrap_ts = System.currentTimeMillis();
+            append_logger_msg(TAG + "::" + "calling bootstrap_me__real() [force]");
+            bootstrap_me__real();
+            return;
+        }
+
+        if (global_last_bootstrap_ts > -1)
+        {
+            if ((global_last_bootstrap_ts + (TOX_BOOTSTRAP_MIN_INTERVAL_SECS * 1000)) <= System.currentTimeMillis())
+            {
+                final long dt = System.currentTimeMillis() - global_last_bootstrap_ts;
+                append_logger_msg(TAG + "::" + "calling bootstrap_me__real() [delta time s: " + (dt / 1000) + " (min s: " + TOX_BOOTSTRAP_MIN_INTERVAL_SECS + " )]");
+                global_last_bootstrap_ts = System.currentTimeMillis();
+                bootstrap_me__real();
+            }
+        }
+        else
+        {
+            global_last_bootstrap_ts = System.currentTimeMillis();
+            append_logger_msg(TAG + "::" + "calling bootstrap_me__real() [startup]");
+            bootstrap_me__real();
+        }
+    }
+
+    static void bootstrap_me__real()
+    {
+        Log.i(TAG, "bootstrap_me__real");
+        bootstap_from_custom_nodes();
+
+        // ----- UDP ------
+        get_udp_nodelist_from_db();
+        Log.i(TAG, "bootstrap_node_list[sort]=" + bootstrap_node_list.toString());
+        try
+        {
+            Collections.shuffle(bootstrap_node_list);
+            Collections.shuffle(bootstrap_node_list);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        Log.i(TAG, "bootstrap_node_list[rand]=" + bootstrap_node_list.toString());
+
+        try
+        {
+            Iterator i2 = bootstrap_node_list.iterator();
+            com.zoffcc.applications.sorm.BootstrapNodeEntryDB ee;
+            int used = 0;
+            while (i2.hasNext())
+            {
+                ee = (com.zoffcc.applications.sorm.BootstrapNodeEntryDB) i2.next();
+                int bootstrap_result = bootstrap_single_wrapper(ee.ip, ee.port, ee.key_hex);
+                Log.i(TAG, "bootstrap_single:res=" + bootstrap_result);
+
+                if (bootstrap_result == 0)
+                {
+                    used++;
+                    // Log.i(TAG, "bootstrap_single:++:used=" + used);
+                }
+
+                if (used >= USE_MAX_NUMBER_OF_BOOTSTRAP_NODES)
+                {
+                    Log.i(TAG, "bootstrap_single:break:used=" + used);
+                    break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        // ----- UDP ------
+        //
+        // ----- TCP ------
+        get_tcprelay_nodelist_from_db();
+        Log.i(TAG, "tcprelay_node_list[sort]=" + tcprelay_node_list.toString());
+        try
+        {
+            Collections.shuffle(tcprelay_node_list);
+            Collections.shuffle(tcprelay_node_list);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        Log.i(TAG, "tcprelay_node_list[rand]=" + tcprelay_node_list.toString());
+
+        try
+        {
+            if (USE_MAX_NUMBER_OF_BOOTSTRAP_TCP_RELAYS > 0)
+            {
+                if (!PREF__force_udp_only)
+                {
+                    Iterator i2 = tcprelay_node_list.iterator();
+                    com.zoffcc.applications.sorm.BootstrapNodeEntryDB ee;
+                    int used = 0;
+                    while (i2.hasNext())
+                    {
+                        ee = (com.zoffcc.applications.sorm.BootstrapNodeEntryDB) i2.next();
+                        int bootstrap_result = 1;
+                        if ((ee.ip != null) && (ee.key_hex != null))
+                        {
+                            bootstrap_result = HelperGeneric.add_tcp_relay_single_wrapper(ee.ip, ee.port, ee.key_hex);
+                        }
+                        Log.i(TAG, "add_tcp_relay_single:res=" + bootstrap_result);
+
+                        if (bootstrap_result == 0)
+                        {
+                            used++;
+                            // Log.i(TAG, "add_tcp_relay_single:++:used=" + used);
+                        }
+
+                        if (used >= USE_MAX_NUMBER_OF_BOOTSTRAP_TCP_RELAYS)
+                        {
+                            Log.i(TAG, "add_tcp_relay_single:break:used=" + used);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        // ----- TCP ------
+
+        // ----- TCP mobile ------
+        // Log.i(TAG, "add_tcp_relay_single:res=" + MainActivity.add_tcp_relay_single_wrapper("127.0.0.1", 33447, "252E6D7F8168682363BC473C3951357FB2E28BC9A7B7E1F4CB3B302DC331BDAA".substring(0, (TOX_PUBLIC_KEY_SIZE * 2) - 0)));
+        // ----- TCP mobile ------
+    }
+
+    static void wakeup_tox_thread()
+    {
+        append_logger_msg(TAG + "::wakeup_tox_thread");
+        // This will wakeup the tox_iterate() thread and go online as quick as possible
+        // only useful if in Batterysavings-Mode
+        try
+        {
+            if (trifa_service_thread != null)
+            {
+                trigger_proper_wakeup_outside_tox_service_thread();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent)
+    {
+        Log.i(TAG, "onUnbind");
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void unbindService(ServiceConnection conn)
+    {
+        Log.i(TAG, "unbindService");
+        super.unbindService(conn);
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        Log.i(TAG, "onDestroy");
+        super.onDestroy();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent)
+    {
+        Log.i(TAG, "onBind");
+        return null;
+    }
+
+    // ------------------------------
+
+
+    // --------------- JNI ---------------
+    // --------------- JNI ---------------
+    // --------------- JNI ---------------
+    static void logger(int level, String text)
+    {
+        Log.i(TAG, text);
+    }
+
+    /*
+     * This is called by native methods to check/fix broken UTF-8 Strings
+     */
+    static String safe_string(byte[] in)
+    {
+        // Log.i(TAG, "safe_string:in=" + in);
+        String out = "";
+
+        try
+        {
+            out = new String(in, StandardCharsets.UTF_8);  // Best way to decode using "UTF-8"
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.i(TAG, "safe_string:EE:" + e.getMessage());
+            try
+            {
+                out = new String(in);
+            }
+            catch (Exception e2)
+            {
+                e2.printStackTrace();
+                Log.i(TAG, "safe_string:EE2:" + e2.getMessage());
+            }
+        }
+
+        // Log.i(TAG, "safe_string:out=" + out);
+        return out;
+    }
+    // --------------- JNI ---------------
+    // --------------- JNI ---------------
+    // --------------- JNI ---------------
+}

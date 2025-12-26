@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/item_info"
+        android:icon="@drawable/ic_info_outline_white_24dp"
+        android:title="@string/layout___info"
+        android:visible="true"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/item_dummy01"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:background="@color/md_red_400"
+        android:title="   ---   "
+        android:visible="true"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/item_add_default_ft_contact"
+        android:icon="@drawable/ic_content_copy_white_24dp"
+        android:title="@string/layout___add_as_default_ft_contact"
+        android:visible="true"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/item_dummy02"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:background="@color/md_red_400"
+        android:title="   ---   "
+        android:visible="true"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/item_delete"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:title="@string/layout___delete"
+        android:visible="true"
+        app:showAsAction="ifRoom|withText"/>
+</menu>
