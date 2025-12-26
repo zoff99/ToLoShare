@@ -5280,7 +5280,6 @@ public class MainActivity extends AppCompatActivity
                             remote_location_overlay.setLocation(new GeoPoint(lat, lon));
                             remote_location_overlay.setAccuracy(Math.round(acc));
                             remote_location_overlay.setBearing(bearing);
-                            map.postInvalidate();
 
                             try
                             {
@@ -5296,6 +5295,12 @@ public class MainActivity extends AppCompatActivity
                             catch(Exception e)
                             {
                             }
+
+                            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
+                            {
+                                set_map_center_to(remoteBestLocation);
+                            }
+                            map.postInvalidate();
 
                             Runnable myRunnable = new Runnable()
                             {
