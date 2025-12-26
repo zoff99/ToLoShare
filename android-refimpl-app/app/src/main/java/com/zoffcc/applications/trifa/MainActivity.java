@@ -517,6 +517,7 @@ public class MainActivity extends AppCompatActivity
     Spinner spinner_own_status = null;
 
     /** @noinspection CommentedOutCode*/
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
