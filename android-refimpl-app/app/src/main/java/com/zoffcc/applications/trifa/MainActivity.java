@@ -4991,6 +4991,30 @@ public class MainActivity extends AppCompatActivity
             HelperFriend.update_friend_in_db_name(f);
             HelperFriend.update_single_friend_in_friendlist_view(f);
         }
+
+        // also update the name on the location text and later maybe on the map
+        try
+        {
+            String f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
+            if ((f_pubkey != null) && (f_pubkey.length() > 10))
+            {
+                if (!remote_location_data.containsKey(f_pubkey))
+                {
+                    CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
+                    re.friend_name = friend_name;
+                    remote_location_data.put(f_pubkey, re);
+                }
+                else
+                {
+                    CaptureService.remote_location_entry re =remote_location_data.get(f_pubkey);
+                    re.friend_name = friend_name;
+                }
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
     }
 
     static void android_tox_callback_friend_status_message_cb_method(long friend_number, String status_message, long length)
