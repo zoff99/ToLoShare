@@ -146,10 +146,12 @@ import permissions.dispatcher.RuntimePermissions;
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
+import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
+import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
@@ -288,15 +290,16 @@ public class MainActivity extends AppCompatActivity
     static ViewGroup main_gallery_container = null;
     static TextView debug_text = null;
     static TextView debug_text_2 = null;
+    static TextView debug_text_3 = null;
     static ImageButton btn_follow_self = null;
     static ImageButton btn_follow_friend_0 = null;
+    static ImageButton btn_follow_friend_1 = null;
     static ImageButton btn_follow_stop = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
 
     static MapView map = null;
-    static DirectedLocationOverlay remote_location_overlay = null;
     static MyLocationNewOverlay mLocationOverlay = null;
     static IMapController mapController = null;
     static String own_location_txt = "";
@@ -600,10 +603,6 @@ public class MainActivity extends AppCompatActivity
         mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 40);
         map.getOverlays().add(mScaleBarOverlay);
 
-        remote_location_overlay = new DirectedLocationOverlay(this);
-        remote_location_overlay.setShowAccuracy(true);
-        map.getOverlays().add(remote_location_overlay);
-
         mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
         mLocationOverlay.setDirectionIcon(
                 ((BitmapDrawable) getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
@@ -621,9 +620,11 @@ public class MainActivity extends AppCompatActivity
         main_gallery_container = this.findViewById(R.id.main_gallery_container);
         debug_text = this.findViewById(R.id.debug_text);
         debug_text_2 = this.findViewById(R.id.debug_text_2);
+        debug_text_3 = this.findViewById(R.id.debug_text_3);
 
         btn_follow_self = this.findViewById(R.id.btn_follow_self);
         btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
+        btn_follow_friend_1 = this.findViewById(R.id.btn_follow_friend_1);
         btn_follow_stop = this.findViewById(R.id.btn_follow_stop);
 
         btn_follow_self.setOnClickListener(new View.OnClickListener()
@@ -662,6 +663,30 @@ public class MainActivity extends AppCompatActivity
 
                     // HINT: for this button we always use friend #0
                     String f_pubkey = tox_friend_get_public_key__wrapper(0);
+                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                    set_map_center_to(re.remoteBestLocation);
+                }
+                catch (Exception ee2)
+                {
+                }
+            }
+        });
+
+        btn_follow_friend_1.setOnClickListener(new View.OnClickListener()
+        {
+            @SuppressLint("ApplySharedPref")
+            @Override
+            public void onClick(View view)
+            {
+                try
+                {
+                    PREF__map_follow_mode = MAP_FOLLOW_MODE_FRIEND_1.value;
+                    set_follow_button_ui();
+                    SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+
+                    // HINT: for this button we always use friend #1
+                    String f_pubkey = tox_friend_get_public_key__wrapper(1);
                     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                     set_map_center_to(re.remoteBestLocation);
                 }
@@ -3570,7 +3595,26 @@ public class MainActivity extends AppCompatActivity
                                 String f_pubkey = tox_friend_get_public_key__wrapper(0);
                                 CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                                 set_debug_text_2(location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
 
+                            try
+                            {
+                                // HINT: for this textfield we always use friend #1
+                                String f_pubkey_1 = tox_friend_get_public_key__wrapper(1);
+                                CaptureService.remote_location_entry re1 = remote_location_data.get(f_pubkey_1);
+                                set_debug_text_3(location_info_text(re1.remote_location_last_ts_millis, re1.remote_location_txt));
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            try
+                            {
                                 set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
                             }
                             catch (Exception e)
@@ -4201,6 +4245,9 @@ public class MainActivity extends AppCompatActivity
             btn_follow_friend_0.setColorFilter(null);
             btn_follow_friend_0.setAlpha(alpha_inactive);
 
+            btn_follow_friend_1.setColorFilter(null);
+            btn_follow_friend_1.setAlpha(alpha_inactive);
+
             btn_follow_stop.setColorFilter(null);
             btn_follow_stop.setAlpha(alpha_inactive);
         }
@@ -4212,6 +4259,23 @@ public class MainActivity extends AppCompatActivity
             btn_follow_friend_0.setColorFilter(color_active);
             btn_follow_friend_0.setAlpha(alpha_active);
 
+            btn_follow_friend_1.setColorFilter(null);
+            btn_follow_friend_1.setAlpha(alpha_inactive);
+
+            btn_follow_stop.setColorFilter(null);
+            btn_follow_stop.setAlpha(alpha_inactive);
+        }
+        else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_1.value)
+        {
+            btn_follow_self.setColorFilter(null);
+            btn_follow_self.setAlpha(alpha_inactive);
+
+            btn_follow_friend_0.setColorFilter(null);
+            btn_follow_friend_0.setAlpha(alpha_inactive);
+
+            btn_follow_friend_1.setColorFilter(color_active);
+            btn_follow_friend_1.setAlpha(alpha_active);
+
             btn_follow_stop.setColorFilter(null);
             btn_follow_stop.setAlpha(alpha_inactive);
         }
@@ -4222,6 +4286,9 @@ public class MainActivity extends AppCompatActivity
 
             btn_follow_friend_0.setColorFilter(null);
             btn_follow_friend_0.setAlpha(alpha_inactive);
+
+            btn_follow_friend_1.setColorFilter(null);
+            btn_follow_friend_1.setAlpha(alpha_inactive);
 
             btn_follow_stop.setColorFilter(color_active);
             btn_follow_stop.setAlpha(alpha_active);
@@ -5299,9 +5366,6 @@ public class MainActivity extends AppCompatActivity
                             // float alt = Float.parseFloat(separated[4]); // not used
                             float acc = Float.parseFloat(separated[5]);
                             float bearing = Float.parseFloat(separated[6]);
-                            remote_location_overlay.setLocation(new GeoPoint(lat, lon));
-                            remote_location_overlay.setAccuracy(Math.round(acc));
-                            remote_location_overlay.setBearing(bearing);
 
                             String f_pubkey = null;
                             try
@@ -5316,6 +5380,30 @@ public class MainActivity extends AppCompatActivity
                                         remote_location_data.put(f_pubkey, re);
                                     }
                                 }
+                            }
+                            catch(Exception e)
+                            {
+                            }
+
+                            try
+                            {
+                                if ((f_pubkey != null) && (f_pubkey.length() > 10))
+                                {
+                                    if (!remote_location_overlays.containsKey(f_pubkey))
+                                    {
+                                        CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
+                                        DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
+                                        directed_ol.setShowAccuracy(true);
+                                        map.getOverlays().add(directed_ol);
+                                        remote_ol.remote_location_overlay = directed_ol;
+                                        remote_location_overlays.put(f_pubkey, remote_ol);
+                                    }
+                                }
+
+                                CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
+                                remote_ol.remote_location_overlay.setLocation(new GeoPoint(lat, lon));
+                                remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
+                                remote_ol.remote_location_overlay.setBearing(bearing);
                             }
                             catch(Exception e)
                             {
@@ -5346,6 +5434,15 @@ public class MainActivity extends AppCompatActivity
                                     set_map_center_to_proxy_uithread(re.remoteBestLocation);
                                 }
                             }
+                            else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_1.value)
+                            {
+                                if (friend_number == 1)
+                                {
+                                    // HINT: we only want to follow friend #1
+                                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                    set_map_center_to_proxy_uithread(re.remoteBestLocation);
+                                }
+                            }
                             map.postInvalidate();
 
                             if (friend_number == 0)
@@ -5364,6 +5461,36 @@ public class MainActivity extends AppCompatActivity
                                             re.remote_location_txt = "name: " + re.friend_name + "\n" + "accur: " +
                                                                      (int) (Math.round(acc * 10f) / 10) + " m\n";
                                             set_debug_text_2(location_info_text(re.remote_location_last_ts_millis,
+                                                                                re.remote_location_txt));
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Log.i(TAG, "EE.b:" + e.getMessage());
+                                        }
+                                    }
+                                };
+
+                                if (main_handler_s != null)
+                                {
+                                    main_handler_s.post(myRunnable);
+                                }
+                            }
+                            else if (friend_number == 1)
+                            {
+                                String final_f_pubkey = f_pubkey;
+                                Runnable myRunnable = new Runnable()
+                                {
+                                    @Override
+                                    public void run()
+                                    {
+                                        try
+                                        {
+                                            CaptureService.remote_location_entry re = remote_location_data.get(
+                                                    final_f_pubkey);
+                                            re.remote_location_last_ts_millis = current_ts_millis;
+                                            re.remote_location_txt = "name: " + re.friend_name + "\n" + "accur: " +
+                                                                     (int) (Math.round(acc * 10f) / 10) + " m\n";
+                                            set_debug_text_3(location_info_text(re.remote_location_last_ts_millis,
                                                                                 re.remote_location_txt));
                                         }
                                         catch (Exception e)
@@ -6240,6 +6367,30 @@ public class MainActivity extends AppCompatActivity
                 try
                 {
                     debug_text_2.setText(t);
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+    }
+
+    synchronized static void set_debug_text_3(final String t)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    debug_text_3.setText(t);
                 }
                 catch (Exception e)
                 {

@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
 import java.util.HashMap;
 
@@ -54,7 +55,6 @@ public class CaptureService extends Service
     static Location currentBestLocation = null;
 
     static HashMap<String, remote_location_entry> remote_location_data = new HashMap<>();
-
     public static class remote_location_entry {
         Location remoteBestLocation = null;
         String remote_location_txt = "";
@@ -62,6 +62,11 @@ public class CaptureService extends Service
         long last_remote_location_ts_millis = 0;
         long remote_location_last_ts_millis = 0;
         String friend_name = "remote";
+    }
+
+    static HashMap<String, remote_location_overlay_entry> remote_location_overlays = new HashMap<>();
+    public static class remote_location_overlay_entry {
+        DirectedLocationOverlay remote_location_overlay = null;
     }
 
     public enum MAP_FOLLOW_MODE
