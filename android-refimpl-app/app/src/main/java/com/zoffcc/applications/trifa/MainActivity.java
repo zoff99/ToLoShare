@@ -149,7 +149,7 @@ import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_F
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
-import static com.zoffcc.applications.trifa.CaptureService.remoteBestLocation;
+import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
@@ -158,6 +158,7 @@ import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.send_friend_msg_receipt_v2_wrapper;
 import static com.zoffcc.applications.trifa.HelperFriend.send_pushurl_to_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperFriend.update_friend_in_db_capabilities;
 import static com.zoffcc.applications.trifa.HelperFriend.update_friend_in_db_ip_addr_str;
 import static com.zoffcc.applications.trifa.HelperGeneric.append_logger_msg;
@@ -235,6 +236,7 @@ fn=1 res=1 msg=🍔👍😜👍😜 @%\4äö ubnc Ovid n JB von in BK ni ubvzv8 
 
  */
 
+/** @noinspection ExtractMethodRecommender*/
 @SuppressWarnings({"UnusedReturnValue", "deprecation", "JniMissingFunction", "unused", "RedundantSuppression", "unchecked", "ConstantConditions", "RedundantCast", "Convert2Lambda", "EmptyCatchBlock", "PointlessBooleanExpression", "SimplifiableIfStatement", "ResultOfMethodCallIgnored"})
 @SuppressLint({"StaticFieldLeak", "SimpleDateFormat", "SetTextI18n"})
 @RuntimePermissions
@@ -297,13 +299,9 @@ public class MainActivity extends AppCompatActivity
     static DirectedLocationOverlay remote_location_overlay = null;
     static MyLocationNewOverlay mLocationOverlay = null;
     static IMapController mapController = null;
-    static long last_remote_location_ts_millis = 0;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
-    static String remote_location_txt = "";
-    static String remote_location_time_txt = "";
-    static long remote_location_last_ts_millis = 0;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -662,7 +660,10 @@ public class MainActivity extends AppCompatActivity
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
                     settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
 
-                    set_map_center_to(remoteBestLocation);
+                    // HINT: for this button we always use friend #0
+                    String f_pubkey = tox_friend_get_public_key__wrapper(0);
+                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                    set_map_center_to(re.remoteBestLocation);
                 }
                 catch (Exception ee2)
                 {
@@ -3565,7 +3566,11 @@ public class MainActivity extends AppCompatActivity
                         {
                             try
                             {
-                                set_debug_text_2(location_info_text(remote_location_last_ts_millis, remote_location_txt));
+                                // HINT: for this textfield we always use friend #0
+                                String f_pubkey = tox_friend_get_public_key__wrapper(0);
+                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                set_debug_text_2(location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
+
                                 set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
                             }
                             catch (Exception e)
@@ -5274,16 +5279,35 @@ public class MainActivity extends AppCompatActivity
                             remote_location_overlay.setAccuracy(Math.round(acc));
                             remote_location_overlay.setBearing(bearing);
 
+                            String f_pubkey = null;
                             try
                             {
-                                if (remoteBestLocation == null)
+                                f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
+                                if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                 {
-                                    remoteBestLocation = new Location("gps");
+                                    if (!remote_location_data.containsKey(f_pubkey))
+                                    {
+                                        CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
+                                        re.friend_name = tox_friend_get_name(friend_number);
+                                        remote_location_data.put(f_pubkey, re);
+                                    }
                                 }
-                                remoteBestLocation.setAccuracy(acc);
-                                remoteBestLocation.setLatitude(lat);
-                                remoteBestLocation.setLongitude(lon);
-                                remoteBestLocation.setBearing(bearing);
+                            }
+                            catch(Exception e)
+                            {
+                            }
+
+                            try
+                            {
+                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                if (re.remoteBestLocation == null)
+                                {
+                                    re.remoteBestLocation = new Location("gps");
+                                }
+                                re.remoteBestLocation.setAccuracy(acc);
+                                re.remoteBestLocation.setLatitude(lat);
+                                re.remoteBestLocation.setLongitude(lon);
+                                re.remoteBestLocation.setBearing(bearing);
                             }
                             catch(Exception e)
                             {
@@ -5291,35 +5315,48 @@ public class MainActivity extends AppCompatActivity
 
                             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
                             {
-                                set_map_center_to_proxy_uithread(remoteBestLocation);
+                                if (friend_number == 0)
+                                {
+                                    // HINT: we only want to follow friend #0
+                                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                    set_map_center_to_proxy_uithread(re.remoteBestLocation);
+                                }
                             }
                             map.postInvalidate();
 
-                            Runnable myRunnable = new Runnable()
+                            if (friend_number == 0)
                             {
-                                @Override
-                                public void run()
+                                String final_f_pubkey = f_pubkey;
+                                Runnable myRunnable = new Runnable()
                                 {
-                                    try
+                                    @Override
+                                    public void run()
                                     {
-                                        remote_location_last_ts_millis = current_ts_millis;
-                                        remote_location_txt = "remote: " + "#" + friend_number + "\n" +
-                                                              "accur: " + (int)(Math.round(acc * 10f) / 10) + " m\n";
-                                        set_debug_text_2(location_info_text(remote_location_last_ts_millis, remote_location_txt));
+                                        try
+                                        {
+                                            CaptureService.remote_location_entry re = remote_location_data.get(
+                                                    final_f_pubkey);
+                                            re.remote_location_last_ts_millis = current_ts_millis;
+                                            re.remote_location_txt = "name: " + re.friend_name + "\n" + "accur: " +
+                                                                     (int) (Math.round(acc * 10f) / 10) + " m\n";
+                                            set_debug_text_2(location_info_text(re.remote_location_last_ts_millis,
+                                                                                re.remote_location_txt));
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Log.i(TAG, "EE.b:" + e.getMessage());
+                                        }
                                     }
-                                    catch (Exception e)
-                                    {
-                                        Log.i(TAG, "EE.b:" + e.getMessage());
-                                    }
-                                }
-                            };
+                                };
 
-                            if (main_handler_s != null)
-                            {
-                                main_handler_s.post(myRunnable);
+                                if (main_handler_s != null)
+                                {
+                                    main_handler_s.post(myRunnable);
+                                }
                             }
 
-                            last_remote_location_ts_millis = current_ts_millis;
+                            CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                            re.last_remote_location_ts_millis = current_ts_millis;
                         }
                     }
                 }
@@ -5360,7 +5397,7 @@ public class MainActivity extends AppCompatActivity
             msgV3hash_hex_string = HelperGeneric.bytesToHex(msgV3hash_bin, 0, msgV3hash_bin.length);
 
             int got_messages = orma.selectFromMessage().tox_friendpubkeyEq(
-                    HelperFriend.tox_friend_get_public_key__wrapper(friend_number)).directionEq(0).msg_idv3_hashEq(
+                    tox_friend_get_public_key__wrapper(friend_number)).directionEq(0).msg_idv3_hashEq(
                     msgV3hash_hex_string).count();
 
             if (got_messages > 0)

@@ -16,6 +16,8 @@ import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
 
+import java.util.HashMap;
+
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
@@ -50,7 +52,17 @@ public class CaptureService extends Service
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
 
     static Location currentBestLocation = null;
-    static Location remoteBestLocation = null;
+
+    static HashMap<String, remote_location_entry> remote_location_data = new HashMap<>();
+
+    public static class remote_location_entry {
+        Location remoteBestLocation = null;
+        String remote_location_txt = "";
+        // String remote_location_time_txt = "";
+        long last_remote_location_ts_millis = 0;
+        long remote_location_last_ts_millis = 0;
+        String friend_name = "remote";
+    }
 
     public enum MAP_FOLLOW_MODE
     {
