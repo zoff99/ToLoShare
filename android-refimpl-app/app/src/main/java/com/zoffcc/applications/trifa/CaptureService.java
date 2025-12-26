@@ -238,11 +238,21 @@ public class CaptureService extends Service
             }
         };
 
-        locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
+        try
+        {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
+        }
+        catch(Exception e)
+        {
+        }
 
-        locationManager.requestLocationUpdates(
-                 LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
+        try
+        {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     static void set_map_center_to_proxy_uithread(final Location location)
