@@ -5402,7 +5402,7 @@ public class MainActivity extends AppCompatActivity
                                         {
                                             // HINT: make a drawable later!!
                                             Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
-                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#268210"));
+                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#2B8A15"));
                                             directed_ol.setDirectionArrow(location_arrow_2);
                                         }
                                         map.getOverlays().add(directed_ol);
