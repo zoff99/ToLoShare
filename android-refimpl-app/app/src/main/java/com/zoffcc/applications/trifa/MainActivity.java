@@ -3498,45 +3498,8 @@ public class MainActivity extends AppCompatActivity
                         {
                             try
                             {
-                                final long current_ts_millis = System.currentTimeMillis();
-
-                                if (last_remote_location_ts_millis > 0)
-                                {
-                                    long remote_diff = new Date(current_ts_millis).getTime() -
-                                                       new Date(last_remote_location_ts_millis).getTime();
-                                    long remote_seconds = TimeUnit.MILLISECONDS.toSeconds(remote_diff);
-                                    long remote_minutes = TimeUnit.MILLISECONDS.toMinutes(remote_diff);
-
-                                    if (remote_minutes > 0)
-                                    {
-                                        remote_location_time_txt = remote_minutes + " minutes ago";
-                                        set_debug_text_2(remote_location_txt + remote_location_time_txt);
-                                    }
-                                    else if (remote_seconds > 0)
-                                    {
-                                        remote_location_time_txt = remote_seconds + " seconds ago";
-                                        set_debug_text(own_location_txt + remote_location_time_txt);
-                                    }
-                                }
-
-                                if (own_location_last_ts_millis > 0)
-                                {
-                                    long location_diff = new Date(current_ts_millis).getTime() -
-                                                         new Date(own_location_last_ts_millis).getTime();
-                                    long location_seconds = TimeUnit.MILLISECONDS.toSeconds(location_diff);
-                                    long location_minutes = TimeUnit.MILLISECONDS.toMinutes(location_diff);
-
-                                    if (location_minutes > 0)
-                                    {
-                                        own_location_time_txt = location_minutes + " minutes ago";
-                                        set_debug_text(own_location_txt + own_location_time_txt);
-                                    }
-                                    else if (location_seconds > 0)
-                                    {
-                                        own_location_time_txt = location_seconds + " seconds ago";
-                                        set_debug_text(own_location_txt + own_location_time_txt);
-                                    }
-                                }
+                                set_debug_text_2(location_info_text(remote_location_last_ts_millis, remote_location_txt));
+                                set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
                             }
                             catch (Exception e)
                             {
@@ -4215,6 +4178,37 @@ public class MainActivity extends AppCompatActivity
             {
             }
         }
+    }
+
+    static String location_info_text(long last_ts_millis, String location_txt)
+    {
+        final long current_ts_millis = System.currentTimeMillis();
+        String location_time_txt = "???";
+
+        if (last_ts_millis > 0)
+        {
+            long diff = new Date(current_ts_millis).getTime() -
+                        new Date(last_ts_millis).getTime();
+            long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
+
+            if (minutes > 0)
+            {
+                location_time_txt = "last: " + minutes + " minutes ago";
+            }
+            else if (seconds > 0)
+            {
+                location_time_txt = "last: " + seconds + " seconds ago";
+            }
+            else
+            {
+                location_time_txt = "last: " + "now";
+            }
+            return location_txt + location_time_txt;
+        }
+
+        // HINT: No location yet, just give return String
+        return "";
     }
 
     @Override
@@ -5245,40 +5239,10 @@ public class MainActivity extends AppCompatActivity
                                 {
                                     try
                                     {
-
-                                        long diff = new Date(current_ts_millis).getTime() - new Date(last_remote_location_ts_millis).getTime();
-
-                                        long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
-                                        long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
-
                                         remote_location_last_ts_millis = current_ts_millis;
-
-                                        if (minutes > 0)
-                                        {
-                                            remote_location_txt = "remote location: " + "\n" +
-                                                                  "lat: " + lat + "\n" +
-                                                                  "lon: " + lon + "\n" +
-                                                                  "accur: " + acc + "\n";
-                                            remote_location_time_txt = minutes + " minutes ago";
-                                        }
-                                        else if (seconds < 1)
-                                        {
-                                            remote_location_txt = "remote location: " + "\n" +
-                                                                  "lat: " + lat + "\n" +
-                                                                  "lon: " + lon + "\n" +
-                                                                  "accur: " + acc + "\n";
-                                            remote_location_time_txt = "time: " + MainActivity.df_date_time_long.format(new Date(remote_location_last_ts_millis));
-                                        }
-                                        else
-                                        {
-                                            remote_location_txt = "remote location: " + "\n" +
-                                                                  "lat: " + lat + "\n" +
-                                                                  "lon: " + lon + "\n" +
-                                                                  "accur: " + acc + "\n";
-                                            remote_location_time_txt = seconds + " seconds ago";
-                                        }
-
-                                        set_debug_text_2(remote_location_txt + remote_location_time_txt);
+                                        remote_location_txt = "remote: " + "#" + friend_number + "\n" +
+                                                              "accur: " + (int)(Math.round(acc * 10f) / 10) + " m\n";
+                                        set_debug_text_2(location_info_text(remote_location_last_ts_millis, remote_location_txt));
                                     }
                                     catch (Exception e)
                                     {

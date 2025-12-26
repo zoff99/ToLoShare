@@ -28,6 +28,7 @@ import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_ke
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.debug_text;
+import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.map;
 import static com.zoffcc.applications.trifa.MainActivity.mapController;
@@ -190,13 +191,10 @@ public class CaptureService extends Service
                     e.printStackTrace();
                 }
 
-                own_location_txt = "provider: " + location.getProvider() + "\n" +
-                                   "lat: " + location.getLatitude() + "\n" +
-                                   "lon: " + location.getLongitude() + "\n" +
-                                   "accur: " + location.getAccuracy() + "\n";
                 own_location_last_ts_millis = System.currentTimeMillis();
-                own_location_time_txt = "time: " + MainActivity.df_date_time_long.format(new Date(own_location_last_ts_millis));
-                set_debug_text(own_location_txt + own_location_time_txt);
+                own_location_txt = "provider: " + location.getProvider() + "\n" +
+                                   "accur: " + (int)(Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
+                set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
             }
 
             @Override
