@@ -41,8 +41,12 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -5394,6 +5398,13 @@ public class MainActivity extends AppCompatActivity
                                         CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
                                         DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
                                         directed_ol.setShowAccuracy(true);
+                                        if (friend_number == 1)
+                                        {
+                                            // HINT: make a drawable later!!
+                                            Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
+                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#268210"));
+                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                        }
                                         map.getOverlays().add(directed_ol);
                                         remote_ol.remote_location_overlay = directed_ol;
                                         remote_location_overlays.put(f_pubkey, remote_ol);
@@ -6403,6 +6414,16 @@ public class MainActivity extends AppCompatActivity
         {
             main_handler_s.post(myRunnable);
         }
+    }
+
+    public static Bitmap tintImage(Bitmap bitmap, int color)
+    {
+        Paint paint = new Paint();
+        paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+        Bitmap bitmapResult = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmapResult);
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+        return bitmapResult;
     }
 
     static class send_message_result
