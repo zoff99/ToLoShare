@@ -156,6 +156,7 @@ import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg;
 import static com.zoffcc.applications.trifa.CaptureService.remoteBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
+import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
@@ -5298,7 +5299,7 @@ public class MainActivity extends AppCompatActivity
 
                             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
                             {
-                                set_map_center_to(remoteBestLocation);
+                                set_map_center_to_proxy_uithread(remoteBestLocation);
                             }
                             map.postInvalidate();
 

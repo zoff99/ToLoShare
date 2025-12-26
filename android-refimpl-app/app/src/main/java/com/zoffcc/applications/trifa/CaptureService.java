@@ -239,6 +239,31 @@ public class CaptureService extends Service
                  LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
     }
 
+    static void set_map_center_to_proxy_uithread(final Location location)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    set_map_center_to(location);
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "set_map_center_to_proxy_uithread:EE:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+
+    }
+
     static void set_map_center_to(Location location)
     {
         try
