@@ -103,6 +103,7 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -592,6 +593,12 @@ public class MainActivity extends AppCompatActivity
         map.setMultiTouchControls(true);
         map.getOverlays().add(mRotationGestureOverlay);
         */
+
+        final DisplayMetrics dm = getResources().getDisplayMetrics();
+        ScaleBarOverlay mScaleBarOverlay = new ScaleBarOverlay(map);
+        mScaleBarOverlay.setCentred(true);
+        mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 40);
+        map.getOverlays().add(mScaleBarOverlay);
 
         remote_location_overlay = new DirectedLocationOverlay(this);
         remote_location_overlay.setShowAccuracy(true);
