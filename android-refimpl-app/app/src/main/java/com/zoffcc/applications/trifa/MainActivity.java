@@ -571,6 +571,9 @@ public class MainActivity extends AppCompatActivity
         //note, the load method also sets the HTTP User Agent to your application's package name, abusing osm's
         //tile servers will get you banned based on this string
 
+        // HINT: just set the HTTP User Agent explicitly here
+        org.osmdroid.config.Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
+
         Log.i(TAG, "M:STARTUP:setContentView start");
         setContentView(R.layout.activity_main);
         Log.i(TAG, "M:STARTUP:setContentView end");
