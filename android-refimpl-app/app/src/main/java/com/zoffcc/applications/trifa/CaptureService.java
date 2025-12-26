@@ -16,31 +16,20 @@ import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
 
-import java.util.Date;
-
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
-import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
-import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
-import static com.zoffcc.applications.trifa.MainActivity.debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
-import static com.zoffcc.applications.trifa.MainActivity.map;
 import static com.zoffcc.applications.trifa.MainActivity.mapController;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
-import static com.zoffcc.applications.trifa.MainActivity.own_location_time_txt;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
-import static com.zoffcc.applications.trifa.MainActivity.remote_location_overlay;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
-import static com.zoffcc.applications.trifa.MainActivity.set_debug_text_2;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PROXY_PUBKEY_FOR_FRIEND;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
 /** @noinspection CommentedOutCode*/
