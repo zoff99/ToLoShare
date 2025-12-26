@@ -3568,7 +3568,7 @@ public class MainActivity extends AppCompatActivity
                         remote_location_overlay.setLocation(new GeoPoint(lat, lon));
                         remote_location_overlay.setAccuracy(Math.round(acc));
                         remote_location_overlay.setBearing(bearing);
-                        map.invalidate();
+                        map.postInvalidate();
                         */
 
                                 try
@@ -5223,7 +5223,7 @@ public class MainActivity extends AppCompatActivity
                             remote_location_overlay.setLocation(new GeoPoint(lat, lon));
                             remote_location_overlay.setAccuracy(Math.round(acc));
                             remote_location_overlay.setBearing(bearing);
-                            map.invalidate();
+                            map.postInvalidate();
 
                             Runnable myRunnable = new Runnable()
                             {
