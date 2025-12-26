@@ -23,11 +23,14 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
+import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.map;
+import static com.zoffcc.applications.trifa.MainActivity.mapController;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_time_txt;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
@@ -57,6 +60,22 @@ public class CaptureService extends Service
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
 
     static Location currentBestLocation = null;
+
+    public enum MAP_FOLLOW_MODE
+    {
+        MAP_FOLLOW_MODE_NONE(-2),
+        MAP_FOLLOW_MODE_SELF(-1),
+        MAP_FOLLOW_MODE_FRIEND_0(0),
+        MAP_FOLLOW_MODE_FRIEND_1(1),
+        MAP_FOLLOW_MODE_FRIEND_2(2);
+
+        public final int value;
+
+        MAP_FOLLOW_MODE(int value)
+        {
+            this.value = value;
+        }
+    }
 
     @Override
     public void onCreate()
@@ -153,6 +172,11 @@ public class CaptureService extends Service
                     e.printStackTrace();
                 }
 
+                if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                {
+                    set_map_center_to(location);
+                }
+
                 try
                 {
                     final byte[] data_bin = getGeoMsg(location);
@@ -191,6 +215,10 @@ public class CaptureService extends Service
                     if (lastKnownLocation != null)
                     {
                         Log.i(TAG1, "onProviderEnabled: lastKnownLocation = " + lastKnownLocation);
+                        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                        {
+                            set_map_center_to(lastKnownLocation);
+                        }
                     }
                 }
                 catch(Exception e)
@@ -210,6 +238,21 @@ public class CaptureService extends Service
 
         locationManager.requestLocationUpdates(
                  LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
+    }
+
+    private static void set_map_center_to(Location location)
+    {
+        try
+        {
+            // HINT: follow own location on the map
+            GeoPoint new_center = new GeoPoint(location.getLatitude(),
+                                               location.getLongitude());
+            mapController.animateTo(new_center);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     static byte[] getGeoMsg(Location location)

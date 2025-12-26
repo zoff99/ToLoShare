@@ -146,13 +146,11 @@ import info.guardianproject.netcipher.proxy.StatusCallback;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 
-import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
-import static androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE;
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
+import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
-import static com.zoffcc.applications.trifa.HelperFriend.get_friend_name_from_num;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.send_friend_msg_receipt_v2_wrapper;
@@ -296,6 +294,7 @@ public class MainActivity extends AppCompatActivity
     static MapView map = null;
     static DirectedLocationOverlay remote_location_overlay = null;
     static MyLocationNewOverlay mLocationOverlay = null;
+    static IMapController mapController = null;
     static long last_remote_location_ts_millis = 0;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
@@ -474,6 +473,7 @@ public class MainActivity extends AppCompatActivity
     static boolean PREF__gainprocessing_active = true;
     static boolean PREF__rnnoise_active = false;
     static boolean PREF__trust_all_webcerts = false; // HINT: !!be careful with this option!!
+    static int PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
 
     final static String push_instance_name = "com.zoffcc.applications.push_toloshare";
 
@@ -611,7 +611,7 @@ public class MainActivity extends AppCompatActivity
         map.getOverlays().add(mLocationOverlay);
 
         // set a default starting point in the middle of europe
-        IMapController mapController = map.getController();
+        mapController = map.getController();
         mapController.setZoom(12);
         GeoPoint startPoint = new GeoPoint(48.2085, 16.3730);
         mapController.setCenter(startPoint);
@@ -3459,11 +3459,13 @@ public class MainActivity extends AppCompatActivity
     protected void onPause()
     {
         Log.i(TAG, "onPause");
+
+        // mLocationOverlay.disableMyLocation();
+        map.onPause();
+
         super.onPause();
 
         global_showing_mainview = false;
-        // mLocationOverlay.disableMyLocation();
-        map.onPause();
 
         MainActivity.friend_list_fragment = null;
     }
@@ -3652,8 +3654,9 @@ public class MainActivity extends AppCompatActivity
         PREF__use_native_audio_play = settings.getBoolean("X_use_native_audio_play", true);
         PREF__tox_set_do_not_sync_av = settings.getBoolean("X_tox_set_do_not_sync_av", false);
 
+        PREF__map_follow_mode = settings.getInt("PREF__map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
 
-    // reset trigger for throttled saving
+        // reset trigger for throttled saving
         update_savedata_file_wrapper_throttled_last_trigger_ts = 0;
 
         remove_all_progressDialogs();
