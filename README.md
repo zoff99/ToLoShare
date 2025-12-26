@@ -3,8 +3,9 @@
 This is a simplified version of [TRIfA](https://github.com/zoff99/ToxAndroidRefImpl) (the Tox Message Application for Android) that focuses on stable location sharing.
 This is a work in progress, feel free to help out.
 
+<!--
 <a href="https://f-droid.org/app/com.zoffcc.applications.toloshare"><img src="https://raw.githubusercontent.com/zoff99/ToLoShare/master/images/f-droid.png" width="200"></a>
-
+-->
 
 Status
 =
