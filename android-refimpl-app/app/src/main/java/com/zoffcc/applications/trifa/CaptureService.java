@@ -61,6 +61,7 @@ public class CaptureService extends Service
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
 
     static Location currentBestLocation = null;
+    static Location remoteBestLocation = null;
 
     public enum MAP_FOLLOW_MODE
     {
@@ -238,7 +239,7 @@ public class CaptureService extends Service
                  LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
     }
 
-    private static void set_map_center_to(Location location)
+    static void set_map_center_to(Location location)
     {
         try
         {

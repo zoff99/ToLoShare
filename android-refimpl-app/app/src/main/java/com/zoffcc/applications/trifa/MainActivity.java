@@ -72,6 +72,7 @@ import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
@@ -148,8 +149,13 @@ import permissions.dispatcher.RuntimePermissions;
 
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
+import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
+import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
+import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg;
+import static com.zoffcc.applications.trifa.CaptureService.remoteBestLocation;
+import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
@@ -287,6 +293,9 @@ public class MainActivity extends AppCompatActivity
     static ViewGroup main_gallery_container = null;
     static TextView debug_text = null;
     static TextView debug_text_2 = null;
+    static ImageButton btn_follow_self = null;
+    static ImageButton btn_follow_friend_0 = null;
+    static ImageButton btn_follow_stop = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
@@ -621,6 +630,71 @@ public class MainActivity extends AppCompatActivity
         main_gallery_container = this.findViewById(R.id.main_gallery_container);
         debug_text = this.findViewById(R.id.debug_text);
         debug_text_2 = this.findViewById(R.id.debug_text_2);
+
+        btn_follow_self = this.findViewById(R.id.btn_follow_self);
+        btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
+        btn_follow_stop = this.findViewById(R.id.btn_follow_stop);
+
+        btn_follow_self.setOnClickListener(new View.OnClickListener()
+        {
+            @SuppressLint("ApplySharedPref")
+            @Override
+            public void onClick(View view)
+            {
+                try
+                {
+                    PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
+                    set_follow_button_ui();
+                    SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+
+                    set_map_center_to(currentBestLocation);
+                }
+                catch (Exception ee2)
+                {
+                }
+            }
+        });
+
+        btn_follow_friend_0.setOnClickListener(new View.OnClickListener()
+        {
+            @SuppressLint("ApplySharedPref")
+            @Override
+            public void onClick(View view)
+            {
+                try
+                {
+                    PREF__map_follow_mode = MAP_FOLLOW_MODE_FRIEND_0.value;
+                    set_follow_button_ui();
+                    SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+
+                    set_map_center_to(remoteBestLocation);
+                }
+                catch (Exception ee2)
+                {
+                }
+            }
+        });
+
+        btn_follow_stop.setOnClickListener(new View.OnClickListener()
+        {
+            @SuppressLint("ApplySharedPref")
+            @Override
+            public void onClick(View view)
+            {
+                try
+                {
+                    PREF__map_follow_mode = MAP_FOLLOW_MODE_NONE.value;
+                    set_follow_button_ui();
+                    SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+                }
+                catch (Exception ee2)
+                {
+                }
+            }
+        });
 
         mt = (TextView) this.findViewById(R.id.main_maintext);
         mt.setText("...");
@@ -3518,71 +3592,6 @@ public class MainActivity extends AppCompatActivity
             t_geo_time_thread.start();
         }
 
-
-        if (WANT_DEBUG_THREAD)
-        {
-            if (!DEBUG_THREAD_STARTED)
-            {
-                DEBUG_THREAD_STARTED = true;
-                final Thread t_debug_location = new Thread()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            while (true)
-                            {
-
-
-                                float lat = 48.2085f - (float) (Math.random() * 0.02f);
-                                float lon = 16.3730f - (float) (Math.random() * 0.02f);
-                                float acc = 20.5f - (float) (Math.random() * 19.0f);
-                                float bearing = (float) (Math.random() * 360.0f);
-                        /*
-                        remote_location_overlay.setLocation(new GeoPoint(lat, lon));
-                        remote_location_overlay.setAccuracy(Math.round(acc));
-                        remote_location_overlay.setBearing(bearing);
-                        map.postInvalidate();
-                        */
-
-                                try
-                                {
-                                    Location location = new Location(LocationManager.GPS_PROVIDER);
-                                    location.setLatitude(lat);
-                                    location.setLongitude(lon);
-                                    location.setBearing(bearing);
-                                    location.setAccuracy(acc);
-                                    final byte[] data_bin = getGeoMsg(location);
-                                    int data_bin_len = data_bin.length;
-                                    data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
-                                    String friend_pubkey = orma.selectFromFriendList().orderByTox_public_key_stringAsc().get(
-                                            0).tox_public_key_string;
-                                    // Log.i(TAG, "toxpubkey=" + friend_pubkey + " " + bytes_to_hex(data_bin));
-                                    final int res = tox_friend_send_lossless_packet(
-                                            tox_friend_by_public_key__wrapper(friend_pubkey), data_bin, data_bin_len);
-                                    // Log.i(TAG, "res=" + res);
-                                }
-                                catch (Exception e)
-                                {
-                                    e.printStackTrace();
-                                }
-
-                                Thread.sleep(2500);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                t_debug_location.start();
-            }
-        }
-
-
-
         /*
          // **************************************
          // **************************************
@@ -3618,6 +3627,7 @@ public class MainActivity extends AppCompatActivity
         PREF__tox_set_do_not_sync_av = settings.getBoolean("X_tox_set_do_not_sync_av", false);
 
         PREF__map_follow_mode = settings.getInt("PREF__map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
+        set_follow_button_ui();
 
         // reset trigger for throttled saving
         update_savedata_file_wrapper_throttled_last_trigger_ts = 0;
@@ -4177,6 +4187,46 @@ public class MainActivity extends AppCompatActivity
             catch(Exception e)
             {
             }
+        }
+    }
+
+    private static void set_follow_button_ui()
+    {
+        int color_active = Color.parseColor("#8A1919");
+        float alpha_active = 0.8f;
+        float alpha_inactive = 0.5f;
+        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+        {
+            btn_follow_self.setColorFilter(color_active);
+            btn_follow_self.setAlpha(alpha_active);
+
+            btn_follow_friend_0.setColorFilter(null);
+            btn_follow_friend_0.setAlpha(alpha_inactive);
+
+            btn_follow_stop.setColorFilter(null);
+            btn_follow_stop.setAlpha(alpha_inactive);
+        }
+        else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
+        {
+            btn_follow_self.setColorFilter(null);
+            btn_follow_self.setAlpha(alpha_inactive);
+
+            btn_follow_friend_0.setColorFilter(color_active);
+            btn_follow_friend_0.setAlpha(alpha_active);
+
+            btn_follow_stop.setColorFilter(null);
+            btn_follow_stop.setAlpha(alpha_inactive);
+        }
+        else // if (PREF__map_follow_mode == MAP_FOLLOW_MODE_NONE.value)
+        {
+            btn_follow_self.setColorFilter(null);
+            btn_follow_self.setAlpha(alpha_inactive);
+
+            btn_follow_friend_0.setColorFilter(null);
+            btn_follow_friend_0.setAlpha(alpha_inactive);
+
+            btn_follow_stop.setColorFilter(color_active);
+            btn_follow_stop.setAlpha(alpha_active);
         }
     }
 
@@ -5231,6 +5281,21 @@ public class MainActivity extends AppCompatActivity
                             remote_location_overlay.setAccuracy(Math.round(acc));
                             remote_location_overlay.setBearing(bearing);
                             map.postInvalidate();
+
+                            try
+                            {
+                                if (remoteBestLocation == null)
+                                {
+                                    remoteBestLocation = new Location("gps");
+                                }
+                                remoteBestLocation.setAccuracy(acc);
+                                remoteBestLocation.setLatitude(lat);
+                                remoteBestLocation.setLongitude(lon);
+                                remoteBestLocation.setBearing(bearing);
+                            }
+                            catch(Exception e)
+                            {
+                            }
 
                             Runnable myRunnable = new Runnable()
                             {

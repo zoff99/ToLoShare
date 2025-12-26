@@ -183,29 +183,106 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical" >
 
-                <TextView
-                    android:id="@+id/debug_text"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingLeft="5dp"
-                    android:paddingRight="5dp"
-                    android:text="..."
-                    android:textColor="@color/md_black_1000"
-                    android:textSize="12sp"
-                    android:visibility="visible"
-                    tools:ignore="HardcodedText" />
+                    android:orientation="vertical" >
 
-                <TextView
-                    android:id="@+id/debug_text_2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="5dp"
-                    android:paddingRight="5dp"
-                    android:text="..."
-                    android:textColor="@color/md_black_1000"
-                    android:textSize="12sp"
-                    android:visibility="visible"
-                    tools:ignore="HardcodedText" />
+                    <LinearLayout
+                        android:layout_weight="5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" >
+
+                        <TextView
+                            android:id="@+id/debug_text"
+                            android:layout_width="0dp"
+                            android:layout_weight="10"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:paddingRight="5dp"
+                            android:text="..."
+                            android:textColor="@color/md_black_1000"
+                            android:textSize="12sp"
+                            android:visibility="visible"
+                            tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/btn_follow_self"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            android:cropToPadding="true"
+                            android:padding="5dp"
+                            android:alpha="0.5"
+                            android:background="@drawable/transparent"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/outline_arrow_circle_right_24" />
+
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_weight="5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" >
+
+                        <TextView
+                            android:id="@+id/debug_text_2"
+                            android:layout_width="0dp"
+                            android:layout_weight="10"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:paddingRight="5dp"
+                            android:text="..."
+                            android:textColor="@color/md_black_1000"
+                            android:textSize="12sp"
+                            android:visibility="visible"
+                            tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/btn_follow_friend_0"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            android:cropToPadding="true"
+                            android:padding="5dp"
+                            android:alpha="0.5"
+                            android:background="@drawable/transparent"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/outline_arrow_circle_right_24" />
+
+                    </LinearLayout>
+
+
+                    <LinearLayout
+                        android:layout_weight="5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" >
+
+                        <TextView
+                            android:id="@+id/dummy999"
+                            android:layout_width="0dp"
+                            android:layout_weight="10"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:paddingRight="5dp"
+                            android:text=""
+                            android:visibility="visible"
+                            tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/btn_follow_stop"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            android:cropToPadding="true"
+                            android:padding="5dp"
+                            android:alpha="0.5"
+                            android:background="@drawable/transparent"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/outline_cancel_24" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
             <FrameLayout
                 android:id="@+id/main_gallery_container"
