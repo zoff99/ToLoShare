@@ -9,8 +9,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.zoffcc.applications.sorm.Message;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -53,16 +51,9 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static androidx.test.runner.lifecycle.Stage.RESUMED;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
-import static com.zoffcc.applications.trifa.MainActivity.load_main_gallery_images;
-import static com.zoffcc.applications.trifa.MainActivity.main_gallery_adapter;
 import static com.zoffcc.applications.trifa.MainActivity.main_gallery_container;
-import static com.zoffcc.applications.trifa.MainActivity.main_gallery_manager;
-import static com.zoffcc.applications.trifa.MainActivity.main_gallery_recycler;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.waiting_container;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_FT_DIRECTION.TRIFA_FT_DIRECTION_INCOMING;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_FILE;
-import static com.zoffcc.applications.trifa.ToxVars.TOX_FILE_CONTROL.TOX_FILE_CONTROL_CANCEL;
 import static com.zoffcc.applications.trifa.TrifaToxService.orma;
 
 @RunWith(AndroidJUnit4.class)
@@ -78,7 +69,9 @@ public class JavaFriendTester
     //
     @Rule
     public GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(Manifest.permission.RECORD_AUDIO,
-                                                                               Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                                                                               Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                                                               Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                                               Manifest.permission.ACCESS_FINE_LOCATION);
     private static Activity currentActivity = null;
 
     @Test
@@ -222,16 +215,11 @@ public class JavaFriendTester
                     // *** breaks thing, not sure why *** // switch_normal_main_view.setChecked(false);
 
                     MainActivity.PREF__normal_main_view = false;
-                    //SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-                    //settings.edit().putBoolean("normal_main_view", false).commit();
 
                     // the above does not trigger the "setOnCheckedChangeListener" for some reason
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
-                    main_gallery_recycler.setAdapter(main_gallery_adapter);
-                    main_gallery_recycler.setLayoutManager(main_gallery_manager);
                     main_gallery_container.bringToFront();
-                    load_main_gallery_images();
                     Log.i(TAG, "trigger setOnCheckedChangeListener");
                 }
                 catch (Exception e)
@@ -265,34 +253,6 @@ public class JavaFriendTester
 
         wait_(1);
         Espresso.closeSoftKeyboard();
-
-        List<Message> incoming_files = new ArrayList<>();
-        while (incoming_files.size() < 1)
-        {
-            try
-            {
-                incoming_files = orma.selectFromMessage().
-                        tox_friendpubkeyEq(def_friend_pubkey).
-                        directionEq(TRIFA_FT_DIRECTION_INCOMING.value).
-                        TRIFA_MESSAGE_TYPEEq(TRIFA_MSG_FILE.value).
-                        stateEq(TOX_FILE_CONTROL_CANCEL.value).
-                        orderBySent_timestampAsc().
-                        toList();
-            }
-            catch(Exception e)
-            {
-            }
-
-            Log.i(TAG, "incoming_files:" + incoming_files.size());
-
-            try
-            {
-                Thread.sleep(500);
-            }
-            catch(Exception e)
-            {
-            }
-        }
 
         wait_(2);
         // load_main_gallery_images();
@@ -470,6 +430,8 @@ public class JavaFriendTester
         ArrayList<String> permissions = new ArrayList<>();
         permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         for (int i = 0; i < permissions.size(); i++)
         {
             String command = String.format("pm grant %s %s", getTargetContext().getPackageName(), permissions.get(i));
