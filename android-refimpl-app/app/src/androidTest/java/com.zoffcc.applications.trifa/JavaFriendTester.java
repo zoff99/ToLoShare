@@ -51,8 +51,11 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static androidx.test.runner.lifecycle.Stage.RESUMED;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
+import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_gallery_container;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.map;
+import static com.zoffcc.applications.trifa.MainActivity.switch_normal_main_view;
 import static com.zoffcc.applications.trifa.MainActivity.waiting_container;
 import static com.zoffcc.applications.trifa.TrifaToxService.orma;
 
@@ -165,6 +168,46 @@ public class JavaFriendTester
         screenshot("006");
         wait_(2);
 
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    ///********/// switch_normal_main_view.setChecked(false);
+
+                    MainActivity.PREF__normal_main_view = false;
+
+                    // the above does not trigger the "setOnCheckedChangeListener" for some reason
+
+                    map.onResume();
+                    mLocationOverlay.enableMyLocation();
+                    main_gallery_container.bringToFront();
+
+                    waiting_container.setVisibility(View.GONE);
+                    main_gallery_container.setVisibility(View.VISIBLE);
+                    main_gallery_container.bringToFront();
+                    Log.i(TAG, "trigger setOnCheckedChangeListener");
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.i(TAG, "EE:002:" + e.getMessage());
+                }
+            }
+        };
+        try
+        {
+            if (main_handler_s != null)
+            {
+                main_handler_s.post(myRunnable);
+            }
+        }
+        catch (Exception e)
+        {
+        }
+
         boolean tox_online = false;
         while (!tox_online)
         {
@@ -188,6 +231,7 @@ public class JavaFriendTester
         long loops = 0;
         final long max_loops = 120;
         int count_friends = orma.selectFromFriendList().count();
+        /*
         while (count_friends < 1)
         {
             wait_(2);
@@ -199,47 +243,12 @@ public class JavaFriendTester
             }
             count_friends = orma.selectFromFriendList().count();
         }
+         */
 
         // set first friend as default contact
-        final String def_friend_pubkey = orma.selectFromFriendList().get(0).tox_public_key_string;
-        Log.i(TAG, "def_friend_pubkey=" + def_friend_pubkey);
-        get_set_is_default_ft_contact(def_friend_pubkey, true);
-
-        Runnable myRunnable = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    // *** breaks thing, not sure why *** // switch_normal_main_view.setChecked(false);
-
-                    MainActivity.PREF__normal_main_view = false;
-
-                    // the above does not trigger the "setOnCheckedChangeListener" for some reason
-                    waiting_container.setVisibility(View.GONE);
-                    main_gallery_container.setVisibility(View.VISIBLE);
-                    main_gallery_container.bringToFront();
-                    Log.i(TAG, "trigger setOnCheckedChangeListener");
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                    Log.i(TAG, "EE:002:" + e.getMessage());
-                }
-            }
-        };
-
-        try
-        {
-            if (main_handler_s != null)
-            {
-                main_handler_s.post(myRunnable);
-            }
-        }
-        catch (Exception e)
-        {
-        }
+        // final String def_friend_pubkey = orma.selectFromFriendList().get(0).tox_public_key_string;
+        // Log.i(TAG, "def_friend_pubkey=" + def_friend_pubkey);
+        // get_set_is_default_ft_contact(def_friend_pubkey, true);
 
         wait_(2);
         // friend should be fully added here
