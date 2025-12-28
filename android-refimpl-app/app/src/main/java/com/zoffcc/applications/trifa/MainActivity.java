@@ -1482,7 +1482,7 @@ public class MainActivity extends BaseProtectedActivity
                 R.string.MainActivity_maint).withIcon(GoogleMaterial.Icon.gmd_build);
         PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName(
                 R.string.MainActivity_about).withIcon(GoogleMaterial.Icon.gmd_info);
-        PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName("-----");
+        PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName("Change Code");
         PrimaryDrawerItem item7 = new PrimaryDrawerItem().withIdentifier(7).withName(
                 R.string.MainActivity_exit).withIcon(GoogleMaterial.Icon.gmd_exit_to_app);
         final Drawable d1 = new IconicsDrawable(this).icon(FontAwesome.Icon.faw_lock).color(
@@ -1606,6 +1606,8 @@ public class MainActivity extends BaseProtectedActivity
                         }
                         else if (position == 8)
                         {
+                            Intent intent = new Intent(context_s, ChangePinActivity.class);
+                            startActivity(intent);
                         }
                         else if (position == 10)
                         {

@@ -122,6 +122,12 @@
             android:launchMode="singleTask">
         </activity>
         <activity
+            android:name=".ChangePinActivity"
+            android:configChanges="screenSize|locale|touchscreen|navigation|orientation|fontScale|keyboard|keyboardHidden"
+            android:label="Change PIN"
+            android:launchMode="singleTask">
+        </activity>
+        <activity
             android:name=".CheckPasswordActivity"
             android:configChanges="screenSize|locale|touchscreen|navigation|orientation|fontScale|keyboard|keyboardHidden"
             android:label="@string/title_activity_check_password"
