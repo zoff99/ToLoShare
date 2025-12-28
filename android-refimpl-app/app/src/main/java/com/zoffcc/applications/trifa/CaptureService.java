@@ -46,7 +46,7 @@ public class CaptureService extends Service
     Notification notification_gps = null;
     NotificationManager nmn_gps = null;
     NotificationChannel notification_channel_gpsservice = null;
-    String channelId_gps = "toloshare_svc1";
+    String channelId_gps = "chl_svc1";
     LocationManager locationManager = null;
     LocationListenerCompat mLocationListener = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
@@ -105,7 +105,7 @@ public class CaptureService extends Service
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
-            CharSequence name = "svc2";
+            CharSequence name = "Chl Svc1";
             notification_channel_gpsservice = new NotificationChannel(channelId_gps, name, NotificationManager.IMPORTANCE_DEFAULT);
             notification_channel_gpsservice.enableVibration(false);
             notification_channel_gpsservice.setSound(null, null);

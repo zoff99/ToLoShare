@@ -928,8 +928,8 @@ public class MainActivity extends BaseProtectedActivity
             Log.i(TAG, "M:STARTUP:notification channels");
             String channelName;
             // ---------------------
-            channelId_newmessage_sound_and_vibrate = "trifa_new_message_sound_and_vibrate";
-            channelName = "New Message Sound and Vibrate";
+            channelId_newmessage_sound_and_vibrate = "chl_3";
+            channelName = "Chl 3";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             notification_channel_newmessage_sound_and_vibrate = new NotificationChannel(
                     channelId_newmessage_sound_and_vibrate, channelName, importance);
@@ -937,8 +937,8 @@ public class MainActivity extends BaseProtectedActivity
             notification_channel_newmessage_sound_and_vibrate.enableVibration(true);
             nmn3.createNotificationChannel(notification_channel_newmessage_sound_and_vibrate);
             // ---------------------
-            channelId_newmessage_sound = "trifa_new_message_sound";
-            channelName = "New Message Sound";
+            channelId_newmessage_sound = "chl_4";
+            channelName = "Chl 4";
             importance = NotificationManager.IMPORTANCE_DEFAULT;
             notification_channel_newmessage_sound = new NotificationChannel(channelId_newmessage_sound, channelName,
                                                                             importance);
@@ -946,8 +946,8 @@ public class MainActivity extends BaseProtectedActivity
             notification_channel_newmessage_sound.enableVibration(false);
             nmn3.createNotificationChannel(notification_channel_newmessage_sound);
             // ---------------------
-            channelId_newmessage_vibrate = "trifa_new_message_vibrate";
-            channelName = "New Message Vibrate";
+            channelId_newmessage_vibrate = "chl_5";
+            channelName = "Chl 5";
             importance = NotificationManager.IMPORTANCE_DEFAULT;
             notification_channel_newmessage_vibrate = new NotificationChannel(channelId_newmessage_vibrate, channelName,
                                                                               importance);
@@ -956,8 +956,8 @@ public class MainActivity extends BaseProtectedActivity
             notification_channel_newmessage_vibrate.enableVibration(true);
             nmn3.createNotificationChannel(notification_channel_newmessage_vibrate);
             // ---------------------
-            channelId_newmessage_silent = "trifa_new_message_silent";
-            channelName = "New Message Silent";
+            channelId_newmessage_silent = "chl_6";
+            channelName = "Chl 6";
             importance = NotificationManager.IMPORTANCE_DEFAULT;
             notification_channel_newmessage_silent = new NotificationChannel(channelId_newmessage_silent, channelName,
                                                                              importance);
@@ -966,8 +966,8 @@ public class MainActivity extends BaseProtectedActivity
             notification_channel_newmessage_silent.enableVibration(false);
             nmn3.createNotificationChannel(notification_channel_newmessage_silent);
             // ---------------------
-            channelId_toxservice = "trifa_tox_service";
-            channelName = "Tox Service";
+            channelId_toxservice = "chl_0";
+            channelName = "Chl 0";
             importance = NotificationManager.IMPORTANCE_LOW;
             notification_channel_toxservice = new NotificationChannel(channelId_toxservice, channelName, importance);
             notification_channel_toxservice.setDescription(channelId_toxservice);

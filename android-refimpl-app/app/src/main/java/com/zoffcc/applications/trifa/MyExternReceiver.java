@@ -118,13 +118,13 @@ public class MyExternReceiver // extends BroadcastReceiver
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                                 {
                                     NotificationChannel channel = new NotificationChannel(
-                                            "trifa_extern_msg_receiver_id", "new Message",
+                                            "chl_p1", "Chl P1",
                                             NotificationManager.IMPORTANCE_HIGH);
                                     nm3.createNotificationChannel(channel);
                                 }
 
                                 NotificationCompat.Builder notificationBuilder = new NotificationCompat.
-                                        Builder(context, "trifa_extern_msg_receiver_id").
+                                        Builder(context, "Chl P2").
                                         setSmallIcon(R.mipmap.ic_launcher).
                                         setContentTitle("TRIfA").
                                         setContentText("Incoming Message").
