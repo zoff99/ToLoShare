@@ -21,7 +21,7 @@ public class PinStorageUtil {
         prefs.edit()
                 .putString(PIN_KEY, pin)
                 .putBoolean(INITIALIZED_KEY, true) // Mark setup as complete
-                .apply();
+                .commit();
     }
 
     public static boolean isPinSet(Context context) {

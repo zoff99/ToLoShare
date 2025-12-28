@@ -2,6 +2,8 @@ package com.zoffcc.applications.trifa;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -36,6 +38,7 @@ import androidx.test.rule.GrantPermissionRule;
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import androidx.test.runner.screenshot.Screenshot;
 
+import static androidx.core.content.ContextCompat.startActivity;
 import static androidx.test.InstrumentationRegistry.getTargetContext;
 import static androidx.test.core.graphics.BitmapStorage.writeToTestStorage;
 import static androidx.test.espresso.Espresso.onView;
@@ -52,6 +55,7 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static androidx.test.runner.lifecycle.Stage.RESUMED;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
+import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_gallery_container;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
@@ -77,10 +81,6 @@ public class JavaFriendTester
                                                                                Manifest.permission.ACCESS_COARSE_LOCATION,
                                                                                Manifest.permission.ACCESS_FINE_LOCATION);
     private static Activity currentActivity = null;
-
-    @Rule
-    public ActivityScenarioRule<CustomPinActivity> activityRule =
-            new ActivityScenarioRule<>(CustomPinActivity.class);
 
     @Test
     public void Test_Startup()
@@ -148,31 +148,13 @@ public class JavaFriendTester
         }
         else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
         {
-            Log.i(TAG, "ACT:0c:" + cur_act);
-            ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
-            scenario2.onActivity(activity -> {
-                activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            });
-            wait_(2);
-
+            cause_error(12);
             Log.i(TAG, "ACT:2:" + cur_act);
             Log.i(TAG, "ACT:2:001");
             screenshot("002ap");
             Log.i(TAG, "ACT:2:002");
-            try
-            {
-                onView(withId(R.id.btn_unlock)).perform(click());
-                Log.i(TAG, "ACT:2:003");
-            }
-            catch(Exception e)
-            {
-                Log.i(TAG, "ACT:2:004");
-                wait_(4);
-                Log.i(TAG, "ACT:2:005");
-                onView(withId(R.id.btn_unlock)).perform(click());
-                Log.i(TAG, "ACT:2:006");
-            }
-            Log.i(TAG, "ACT:2:007");
+            // onView(withId(R.id.btn_unlock)).perform(click());
+            Log.i(TAG, "ACT:2:003");
         }
         else
         {
@@ -199,47 +181,25 @@ public class JavaFriendTester
         }
         else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
         {
-            Log.i(TAG, "ACT:0c:" + cur_act);
-            ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
-            scenario2.onActivity(activity -> {
-                activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            });
-            wait_(2);
+            // workaround -----------
+            PinStorageUtil.savePin(getActivityInstance(), "");
+            AppSessionManager.getInstance().setUnlocked(true);
+            // workaround -----------
 
+            Intent intent = new Intent(getActivityInstance(), StartMainActivityWrapper.class);
+            // Flags ensure the user can't "back" into the protected content
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(getActivityInstance(), intent, null);
+
+            // cause_error(12);
+            getActivityInstance().finish();
             Log.i(TAG, "ACT:2:" + cur_act);
             Log.i(TAG, "ACT:2:001");
-            screenshot("002ap");
-            Log.i(TAG, "ACT:2:002");
-            try
-            {
-                onView(withId(R.id.btn_unlock)).perform(click());
-                Log.i(TAG, "ACT:2:003");
-            }
-            catch(Exception e)
-            {
-                Log.i(TAG, "ACT:2:004");
-                wait_(4);
-                Log.i(TAG, "ACT:2:005");
-                onView(withId(R.id.btn_unlock)).perform(click());
-                Log.i(TAG, "ACT:2:006");
-            }
-            Log.i(TAG, "ACT:2:007");
         }
         else
         {
             cause_error(2);
         }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
