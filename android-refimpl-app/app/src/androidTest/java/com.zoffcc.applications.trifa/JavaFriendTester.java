@@ -7,6 +7,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import org.hamcrest.BaseMatcher;
@@ -77,6 +78,10 @@ public class JavaFriendTester
                                                                                Manifest.permission.ACCESS_FINE_LOCATION);
     private static Activity currentActivity = null;
 
+    //@Rule
+    //public ActivityScenarioRule<CustomPinActivity> activityRule =
+    //        new ActivityScenarioRule<>(CustomPinActivity.class);
+
     @Test
     public void Test_Startup()
     {
@@ -106,6 +111,10 @@ public class JavaFriendTester
             {
                 showing_app = true;
             }
+            else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
+            {
+                showing_app = true;
+            }
             else
             {
                 app_showing_cycles++;
@@ -118,31 +127,35 @@ public class JavaFriendTester
         Log.i(TAG, "PREF__window_security:002=" + PREF__window_security);
 
         screenshot("001");
+        wait_(2);
+
+        cur_act = getActivityInstance().getLocalClassName();
 
         if (cur_act.equals("com.zoffcc.applications.trifa.CheckPasswordActivity"))
         {
+            Log.i(TAG, "ACT:0a:" + cur_act);
             onView(withId(R.id.password_1_c)).perform(replaceText(MOCK_PASSWORD));
             screenshot("002a");
             onView(withId(R.id.set_button_2)).perform(click());
         }
         else if (cur_act.equals("com.zoffcc.applications.trifa.SetPasswordActivity"))
         {
+            Log.i(TAG, "ACT:0b:" + cur_act);
             onView(withId(R.id.password_1)).perform(replaceText(MOCK_PASSWORD));
             onView(withId(R.id.password_2)).perform(replaceText(MOCK_PASSWORD));
             screenshot("002b");
             onView(withId(R.id.set_button)).perform(click());
         }
-        else
+        else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
         {
-            cause_error(2);
-        }
+            Log.i(TAG, "ACT:0c:" + cur_act);
+            //ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
+            //scenario2.onActivity(activity -> {
+            //    activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            //});
+            wait_(2);
 
-        wait_(4);
-
-        cur_act = getActivityInstance().getLocalClassName();
-        Log.i(TAG, "ACT:2:" + cur_act);
-        if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
-        {
+            Log.i(TAG, "ACT:2:" + cur_act);
             Log.i(TAG, "ACT:2:001");
             screenshot("002ap");
             Log.i(TAG, "ACT:2:002");
@@ -163,10 +176,71 @@ public class JavaFriendTester
         }
         else
         {
-            cur_act = getActivityInstance().getLocalClassName();
-            Log.i(TAG, "ACT:3:" + cur_act);
-            cause_error(22);
+            cause_error(2);
         }
+
+        wait_(2);
+        cur_act = getActivityInstance().getLocalClassName();
+
+        if (cur_act.equals("com.zoffcc.applications.trifa.CheckPasswordActivity"))
+        {
+            Log.i(TAG, "ACT:0a:" + cur_act);
+            onView(withId(R.id.password_1_c)).perform(replaceText(MOCK_PASSWORD));
+            screenshot("002a");
+            onView(withId(R.id.set_button_2)).perform(click());
+        }
+        else if (cur_act.equals("com.zoffcc.applications.trifa.SetPasswordActivity"))
+        {
+            Log.i(TAG, "ACT:0b:" + cur_act);
+            onView(withId(R.id.password_1)).perform(replaceText(MOCK_PASSWORD));
+            onView(withId(R.id.password_2)).perform(replaceText(MOCK_PASSWORD));
+            screenshot("002b");
+            onView(withId(R.id.set_button)).perform(click());
+        }
+        else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
+        {
+            Log.i(TAG, "ACT:0c:" + cur_act);
+            //ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
+            //scenario2.onActivity(activity -> {
+            //    activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            //});
+            wait_(2);
+
+            Log.i(TAG, "ACT:2:" + cur_act);
+            Log.i(TAG, "ACT:2:001");
+            screenshot("002ap");
+            Log.i(TAG, "ACT:2:002");
+            try
+            {
+                onView(withId(R.id.btn_unlock)).perform(click());
+                Log.i(TAG, "ACT:2:003");
+            }
+            catch(Exception e)
+            {
+                Log.i(TAG, "ACT:2:004");
+                wait_(4);
+                Log.i(TAG, "ACT:2:005");
+                onView(withId(R.id.btn_unlock)).perform(click());
+                Log.i(TAG, "ACT:2:006");
+            }
+            Log.i(TAG, "ACT:2:007");
+        }
+        else
+        {
+            cause_error(2);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         Log.i(TAG, "checking for AlertDialog");
