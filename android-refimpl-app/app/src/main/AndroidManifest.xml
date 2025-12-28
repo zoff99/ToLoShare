@@ -119,12 +119,14 @@
             android:name=".CustomPinActivity"
             android:configChanges="screenSize|locale|touchscreen|navigation|orientation|fontScale|keyboard|keyboardHidden"
             android:label="PIN"
+            android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTask">
         </activity>
         <activity
             android:name=".ChangePinActivity"
             android:configChanges="screenSize|locale|touchscreen|navigation|orientation|fontScale|keyboard|keyboardHidden"
             android:label="Change PIN"
+            android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTask">
         </activity>
         <activity
