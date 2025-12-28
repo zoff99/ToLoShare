@@ -8,10 +8,10 @@ public abstract class BaseProtectedActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        // If not unlocked, redirect to the custom PIN screen
+        // This check runs every time the activity comes to the foreground
         if (!AppSessionManager.getInstance().isUnlocked()) {
             Intent intent = new Intent(this, CustomPinActivity.class);
-            // Prevent user from going back to protected screen without PIN
+            // Flags ensure the user can't "back" into the protected content
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         }

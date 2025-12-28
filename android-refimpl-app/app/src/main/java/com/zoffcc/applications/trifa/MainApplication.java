@@ -82,6 +82,11 @@ public class MainApplication extends Application
         updateTheme(sp);
         sp.registerOnSharedPreferenceChangeListener(sp_change_listener);
 
+        // Register the receiver to listen for screen lock events
+        ScreenOffReceiver receiver = new ScreenOffReceiver();
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(receiver, filter);
+
         // Lingver.init(this, Locale.ENGLISH);
         //
         if (Locale.getDefault().getLanguage().equals(new Locale("ar").getLanguage()))
