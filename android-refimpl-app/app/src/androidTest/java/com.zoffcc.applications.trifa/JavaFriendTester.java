@@ -141,8 +141,11 @@ public class JavaFriendTester
         Log.i(TAG, "ACT:2:" + cur_act);
         if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
         {
+            Log.i(TAG, "ACT:2:001");
             screenshot("002ap");
+            Log.i(TAG, "ACT:2:002");
             onView(withId(R.id.btn_unlock)).perform(click());
+            Log.i(TAG, "ACT:2:003");
         }
         else
         {
