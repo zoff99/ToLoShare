@@ -28,6 +28,8 @@ public class CustomPinActivity extends AppCompatActivity {
         btnAction = findViewById(R.id.btn_unlock);
         tvTitle = findViewById(R.id.tv_title); // Ensure you have this ID in your XML
 
+        etPassword.requestFocus();
+
         // If never initialized, we are in "Setup Mode"
         boolean isFirstTime = !PinStorageUtil.isPinSet(this);
 

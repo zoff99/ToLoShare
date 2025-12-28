@@ -30,6 +30,8 @@ public class ChangePinActivity extends AppCompatActivity {
         btnAction = findViewById(R.id.btn_unlock);
         tvLabel = findViewById(R.id.tv_title);
 
+        etInput.requestFocus();
+
         // Initial State: Verify identity
         if (PinStorageUtil.isPinRequired(this)) {
             tvLabel.setText("Enter Current Code");
@@ -58,6 +60,8 @@ public class ChangePinActivity extends AppCompatActivity {
             etInput.setText("");
             tvLabel.setText("Enter New Code (Leave blank to remove)");
             btnAction.setText("Update Code");
+
+            etInput.requestFocus();
         } else {
             etInput.setError("Incorrect Current Code");
         }
