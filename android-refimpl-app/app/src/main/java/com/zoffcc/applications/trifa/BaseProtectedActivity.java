@@ -14,6 +14,7 @@ public abstract class BaseProtectedActivity extends AppCompatActivity
             // Flags ensure the user can't "back" into the protected content
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
+            overridePendingTransition(0, 0);
         }
     }
 }
