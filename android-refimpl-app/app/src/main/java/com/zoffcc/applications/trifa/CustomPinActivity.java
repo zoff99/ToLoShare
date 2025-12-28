@@ -63,7 +63,7 @@ public class CustomPinActivity extends AppCompatActivity {
                 PinStorageUtil.savePin(this, input);
                 AppSessionManager.getInstance().setUnlocked(true);
 
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, StartMainActivityWrapper.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
@@ -74,7 +74,7 @@ public class CustomPinActivity extends AppCompatActivity {
                 if (PinStorageUtil.checkPin(this, input)) {
                     AppSessionManager.getInstance().setUnlocked(true);
 
-                    Intent intent = new Intent(this, MainActivity.class);
+                    Intent intent = new Intent(this, StartMainActivityWrapper.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     overridePendingTransition(0, 0);

@@ -78,9 +78,9 @@ public class JavaFriendTester
                                                                                Manifest.permission.ACCESS_FINE_LOCATION);
     private static Activity currentActivity = null;
 
-    //@Rule
-    //public ActivityScenarioRule<CustomPinActivity> activityRule =
-    //        new ActivityScenarioRule<>(CustomPinActivity.class);
+    @Rule
+    public ActivityScenarioRule<CustomPinActivity> activityRule =
+            new ActivityScenarioRule<>(CustomPinActivity.class);
 
     @Test
     public void Test_Startup()
