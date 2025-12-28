@@ -153,6 +153,15 @@ public class CaptureService extends Service
         return START_NOT_STICKY; // START_STICKY;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+
+        // This is triggered when the app is swiped away from Recents
+        // Reset the session lock state
+        AppSessionManager.getInstance().lockApp();
+    }
+
     @SuppressLint("MissingPermission")
     public void startLocationTracking()
     {
