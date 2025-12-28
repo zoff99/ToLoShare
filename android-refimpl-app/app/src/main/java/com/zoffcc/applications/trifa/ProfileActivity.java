@@ -142,6 +142,8 @@ public class ProfileActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+
         profile_icon = findViewById(R.id.profile_icon);
         profile_icon_edit = findViewById(R.id.profile_icon_edit);
         profile_icon_remove = findViewById(R.id.profile_icon_remove);

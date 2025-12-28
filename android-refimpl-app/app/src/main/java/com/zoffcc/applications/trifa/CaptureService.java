@@ -114,7 +114,7 @@ public class CaptureService extends Service
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.
                 Builder(this, channelId_gps).
-                setContentTitle("GPS").
+                setContentTitle("Active").
                 setContentText("ToLoShare").
                 setSmallIcon(R.mipmap.ic_launcher).
                 setPriority(NotificationCompat.PRIORITY_DEFAULT).

@@ -29,6 +29,7 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -89,6 +90,8 @@ public class FriendInfoActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friendinfo);
 
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+
         Intent intent = getIntent();
         friendnum = intent.getLongExtra("friendnum", -1);
         friend_pubkey = tox_friend_get_public_key__wrapper(friendnum);
@@ -110,331 +113,17 @@ public class FriendInfoActivity extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        mytoxid.setText("*error*");
-        mynick.setText("*error*");
-        mystatus_message.setText("*error*");
-
-        alias_text.setText("");
-
-        fi_ipaddr_text.setText("");
-        try
-        {
-            final String ip_str = tox_friend_get_connection_ip(tox_friend_by_public_key__wrapper(friend_pubkey));
-            final String f_ip_str = ip_str.replaceAll("\0", "");
-            fi_ipaddr_text.setText(f_ip_str);
-        }
-        catch(Exception ignored)
-        {
-        }
-
-        try
-        {
-            alias_text.setText(orma.selectFromFriendList().
-                    tox_public_key_stringEq(friend_pubkey).
-                    toList().get(0).alias_name);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        String msgv3_single_cap = "";
-
-        try
-        {
-            final FriendList f = (FriendList) orma.selectFromFriendList().tox_public_key_stringEq(
-                    friend_pubkey).toList().get(0);
-
-            if (f.msgv3_capability == 1)
-            {
-                msgv3_single_cap = " MSGV3-lite";
-            }
-        }
-        catch (Exception e)
-        {
-        }
-
-        fi_toxcapabilities_textview.setText(TOX_CAPABILITY_DECODE_TO_STRING(TOX_CAPABILITY_DECODE(
-                get_friend_capabilities_from_pubkey(friend_pubkey))) +
-                                            msgv3_single_cap);
-
-        String friend_relay_pubkey = null;
-
-        fi_relay_pubkey_textview.setText("");
-
-        try
-        {
-            if (friend_relay_pubkey == null)
-            {
-                fi_relay_text.setVisibility(View.GONE);
-                fi_relay_pubkey_textview.setVisibility(View.GONE);
-                remove_friend_relay_button.setVisibility(View.GONE);
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        String pushurl_for_friend = get_pushurl_for_friend(friend_pubkey);
-
-        fi_pushurl_textview.setText("");
-
-        try
-        {
-            if (pushurl_for_friend == null)
-            {
-                fi_pushurl_text.setVisibility(View.GONE);
-                fi_pushurl_textview.setVisibility(View.GONE);
-                remove_friend_pushurl_button.setVisibility(View.GONE);
-            }
-            else
-            {
-                fi_pushurl_text.setVisibility(View.VISIBLE);
-                fi_pushurl_textview.setVisibility(View.VISIBLE);
-                fi_pushurl_textview.setText(pushurl_for_friend);
-
-                boolean is_valid = false;
-                if (pushurl_for_friend.length() > "https://".length())
-                {
-                    if (is_valid_pushurl_for_friend_with_whitelist(pushurl_for_friend))
-                    {
-                        is_valid = true;
-                    }
-                }
-
-                if (!is_valid)
-                {
-                    Spannable spannable = new SpannableString(pushurl_for_friend + "\n" + "(*invalid*)");
-                    spannable.setSpan(new ForegroundColorSpan(Color.RED), pushurl_for_friend.length(),
-                                      (pushurl_for_friend + "\n" + "(*invalid*)").length(),
-                                      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    fi_pushurl_textview.setText(spannable, TextView.BufferType.SPANNABLE);
-                }
-                else
-                {
-                    Spannable spannable = new SpannableString(pushurl_for_friend + "\n" + "( OK )");
-                    spannable.setSpan(new ForegroundColorSpan(darkenColor(Color.GREEN, 0.3f)),
-                                      pushurl_for_friend.length(), (pushurl_for_friend + "\n" + "( OK )").length(),
-                                      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    fi_pushurl_textview.setText(spannable, TextView.BufferType.SPANNABLE);
-                }
-
-                remove_friend_pushurl_button.setText("remove Friend Push URL");
-                remove_friend_pushurl_button.setOnClickListener(new View.OnClickListener()
-                {
-                    @Override
-                    public void onClick(View v)
-                    {
-                        try
-                        {
-                            remove_friend_pushurl_in_db(friend_pubkey);
-                            remove_friend_pushurl_button.setVisibility(View.GONE);
-                            fi_pushurl_text.setVisibility(View.GONE);
-                            fi_pushurl_textview.setVisibility(View.GONE);
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                remove_friend_pushurl_button.setVisibility(View.VISIBLE);
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        final Drawable d1 = new IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_face).color(
-                getResources().getColor(R.color.colorPrimaryDark)).sizeDp(200);
-        profile_icon.setImageDrawable(d1);
-
-        try
-        {
-            final long friendnum_ = friendnum;
-            Thread t = new Thread()
-            {
-                @Override
-                public void run()
-                {
-                    try
-                    {
-                        final FriendList f = (FriendList) orma.selectFromFriendList().tox_public_key_stringEq(
-                                tox_friend_get_public_key__wrapper(friendnum_)).toList().get(0);
-
-                        Runnable myRunnable = new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                try
-                                {
-                                    String pubkey_temp = f.tox_public_key_string;
-                                    String color_pkey = "<font color=\"#331bc5\">";
-                                    String ec = "</font>";
-
-                                    if (is_nightmode_active(getApplicationContext()))
-                                    {
-                                        color_pkey = "<font color=\"#8affffff\">";
-                                    }
-
-                                    mytoxid.setText(Html.fromHtml(color_pkey + pubkey_temp + ec));
-
-                                    mynick.setText(f.name);
-                                    mystatus_message.setText(f.status_message);
-                                }
-                                catch (Exception e)
-                                {
-                                    e.printStackTrace();
-                                    Log.i(TAG, "CALL:start:EE:" + e.getMessage());
-                                }
-                            }
-                        };
-                        main_handler_s.post(myRunnable);
-                    }
-                    catch (Exception e2)
-                    {
-                        e2.printStackTrace();
-                    }
-                }
-            };
-            t.start();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-
-        try
-        {
-            String fname = get_vfs_image_filename_friend_avatar(friendnum);
-            // Log.i(TAG, "fname=" + fname);
-            if (fname != null)
-            {
-                put_vfs_image_on_imageview_real(this, profile_icon, d1, fname, false, true, main_get_friend(friendnum));
-            }
-            else
-            {
-                // Log.i(TAG, "indenticon:001");
-
-                final FriendList f = (FriendList) orma.selectFromFriendList().
-                        tox_public_key_stringEq(friend_pubkey).
-                        toList().get(0);
-
-                create_avatar_identicon_for_pubkey(f.tox_public_key_string);
-                set_friend_avatar_update(friend_pubkey, true);
-
-                String fname3 = get_vfs_image_filename_friend_avatar(friendnum);
-                if (fname3 != null)
-                {
-                    put_vfs_image_on_imageview_real(this, profile_icon, d1, fname3, false, true, f);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Log.i(TAG, "EE2:" + e.getMessage());
-        }
-
     }
 
     @Override
     protected void onResume()
     {
         super.onResume();
-
-        Thread t = new Thread()
-        {
-            @Override
-            public void run()
-            {
-                String num_str1 = "*ERROR*";
-                try
-                {
-                    num_str1 = "" + orma.selectFromMessage().
-                    tox_friendpubkeyEq(friend_pubkey).count();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-                final String num_str_1 = num_str1;
-
-                Runnable myRunnable = new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            friend_num_msgs_text.setText("Messages: " + num_str_1);
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-
-                if (main_handler_s != null)
-                {
-                    main_handler_s.post(myRunnable);
-                }
-            }
-        };
-        t.start();
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
-        // TODO dirty hack, just write "alias"
-
-        try
-        {
-            String alias_name = alias_text.getText().toString();
-            if (alias_name != null)
-            {
-                if (alias_name.length() > 0)
-                {
-                    orma.updateFriendList().
-                            tox_public_key_stringEq(friend_pubkey).
-                            alias_name(alias_name).execute();
-                }
-                else
-                {
-                    orma.updateFriendList().
-                            tox_public_key_stringEq(friend_pubkey).
-                            alias_name("").execute();
-                }
-            }
-            else
-            {
-                orma.updateFriendList().
-                        tox_public_key_stringEq(friend_pubkey).
-                        alias_name("").execute();
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            try
-            {
-            }
-            catch (Exception e1)
-            {
-                e1.printStackTrace();
-                orma.updateFriendList().
-                        tox_public_key_stringEq(friend_pubkey).
-                        alias_name("").execute();
-            }
-        }
     }
 }

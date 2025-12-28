@@ -246,7 +246,7 @@ fn=1 res=1 msg=🍔👍😜👍😜 @%\4äö ubnc Ovid n JB von in BK ni ubvzv8 
 @SuppressWarnings({"UnusedReturnValue", "deprecation", "JniMissingFunction", "unused", "RedundantSuppression", "unchecked", "ConstantConditions", "RedundantCast", "Convert2Lambda", "EmptyCatchBlock", "PointlessBooleanExpression", "SimplifiableIfStatement", "ResultOfMethodCallIgnored"})
 @SuppressLint({"StaticFieldLeak", "SimpleDateFormat", "SetTextI18n"})
 @RuntimePermissions
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseProtectedActivity
 {
     private static final String TAG = "trifa.MainActivity";
     // --------- global config ---------

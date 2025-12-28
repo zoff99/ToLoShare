@@ -75,11 +75,11 @@ public class HelperToxNotification
 
         if (PREF__orbot_enabled)
         {
-            notification_view.setTextViewText(R.id.title, "Tox Service: " + "OFFLINE  [Tor Proxy]");
+            notification_view.setTextViewText(R.id.title, "" + "OFFLINE");
         }
         else
         {
-            notification_view.setTextViewText(R.id.title, "Tox Service: " + "OFFLINE");
+            notification_view.setTextViewText(R.id.title, "" + "OFFLINE");
         }
 
         notification_view.setTextViewText(R.id.text, "");
@@ -217,7 +217,7 @@ public class HelperToxNotification
                     b.setColor(Color.parseColor("#ff0000"));
                 }
             }
-            notification_view.setTextViewText(R.id.title, "Tox Service: " + "OFFLINE manually");
+            notification_view.setTextViewText(R.id.title, "" + "OFFLINE manually");
         }
         else
         {
@@ -248,11 +248,11 @@ public class HelperToxNotification
                 if (PREF__orbot_enabled)
                 {
                     notification_view.setTextViewText(R.id.title,
-                                                      "Tox Service: " + "Bootstrapping [Tor Proxy]" + " " + message);
+                                                      "" + "Bootstrapping");
                 }
                 else
                 {
-                    notification_view.setTextViewText(R.id.title, "Tox Service: " + "Bootstrapping" + " " + message);
+                    notification_view.setTextViewText(R.id.title, "" + "Bootstrapping");
                 }
             }
             else
@@ -284,11 +284,11 @@ public class HelperToxNotification
                     if (PREF__orbot_enabled)
                     {
                         notification_view.setTextViewText(R.id.title,
-                                                          "Tox Service: " + "OFFLINE [Tor Proxy]" + " " + message);
+                                                          "" + "OFFLINE");
                     }
                     else
                     {
-                        notification_view.setTextViewText(R.id.title, "Tox Service: " + "OFFLINE" + " " + message);
+                        notification_view.setTextViewText(R.id.title, "" + "OFFLINE");
                     }
                 }
                 else
@@ -316,7 +316,7 @@ public class HelperToxNotification
                             }
                         }
                         notification_view.setTextViewText(R.id.title,
-                                                          "Tox Service: " + "ONLINE [Tor Proxy]" + " " + message);
+                                                          "" + "ONLINE");
                     }
                     else
                     {
@@ -343,7 +343,7 @@ public class HelperToxNotification
                                 }
                             }
                             notification_view.setTextViewText(R.id.title,
-                                                              "Tox Service: " + "ONLINE [TCP]" + " " + message);
+                                                              "" + "ONLINE");
                             // get_network_connections();
                         }
                         else // if (a_TOXCONNECTION__f == 2)
@@ -369,7 +369,7 @@ public class HelperToxNotification
                                 }
                             }
                             notification_view.setTextViewText(R.id.title,
-                                                              "Tox Service: " + "ONLINE [UDP]" + " " + message);
+                                                              "" + "ONLINE");
                             // get_network_connections();
                         }
                     }
