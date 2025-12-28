@@ -69,14 +69,14 @@ public class ChangePinActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Code Updated Successfully", Toast.LENGTH_SHORT).show();
 
-        // Ensure session remains unlocked
-        AppSessionManager.getInstance().setUnlocked(true);
-
+        // Lock after setting new PIN. so the user must unlock again!
+        AppSessionManager.getInstance().setUnlocked(false);
+        /*
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         overridePendingTransition(0, 0);
-
+        */
         finish();
     }
 }
