@@ -137,6 +137,8 @@ public class JavaFriendTester
             cause_error(2);
         }
 
+        wait_(4);
+
         cur_act = getActivityInstance().getLocalClassName();
         Log.i(TAG, "ACT:2:" + cur_act);
         if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
