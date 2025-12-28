@@ -137,6 +137,21 @@ public class JavaFriendTester
             cause_error(2);
         }
 
+        cur_act = getActivityInstance().getLocalClassName();
+        Log.i(TAG, "ACT:2:" + cur_act);
+        if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
+        {
+            screenshot("002ap");
+            onView(withId(R.id.btn_unlock)).perform(click());
+        }
+        else
+        {
+            cur_act = getActivityInstance().getLocalClassName();
+            Log.i(TAG, "ACT:3:" + cur_act);
+            cause_error(22);
+        }
+
+
         Log.i(TAG, "checking for AlertDialog");
 
         try
