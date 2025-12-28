@@ -14,6 +14,10 @@ public class PinStorageUtil {
      */
     public static void savePin(Context context, String pin) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
+        if (pin == null)
+        {
+            pin = "";
+        }
         prefs.edit()
                 .putString(PIN_KEY, pin)
                 .putBoolean(INITIALIZED_KEY, true) // Mark setup as complete
