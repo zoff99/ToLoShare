@@ -149,10 +149,10 @@ public class JavaFriendTester
         else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
         {
             Log.i(TAG, "ACT:0c:" + cur_act);
-            //ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
-            //scenario2.onActivity(activity -> {
-            //    activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            //});
+            ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
+            scenario2.onActivity(activity -> {
+                activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            });
             wait_(2);
 
             Log.i(TAG, "ACT:2:" + cur_act);
@@ -200,10 +200,10 @@ public class JavaFriendTester
         else if (cur_act.equals("com.zoffcc.applications.trifa.CustomPinActivity"))
         {
             Log.i(TAG, "ACT:0c:" + cur_act);
-            //ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
-            //scenario2.onActivity(activity -> {
-            //    activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            //});
+            ActivityScenario<CustomPinActivity> scenario2 = activityRule.getScenario();
+            scenario2.onActivity(activity -> {
+                activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            });
             wait_(2);
 
             Log.i(TAG, "ACT:2:" + cur_act);
