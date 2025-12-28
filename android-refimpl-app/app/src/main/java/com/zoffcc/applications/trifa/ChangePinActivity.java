@@ -10,6 +10,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
+
 public class ChangePinActivity extends AppCompatActivity {
 
     private EditText etInput;
@@ -24,7 +26,10 @@ public class ChangePinActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_pin); // Reuse your existing layout
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        if (PREF__window_security)
+        {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
 
         etInput = findViewById(R.id.et_password);
         btnAction = findViewById(R.id.btn_unlock);

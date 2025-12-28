@@ -865,6 +865,7 @@ public class MainActivity extends BaseProtectedActivity
 
         if (PREF__window_security)
         {
+            Log.i(TAG, "PREF__window_security: " + PREF__window_security);
             // prevent screenshots and also dont show the window content in recent activity screen
             initializeScreenshotSecurity(this);
         }

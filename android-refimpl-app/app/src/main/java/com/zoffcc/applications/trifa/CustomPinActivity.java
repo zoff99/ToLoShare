@@ -3,6 +3,7 @@ package com.zoffcc.applications.trifa;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -15,6 +16,8 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
 
 public class CustomPinActivity extends AppCompatActivity {
 
+    final static String TAG = "CustPinActivity";
+
     private EditText etPassword;
     private Button btnAction;
     private TextView tvTitle;
@@ -26,6 +29,7 @@ public class CustomPinActivity extends AppCompatActivity {
 
         if (PREF__window_security)
         {
+            Log.i(TAG, "PREF__window_security: " + PREF__window_security);
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         }
 

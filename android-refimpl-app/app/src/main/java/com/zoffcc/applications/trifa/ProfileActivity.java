@@ -88,6 +88,7 @@ import static com.zoffcc.applications.trifa.HelperRelay.own_push_token_load;
 import static com.zoffcc.applications.trifa.HelperRelay.push_token_to_push_url;
 import static com.zoffcc.applications.trifa.HelperRelay.remove_own_pushurl_in_db;
 import static com.zoffcc.applications.trifa.Identicon.IDENTICON_ROWS;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
 import static com.zoffcc.applications.trifa.MainActivity.clipboard;
 import static com.zoffcc.applications.trifa.MainActivity.friend_list_fragment;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
@@ -142,7 +143,10 @@ public class ProfileActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        if (PREF__window_security)
+        {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
 
         profile_icon = findViewById(R.id.profile_icon);
         profile_icon_edit = findViewById(R.id.profile_icon_edit);

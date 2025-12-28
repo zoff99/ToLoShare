@@ -3568,14 +3568,7 @@ public class HelperGeneric
 
     public static void initializeScreenshotSecurity(Activity a)
     {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-        {
-            a.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        }
-        else
-        {
-            a.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        }
+        a.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
     }
 
     static boolean is_nightmode_active(final Context c)
