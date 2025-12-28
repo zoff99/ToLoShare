@@ -276,13 +276,13 @@ public class JavaFriendTester
         screenshot("005");
 
         wait_(1);
-        Espresso.closeSoftKeyboard();
+        // Espresso.closeSoftKeyboard();
 
         wait_(2);
         // load_main_gallery_images();
         screenshot_full("007");
 
-        wait_(60);
+        wait_(40);
         Log.i(TAG, "taking last screenshot ...");
         screenshot_full("099");
         Log.i(TAG, "taking last screenshot ... DONE");
