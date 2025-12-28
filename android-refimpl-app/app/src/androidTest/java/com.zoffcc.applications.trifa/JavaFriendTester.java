@@ -144,8 +144,20 @@ public class JavaFriendTester
             Log.i(TAG, "ACT:2:001");
             screenshot("002ap");
             Log.i(TAG, "ACT:2:002");
-            onView(withId(R.id.btn_unlock)).perform(click());
-            Log.i(TAG, "ACT:2:003");
+            try
+            {
+                onView(withId(R.id.btn_unlock)).perform(click());
+                Log.i(TAG, "ACT:2:003");
+            }
+            catch(Exception e)
+            {
+                Log.i(TAG, "ACT:2:004");
+                wait_(4);
+                Log.i(TAG, "ACT:2:005");
+                onView(withId(R.id.btn_unlock)).perform(click());
+                Log.i(TAG, "ACT:2:006");
+            }
+            Log.i(TAG, "ACT:2:007");
         }
         else
         {
@@ -322,8 +334,11 @@ public class JavaFriendTester
         }
         catch (Exception e)
         {
-            Log.i(TAG, "ERROR on capturing full screenshot: "+ "test_" + num + ".png" + " E:" + e.getMessage());
+            Log.i(TAG, "ERROR on capturing full screenshot: " + "test_" + num + ".png" + " E:" + e.getMessage());
             e.printStackTrace();
+
+            // HINT: ok, then lets try the normal screenshot
+            screenshot(num);
         }
     }
 
