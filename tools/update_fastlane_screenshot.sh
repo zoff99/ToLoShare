@@ -1,5 +1,5 @@
 #! /bin/sh
-url_start_screen='https://github.com/zoff99/ToFShare/releases/download/nightly/screen_shot_android_29_11.png'
+url_start_screen='https://github.com/zoff99/ToLoShare/releases/download/nightly/screen_shot_android_29_11.png'
 
 _HOME2_=$(dirname $0)
 export _HOME2_
