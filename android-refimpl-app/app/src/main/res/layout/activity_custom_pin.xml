@@ -46,7 +46,9 @@
                 android:layout_height="wrap_content"
                 android:hint="Enter Code"
                 android:inputType="textPassword"
+                android:singleLine="true"
                 android:textAlignment="center"
+                android:imeOptions="actionDone"
                 android:textSize="24sp" />
 
             <Button

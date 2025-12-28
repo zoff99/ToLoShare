@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -15,7 +16,6 @@ public class CustomPinActivity extends AppCompatActivity {
     private EditText etPassword;
     private Button btnAction;
     private TextView tvTitle;
-    private boolean isSettingUp = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +37,14 @@ public class CustomPinActivity extends AppCompatActivity {
             tvTitle.setText("Setup: Enter Code or leave blank");
             btnAction.setText("Finish Setup");
         }
+
+        etPassword.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                btnAction.performClick();
+                return true;
+            }
+            return false;
+        });
 
         btnAction.setOnClickListener(v -> {
             String input = etPassword.getText().toString();
