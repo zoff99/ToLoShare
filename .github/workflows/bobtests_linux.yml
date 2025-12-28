@@ -86,6 +86,7 @@ jobs:
           api-level: ${{ matrix.api-level }}
           profile: Nexus 6
           arch: x86_64
+          emulator-build: 13473012
           ndk: 21.0.6113669
           cmake: 3.10.2.4988404
           force-avd-creation: false
