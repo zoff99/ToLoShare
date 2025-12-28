@@ -1585,6 +1585,15 @@ public class TrifaToxService extends Service
         return null;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+
+        // This is triggered when the app is swiped away from Recents
+        // Reset the session lock state
+        AppSessionManager.getInstance().lockApp();
+    }
+
     // ------------------------------
 
 
