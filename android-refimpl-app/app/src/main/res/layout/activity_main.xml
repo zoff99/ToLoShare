@@ -178,6 +178,7 @@
             </FrameLayout>
 
             <LinearLayout
+                android:id="@+id/main_gallery_container"
                 android:layout_weight="5"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -329,7 +330,7 @@
                 </LinearLayout>
 
             <FrameLayout
-                android:id="@+id/main_gallery_container"
+                android:id="@+id/main_gallery_container_inside"
                 android:layout_weight="5"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
