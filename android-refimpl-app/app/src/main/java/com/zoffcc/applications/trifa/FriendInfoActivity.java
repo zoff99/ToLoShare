@@ -70,17 +70,6 @@ public class FriendInfoActivity extends AppCompatActivity
     de.hdodenhof.circleimageview.CircleImageView profile_icon = null;
     TextView mytoxid = null;
     TextView mynick = null;
-    TextView mystatus_message = null;
-    EditText alias_text = null;
-    TextView fi_relay_pubkey_textview = null;
-    TextView fi_toxcapabilities_textview = null;
-    TextView fi_relay_text = null;
-    TextView fi_ipaddr_text = null;
-    TextView friend_num_msgs_text = null;
-    Button remove_friend_relay_button = null;
-    TextView fi_pushurl_textview = null;
-    TextView fi_pushurl_text = null;
-    Button remove_friend_pushurl_button = null;
     String friend_pubkey = null;
 
     long friendnum = -1;
@@ -100,23 +89,70 @@ public class FriendInfoActivity extends AppCompatActivity
         friendnum = intent.getLongExtra("friendnum", -1);
         friend_pubkey = tox_friend_get_public_key__wrapper(friendnum);
 
-        profile_icon = (de.hdodenhof.circleimageview.CircleImageView) findViewById(R.id.fi_profile_icon);
         mytoxid = (TextView) findViewById(R.id.fi_toxprvkey_textview);
         mynick = (TextView) findViewById(R.id.fi_nick_text);
-        mystatus_message = (TextView) findViewById(R.id.fi_status_message_text);
-        alias_text = (EditText) findViewById(R.id.fi_alias_text);
-        fi_relay_pubkey_textview = (TextView) findViewById(R.id.fi_relay_pubkey_textview);
-        fi_relay_text = (TextView) findViewById(R.id.fi_relay_text);
-        fi_ipaddr_text = (TextView) findViewById(R.id.fi_ipaddr_text);
-        remove_friend_relay_button = (Button) findViewById(R.id.remove_friend_relay_button);
-        fi_pushurl_textview = (TextView) findViewById(R.id.fi_pushurl_textview);
-        fi_pushurl_text = (TextView) findViewById(R.id.fi_pushurl_text);
-        remove_friend_pushurl_button = (Button) findViewById(R.id.remove_friend_pushurl_button);
-        fi_toxcapabilities_textview = (TextView) findViewById(R.id.fi_toxcapabilities_textview);
-        friend_num_msgs_text = (TextView) findViewById(R.id.friend_num_msgs_text);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mytoxid.setText("*error*");
+        mynick.setText("*error*");
+
+        try
+        {
+            final long friendnum_ = friendnum;
+            Thread t = new Thread()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        final FriendList f = (FriendList) orma.selectFromFriendList().tox_public_key_stringEq(
+                                tox_friend_get_public_key__wrapper(friendnum_)).toList().get(0);
+
+                        Runnable myRunnable = new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    String pubkey_temp = f.tox_public_key_string;
+                                    String color_pkey = "<font color=\"#331bc5\">";
+                                    String ec = "</font>";
+
+                                    if (is_nightmode_active(getApplicationContext()))
+                                    {
+                                        color_pkey = "<font color=\"#8affffff\">";
+                                    }
+
+                                    mytoxid.setText(Html.fromHtml(color_pkey + pubkey_temp + ec));
+
+                                    mynick.setText(f.name);
+                                }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                    Log.i(TAG, "CALL:start:EE:" + e.getMessage());
+                                }
+                            }
+                        };
+                        main_handler_s.post(myRunnable);
+                    }
+                    catch (Exception e2)
+                    {
+                        e2.printStackTrace();
+                    }
+                }
+            };
+            t.start();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
