@@ -70,6 +70,7 @@ public class FriendInfoActivity extends AppCompatActivity
     de.hdodenhof.circleimageview.CircleImageView profile_icon = null;
     TextView mytoxid = null;
     TextView mynick = null;
+    TextView fi_fnum_text = null;
     String friend_pubkey = null;
 
     long friendnum = -1;
@@ -92,11 +93,15 @@ public class FriendInfoActivity extends AppCompatActivity
         mytoxid = (TextView) findViewById(R.id.fi_toxprvkey_textview);
         mynick = (TextView) findViewById(R.id.fi_nick_text);
 
+        fi_fnum_text = findViewById(R.id.fi_fnum_text);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         mytoxid.setText("*error*");
         mynick.setText("*error*");
+
+        fi_fnum_text.setText("" + friendnum);
 
         try
         {
