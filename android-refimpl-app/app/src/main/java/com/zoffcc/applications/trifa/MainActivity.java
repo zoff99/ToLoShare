@@ -5410,6 +5410,9 @@ public class MainActivity extends BaseProtectedActivity
                             float acc = Float.parseFloat(separated[5]);
                             float bearing = Float.parseFloat(separated[6]);
 
+                            String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
+                            String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+
                             String f_pubkey = null;
                             try
                             {
@@ -5439,9 +5442,30 @@ public class MainActivity extends BaseProtectedActivity
                                         directed_ol.setShowAccuracy(true);
 
                                         // HINT: make a drawable later!!
-                                        Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
-                                                R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#2B8A15"));
-                                        directed_ol.setDirectionArrow(location_arrow_2);
+
+                                        if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey.equals(f_pubkey_pseudo_num_0)))
+                                        {
+                                            Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
+                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#2B8A15"));
+                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                        }
+                                        else if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey.equals(f_pubkey_pseudo_num_1)))
+                                        {
+                                            Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
+                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#A34100"));
+                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                        }
+                                        else
+                                        {
+                                            // #6F0BA3 dark purple
+                                            // #A34100 brown-ish
+
+                                            // HINT: fix me later
+                                            // for now all other location pins are "dark purple"
+                                            Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
+                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#6F0BA3"));
+                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                        }
 
                                         map.getOverlays().add(directed_ol);
                                         remote_ol.remote_location_overlay = directed_ol;
@@ -5473,9 +5497,6 @@ public class MainActivity extends BaseProtectedActivity
                             catch(Exception e)
                             {
                             }
-
-                            String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
-                            String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
 
                             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
                             {
