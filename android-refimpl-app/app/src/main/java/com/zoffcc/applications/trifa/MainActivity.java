@@ -106,6 +106,7 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
@@ -3588,6 +3589,26 @@ public class MainActivity extends BaseProtectedActivity
         {
             map.onResume();
             mLocationOverlay.enableMyLocation();
+
+            try
+            {
+                /*
+                for (Overlay ov : map.getOverlays())
+                {
+                    Log.i(TAG, "OVXXXX:1:" + ov);
+                }
+
+                int so = remote_location_overlays.size();
+                for(int j=0; j<so ;j++)
+                {
+                    Log.i(TAG, "OVXXXX:2:" + j + " " + remote_location_overlays.get(j));
+                }
+                */
+                remote_location_overlays.clear();
+            }
+            catch(Exception e)
+            {
+            }
         }
 
 
@@ -3606,9 +3627,13 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 // HINT: for this textfield we always use friend #0
-                                String f_pubkey = tox_friend_get_public_key__wrapper(0);
-                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                set_debug_text_2(location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
+                                String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
+                                if (f_pubkey != null)
+                                {
+                                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                    set_debug_text_2(location_info_text(re.remote_location_last_ts_millis,
+                                                                        re.remote_location_txt));
+                                }
                             }
                             catch (Exception e)
                             {
@@ -3618,9 +3643,13 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 // HINT: for this textfield we always use friend #1
-                                String f_pubkey_1 = tox_friend_get_public_key__wrapper(1);
-                                CaptureService.remote_location_entry re1 = remote_location_data.get(f_pubkey_1);
-                                set_debug_text_3(location_info_text(re1.remote_location_last_ts_millis, re1.remote_location_txt));
+                                String f_pubkey_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+                                if (f_pubkey_1 != null)
+                                {
+                                    CaptureService.remote_location_entry re1 = remote_location_data.get(f_pubkey_1);
+                                    set_debug_text_3(location_info_text(re1.remote_location_last_ts_millis,
+                                                                        re1.remote_location_txt));
+                                }
                             }
                             catch (Exception e)
                             {
@@ -5505,7 +5534,7 @@ public class MainActivity extends BaseProtectedActivity
                             }
                             else if ((f_pubkey_pseudo_num_1 != null) &&
                                      (f_pubkey != null) &&
-                                     (f_pubkey_pseudo_num_0.equals(f_pubkey)))
+                                     (f_pubkey_pseudo_num_1.equals(f_pubkey)))
 
                             {
                                 String final_f_pubkey = f_pubkey;
