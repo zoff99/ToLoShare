@@ -596,24 +596,8 @@ public class MainActivity extends BaseProtectedActivity
         map.setTilesScaledToDpi(true);
         map.setMinZoomLevel(null);
 
-        /*
-        RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
-        mRotationGestureOverlay.setEnabled(true);
-        map.setMultiTouchControls(true);
-        map.getOverlays().add(mRotationGestureOverlay);
-        */
-
-        final DisplayMetrics dm = getResources().getDisplayMetrics();
-        ScaleBarOverlay mScaleBarOverlay = new ScaleBarOverlay(map);
-        mScaleBarOverlay.setCentred(true);
-        mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 40);
-        map.getOverlays().add(mScaleBarOverlay);
-
-        mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
-        mLocationOverlay.setDirectionIcon(
-                ((BitmapDrawable) getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
-        mLocationOverlay.enableMyLocation();
-        map.getOverlays().add(mLocationOverlay);
+        remove_map_overlays();
+        add_map_overlays();
 
         // set a default starting point in the middle of europe
         mapController = map.getController();
@@ -1918,6 +1902,55 @@ public class MainActivity extends BaseProtectedActivity
         }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
+    }
+
+    void remove_map_overlays()
+    {
+        try
+        {
+            for (Overlay ov : map.getOverlays())
+            {
+                Log.i(TAG, "OVXXXX:1:" + ov);
+            }
+            map.getOverlays().clear();
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    void add_map_overlays()
+    {
+        try
+        {
+            /*
+            RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
+            mRotationGestureOverlay.setEnabled(true);
+            map.setMultiTouchControls(true);
+            map.getOverlays().add(mRotationGestureOverlay);
+            */
+
+            final DisplayMetrics dm = getResources().getDisplayMetrics();
+            ScaleBarOverlay mScaleBarOverlay = new ScaleBarOverlay(map);
+            mScaleBarOverlay.setCentred(true);
+            mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 40);
+            map.getOverlays().add(mScaleBarOverlay);
+        }
+        catch(Exception e)
+        {
+        }
+
+        try
+        {
+            mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
+            mLocationOverlay.setDirectionIcon(
+                    ((BitmapDrawable) getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
+            mLocationOverlay.enableMyLocation();
+            map.getOverlays().add(mLocationOverlay);
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     private static void register_for_push(Context context)
@@ -3588,27 +3621,21 @@ public class MainActivity extends BaseProtectedActivity
         if (!PREF__normal_main_view)
         {
             map.onResume();
-            mLocationOverlay.enableMyLocation();
 
+            remove_map_overlays();
             try
             {
-                /*
-                for (Overlay ov : map.getOverlays())
-                {
-                    Log.i(TAG, "OVXXXX:1:" + ov);
-                }
-
                 int so = remote_location_overlays.size();
                 for(int j=0; j<so ;j++)
                 {
                     Log.i(TAG, "OVXXXX:2:" + j + " " + remote_location_overlays.get(j));
                 }
-                */
                 remote_location_overlays.clear();
             }
             catch(Exception e)
             {
             }
+            add_map_overlays();
         }
 
 
@@ -5467,9 +5494,9 @@ public class MainActivity extends BaseProtectedActivity
                                             directed_ol.setDirectionArrow(location_arrow_2);
                                         }
 
-                                        map.getOverlays().add(directed_ol);
                                         remote_ol.remote_location_overlay = directed_ol;
                                         remote_location_overlays.put(f_pubkey, remote_ol);
+                                        map.getOverlays().add(directed_ol);
                                     }
                                 }
 
