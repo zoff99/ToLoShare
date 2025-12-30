@@ -5401,13 +5401,12 @@ public class MainActivity extends BaseProtectedActivity
                                         CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
                                         DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
                                         directed_ol.setShowAccuracy(true);
-                                        if (friend_number == 1)
-                                        {
-                                            // HINT: make a drawable later!!
-                                            Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
-                                                    R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#2B8A15"));
-                                            directed_ol.setDirectionArrow(location_arrow_2);
-                                        }
+
+                                        // HINT: make a drawable later!!
+                                        Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
+                                                R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#2B8A15"));
+                                        directed_ol.setDirectionArrow(location_arrow_2);
+
                                         map.getOverlays().add(directed_ol);
                                         remote_ol.remote_location_overlay = directed_ol;
                                         remote_location_overlays.put(f_pubkey, remote_ol);
