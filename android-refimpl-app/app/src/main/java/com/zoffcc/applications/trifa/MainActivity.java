@@ -159,6 +159,7 @@ import static com.zoffcc.applications.trifa.CaptureService.remote_location_overl
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
+import static com.zoffcc.applications.trifa.HelperFriend.get_friend_pubkey_sorted_by_pubkey_num;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.send_friend_msg_receipt_v2_wrapper;
@@ -665,10 +666,13 @@ public class MainActivity extends BaseProtectedActivity
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
                     settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
 
-                    // HINT: for this button we always use friend #0
-                    String f_pubkey = tox_friend_get_public_key__wrapper(0);
-                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                    set_map_center_to(re.remoteBestLocation);
+                    // HINT: for this button we always use friend pseudo_#0
+                    String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
+                    if (f_pubkey != null)
+                    {
+                        CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                        set_map_center_to(re.remoteBestLocation);
+                    }
                 }
                 catch (Exception ee2)
                 {
@@ -689,10 +693,13 @@ public class MainActivity extends BaseProtectedActivity
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
                     settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
 
-                    // HINT: for this button we always use friend #1
-                    String f_pubkey = tox_friend_get_public_key__wrapper(1);
-                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                    set_map_center_to(re.remoteBestLocation);
+                    // HINT: for this button we always use friend pseudo_#1
+                    String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(1);
+                    if (f_pubkey != null)
+                    {
+                        CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                        set_map_center_to(re.remoteBestLocation);
+                    }
                 }
                 catch (Exception ee2)
                 {
@@ -5438,9 +5445,14 @@ public class MainActivity extends BaseProtectedActivity
                             {
                             }
 
+                            String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
+                            String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+
                             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
                             {
-                                if (friend_number == 0)
+                                if ((f_pubkey_pseudo_num_0 != null) &&
+                                    (f_pubkey != null) &&
+                                    (f_pubkey_pseudo_num_0.equals(f_pubkey)))
                                 {
                                     // HINT: we only want to follow friend #0
                                     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
@@ -5449,7 +5461,8 @@ public class MainActivity extends BaseProtectedActivity
                             }
                             else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_1.value)
                             {
-                                if (friend_number == 1)
+                                if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) &&
+                                    (f_pubkey_pseudo_num_1.equals(f_pubkey)))
                                 {
                                     // HINT: we only want to follow friend #1
                                     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
@@ -5458,7 +5471,9 @@ public class MainActivity extends BaseProtectedActivity
                             }
                             map.postInvalidate();
 
-                            if (friend_number == 0)
+                            if ((f_pubkey_pseudo_num_0 != null) &&
+                                (f_pubkey != null) &&
+                                (f_pubkey_pseudo_num_0.equals(f_pubkey)))
                             {
                                 String final_f_pubkey = f_pubkey;
                                 Runnable myRunnable = new Runnable()
@@ -5488,7 +5503,10 @@ public class MainActivity extends BaseProtectedActivity
                                     main_handler_s.post(myRunnable);
                                 }
                             }
-                            else if (friend_number == 1)
+                            else if ((f_pubkey_pseudo_num_1 != null) &&
+                                     (f_pubkey != null) &&
+                                     (f_pubkey_pseudo_num_0.equals(f_pubkey)))
+
                             {
                                 String final_f_pubkey = f_pubkey;
                                 Runnable myRunnable = new Runnable()

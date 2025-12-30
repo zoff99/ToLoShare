@@ -131,6 +131,23 @@ public class HelperFriend
         return f;
     }
 
+    static String get_friend_pubkey_sorted_by_pubkey_num(int num)
+    {
+        FriendList f = null;
+
+        try
+        {
+            f = orma.selectFromFriendList().
+                    orderByTox_public_key_stringAsc().get(num);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+
+        return f.tox_public_key_string;
+    }
+
     static int is_friend_online(long friendnum)
     {
         try
