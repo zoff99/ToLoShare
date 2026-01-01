@@ -1,10 +1,13 @@
 package com.zoffcc.applications.trifa;
 
+import android.location.Location;
 import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
 
+import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
+import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 
 public class GpsInterpolator
 {
@@ -24,6 +27,30 @@ public class GpsInterpolator
             remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
             remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
             remote_ol.remote_location_overlay.setBearing((float)newBearing);
+        }
+        catch(Exception e)
+        {
+        }
+
+        try
+        {
+            CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+            if (re.remoteBestLocation == null)
+            {
+                re.remoteBestLocation = new Location("gps");
+            }
+            re.remoteBestLocation.setAccuracy(acc);
+            re.remoteBestLocation.setLatitude(newLat);
+            re.remoteBestLocation.setLongitude(newLon);
+            re.remoteBestLocation.setBearing((float)newBearing);
+        }
+        catch(Exception e)
+        {
+        }
+
+        try
+        {
+            follow_friend_on_map(f_pubkey);
         }
         catch(Exception e)
         {

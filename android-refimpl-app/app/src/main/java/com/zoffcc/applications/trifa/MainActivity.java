@@ -5467,7 +5467,6 @@ public class MainActivity extends BaseProtectedActivity
                                         directed_ol.setShowAccuracy(true);
 
                                         // HINT: make a drawable later!!
-
                                         if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey.equals(f_pubkey_pseudo_num_0)))
                                         {
                                             Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
@@ -5497,29 +5496,6 @@ public class MainActivity extends BaseProtectedActivity
                                         map.getOverlays().add(directed_ol);
                                     }
                                 }
-
-                                /*
-                                CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
-                                remote_ol.remote_location_overlay.setLocation(new GeoPoint(lat, lon));
-                                remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
-                                remote_ol.remote_location_overlay.setBearing(bearing);
-                                 */
-                            }
-                            catch(Exception e)
-                            {
-                            }
-
-                            try
-                            {
-                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                if (re.remoteBestLocation == null)
-                                {
-                                    re.remoteBestLocation = new Location("gps");
-                                }
-                                re.remoteBestLocation.setAccuracy(acc);
-                                re.remoteBestLocation.setLatitude(lat);
-                                re.remoteBestLocation.setLongitude(lon);
-                                re.remoteBestLocation.setBearing(bearing);
                             }
                             catch(Exception e)
                             {
@@ -5537,29 +5513,6 @@ public class MainActivity extends BaseProtectedActivity
                             {
                                 e.printStackTrace();
                             }
-
-                            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
-                            {
-                                if ((f_pubkey_pseudo_num_0 != null) &&
-                                    (f_pubkey != null) &&
-                                    (f_pubkey_pseudo_num_0.equals(f_pubkey)))
-                                {
-                                    // HINT: we only want to follow friend #0
-                                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                    set_map_center_to_proxy_uithread(re.remoteBestLocation);
-                                }
-                            }
-                            else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_1.value)
-                            {
-                                if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) &&
-                                    (f_pubkey_pseudo_num_1.equals(f_pubkey)))
-                                {
-                                    // HINT: we only want to follow friend #1
-                                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                    set_map_center_to_proxy_uithread(re.remoteBestLocation);
-                                }
-                            }
-                            map.postInvalidate();
 
                             if ((f_pubkey_pseudo_num_0 != null) &&
                                 (f_pubkey != null) &&
@@ -5637,6 +5590,35 @@ public class MainActivity extends BaseProtectedActivity
         catch(Exception e)
         {
         }
+    }
+
+    @NonNull
+    static void follow_friend_on_map(String f_pubkey)
+    {
+        String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
+        String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
+        {
+            if ((f_pubkey_pseudo_num_0 != null) &&
+                (f_pubkey != null) &&
+                (f_pubkey_pseudo_num_0.equals(f_pubkey)))
+            {
+                // HINT: we only want to follow friend #0
+                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                set_map_center_to_proxy_uithread(re.remoteBestLocation);
+            }
+        }
+        else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_1.value)
+        {
+            if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) &&
+                (f_pubkey_pseudo_num_1.equals(f_pubkey)))
+            {
+                // HINT: we only want to follow friend #1
+                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                set_map_center_to_proxy_uithread(re.remoteBestLocation);
+            }
+        }
+        map.postInvalidate();
     }
 
     private static void init_friend_location_data_struct(String friend_name, String f_pubkey)
