@@ -256,7 +256,7 @@ public class CaptureService extends Service
 
         try
         {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, mLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
         }
         catch(Exception e)
         {
@@ -264,7 +264,7 @@ public class CaptureService extends Service
 
         try
         {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 0, mLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, mLocationListener);
         }
         catch(Exception e)
         {
