@@ -5138,13 +5138,11 @@ public class MainActivity extends BaseProtectedActivity
             {
                 if (!remote_location_data.containsKey(f_pubkey))
                 {
-                    CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
-                    re.friend_name = friend_name;
-                    remote_location_data.put(f_pubkey, re);
+                    init_friend_location_data_struct(friend_name, f_pubkey);
                 }
                 else
                 {
-                    CaptureService.remote_location_entry re =remote_location_data.get(f_pubkey);
+                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                     re.friend_name = friend_name;
                 }
             }
@@ -5421,7 +5419,7 @@ public class MainActivity extends BaseProtectedActivity
                 {
                     final String geo_data_raw = new String(Arrays.copyOfRange(data, 1, data.length),
                                                            StandardCharsets.UTF_8);
-                    // Log.i(TAG, "GEO: " + geo_data_raw);
+                    Log.i(TAG, "GEO: " + geo_data_raw);
 
                     // example data: TzGeo00:BEGINGEO:<lat>>:<lon>:0.0:22.03:124.1:ENDGEO
 
@@ -5449,15 +5447,13 @@ public class MainActivity extends BaseProtectedActivity
                                 {
                                     if (!remote_location_data.containsKey(f_pubkey))
                                     {
-                                        CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
-                                        re.friend_name = tox_friend_get_name(friend_number);
-                                        re.gps_i = new GpsInterpolator();
-                                        remote_location_data.put(f_pubkey, re);
+                                        init_friend_location_data_struct(tox_friend_get_name(friend_number), f_pubkey);
                                     }
                                 }
                             }
                             catch(Exception e)
                             {
+                                e.printStackTrace();
                             }
 
                             try
@@ -5539,6 +5535,7 @@ public class MainActivity extends BaseProtectedActivity
                             }
                             catch(Exception e)
                             {
+                                e.printStackTrace();
                             }
 
                             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
@@ -5636,6 +5633,20 @@ public class MainActivity extends BaseProtectedActivity
                     }
                 }
             }
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    private static void init_friend_location_data_struct(String friend_name, String f_pubkey)
+    {
+        try
+        {
+            CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
+            re.friend_name = friend_name;
+            re.gps_i = new GpsInterpolator();
+            remote_location_data.put(f_pubkey, re);
         }
         catch(Exception e)
         {

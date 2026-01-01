@@ -51,10 +51,10 @@ public class GpsInterpolator
         }
 
         // Determine sleep time per step (total delta / number of steps)
-        long sleepTimePerStep = timeDelta / steps;
+        long sleepTimePerStep = timeDelta / (steps + 1);
 
         for (int i = 1; i <= steps; i++) {
-            double fraction = (double) i / steps;
+            double fraction = (double) i / (steps + 1);
 
             // Interpolate Coordinates
             double interpolatedLat = lastLat + (newLat - lastLat) * fraction;
@@ -63,15 +63,13 @@ public class GpsInterpolator
             // Interpolate Bearing (Shortest path)
             double interpolatedBearing = interpolateBearing(lastBearing, newBearing, fraction);
 
-            // Trigger UI update or move marker here
-            System.out.printf("Step %d: Lat %.6f, Lon %.6f, Bearing %.2f%n",
-                              i, interpolatedLat, interpolatedLon, interpolatedBearing);
-
             // Sleep to create smooth visual motion
             try {
                 if (sleepTimePerStep > 0) {
                     Thread.sleep(sleepTimePerStep);
                 }
+                // System.out.printf("Step %d: Lat %.6f, Lon %.6f, Bearing %.2f%n",
+                //                  i, interpolatedLat, interpolatedLon, interpolatedBearing);
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, f_pubkey);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
