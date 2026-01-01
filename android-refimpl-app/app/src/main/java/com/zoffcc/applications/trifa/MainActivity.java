@@ -5419,7 +5419,7 @@ public class MainActivity extends BaseProtectedActivity
                 {
                     final String geo_data_raw = new String(Arrays.copyOfRange(data, 1, data.length),
                                                            StandardCharsets.UTF_8);
-                    Log.i(TAG, "GEO: " + geo_data_raw);
+                    // Log.i(TAG, "GEO: " + geo_data_raw);
 
                     // example data: TzGeo00:BEGINGEO:<lat>>:<lon>:0.0:22.03:124.1:ENDGEO
 

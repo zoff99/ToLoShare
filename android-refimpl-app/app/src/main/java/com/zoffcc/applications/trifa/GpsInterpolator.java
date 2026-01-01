@@ -22,7 +22,7 @@ public class GpsInterpolator
     {
         try
         {
-            Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
+            // Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
             CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
             remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
             remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
