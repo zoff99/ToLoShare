@@ -272,6 +272,7 @@ public class MainActivity extends BaseProtectedActivity
 
     static boolean DEBUG_THREAD_STARTED = false;
     static boolean GEO_TIME_THREAD_STARTED = false;
+    static final int INTERPOLATE_POS_STEPS = 3;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -5450,6 +5451,7 @@ public class MainActivity extends BaseProtectedActivity
                                     {
                                         CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
                                         re.friend_name = tox_friend_get_name(friend_number);
+                                        re.gps_i = new GpsInterpolator();
                                         remote_location_data.put(f_pubkey, re);
                                     }
                                 }
@@ -5500,10 +5502,12 @@ public class MainActivity extends BaseProtectedActivity
                                     }
                                 }
 
+                                /*
                                 CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
                                 remote_ol.remote_location_overlay.setLocation(new GeoPoint(lat, lon));
                                 remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
                                 remote_ol.remote_location_overlay.setBearing(bearing);
+                                 */
                             }
                             catch(Exception e)
                             {
@@ -5520,6 +5524,18 @@ public class MainActivity extends BaseProtectedActivity
                                 re.remoteBestLocation.setLatitude(lat);
                                 re.remoteBestLocation.setLongitude(lon);
                                 re.remoteBestLocation.setBearing(bearing);
+                            }
+                            catch(Exception e)
+                            {
+                            }
+
+                            try
+                            {
+                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                if (f_pubkey != null)
+                                {
+                                    re.gps_i.onGpsUpdate(lat, lon, bearing, acc, INTERPOLATE_POS_STEPS, f_pubkey);
+                                }
                             }
                             catch(Exception e)
                             {

@@ -58,6 +58,7 @@ public class CaptureService extends Service
     static HashMap<String, remote_location_entry> remote_location_data = new HashMap<>();
     public static class remote_location_entry {
         Location remoteBestLocation = null;
+        GpsInterpolator gps_i = null;
         String remote_location_txt = "";
         // String remote_location_time_txt = "";
         long last_remote_location_ts_millis = 0;
@@ -395,4 +396,5 @@ public class CaptureService extends Service
         }
         return provider1.equals(provider2);
     }
+
 }
