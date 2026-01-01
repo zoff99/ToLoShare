@@ -67,7 +67,7 @@ public class GpsInterpolator
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
-        if ((isFirstFix) || (timeDelta > 3000)) {
+        if ((isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
             lastLat = newLat;
             lastLon = newLon;
             lastBearing = newBearing;
