@@ -294,6 +294,8 @@ public class MainActivity extends BaseProtectedActivity
     static Resources resources = null;
     static DisplayMetrics metrics = null;
     static SwitchCompat switch_normal_main_view = null;
+    static SwitchCompat switch_friend_gps_smoothing = null;
+    static SwitchCompat switch_own_gps_smoothing = null;
     static ViewGroup waiting_container = null;
     static ViewGroup main_gallery_container = null;
     static TextView debug_text = null;
@@ -614,6 +616,8 @@ public class MainActivity extends BaseProtectedActivity
         mapController.setCenter(startPoint);
 
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
+        switch_friend_gps_smoothing = this.findViewById(R.id.switch_friend_gps_smoothing);
+        switch_own_gps_smoothing = this.findViewById(R.id.switch_own_gps_smoothing);
         waiting_container = this.findViewById(R.id.waiting_container);
         main_gallery_container = this.findViewById(R.id.main_gallery_container);
         debug_text = this.findViewById(R.id.debug_text);
@@ -1878,6 +1882,34 @@ public class MainActivity extends BaseProtectedActivity
             Log.i(TAG, "add_map_overlays:005");
             add_map_overlays();
         }
+
+        PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
+        PREF__gps_smooth_friends = settings.getBoolean("gps_smooth_friends", false);
+        switch_own_gps_smoothing.setChecked(PREF__gps_smooth_own);
+        switch_friend_gps_smoothing.setChecked(PREF__gps_smooth_friends);
+
+
+        switch_own_gps_smoothing.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            @SuppressLint("ApplySharedPref")
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+            {
+                PREF__gps_smooth_own = isChecked;
+                settings.edit().putBoolean("gps_smooth_own", isChecked).commit();
+            }
+        });
+
+        switch_friend_gps_smoothing.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            @SuppressLint("ApplySharedPref")
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+            {
+                PREF__gps_smooth_friends = isChecked;
+                settings.edit().putBoolean("gps_smooth_friends", isChecked).commit();
+            }
+        });
 
         switch_normal_main_view.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {

@@ -29,6 +29,24 @@
             app:showText="false"
             tools:ignore="HardcodedText" />
 
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_friend_gps_smoothing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOff="gallery view"
+            android:textOn="main view"
+            app:showText="false"
+            tools:ignore="HardcodedText" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_own_gps_smoothing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOff="gallery view"
+            android:textOn="main view"
+            app:showText="false"
+            tools:ignore="HardcodedText" />
+
         <Spinner
             android:id="@+id/spinner_own_status"
             android:layout_width="wrap_content"
