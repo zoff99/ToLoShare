@@ -111,7 +111,7 @@ import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.io.File;
@@ -308,7 +308,9 @@ public class MainActivity extends BaseProtectedActivity
     static ArrayList<String> main_gallery_images = null;
 
     static MapView map = null;
-    static MyLocationNewOverlay mLocationOverlay = null;
+    static MyLocationNewOverlay2 mLocationOverlay = null;
+    static IMyLocationProvider mIMyLocationProvider = null;
+    static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
@@ -598,7 +600,9 @@ public class MainActivity extends BaseProtectedActivity
         map.setTilesScaledToDpi(true);
         map.setMinZoomLevel(null);
 
+        Log.i(TAG, "remove_map_overlays:001");
         remove_map_overlays();
+        Log.i(TAG, "add_map_overlays:001");
         add_map_overlays();
 
         // set a default starting point in the middle of europe
@@ -1865,7 +1869,12 @@ public class MainActivity extends BaseProtectedActivity
         else
         {
             map.onResume();
-            mLocationOverlay.enableMyLocation();
+            Log.i(TAG, "OOO:x:1");
+            // enable_mylocation_overlay();
+            Log.i(TAG, "remove_map_overlays:005");
+            remove_map_overlays();
+            Log.i(TAG, "add_map_overlays:005");
+            add_map_overlays();
         }
 
         switch_normal_main_view.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
@@ -1882,7 +1891,12 @@ public class MainActivity extends BaseProtectedActivity
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
                     map.onResume();
-                    mLocationOverlay.enableMyLocation();
+                    Log.i(TAG, "OOO:x:2");
+                    // enable_mylocation_overlay();
+                    Log.i(TAG, "remove_map_overlays:006");
+                    remove_map_overlays();
+                    Log.i(TAG, "add_map_overlays:006");
+                    add_map_overlays();
                     // TODO: this hides the main drawer. how to fix?
                     main_gallery_container.bringToFront();
                 } else {
@@ -1904,6 +1918,29 @@ public class MainActivity extends BaseProtectedActivity
         }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
+    }
+
+    private static void enable_mylocation_overlay()
+    {
+        Log.i(TAG, "OOOOOOO:new:xx:");
+        mLocationOverlay = null;
+        mIMyLocationProvider = null;
+        //if (mIMyLocationProvider == null)
+        {
+            mIMyLocationProvider = new GpsMyLocationProvider(context_s);
+            Log.i(TAG, "OOOOOOO:new:1:a: " + mIMyLocationProvider);
+        }
+
+        //if (mLocationOverlay == null)
+        {
+            Log.i(TAG, "OOOOOOO:new:1:b: " + mIMyLocationProvider);
+            mLocationOverlay = new MyLocationNewOverlay2(mIMyLocationProvider, map);
+            Log.i(TAG, "OOOOOOO:new:1:b");
+        }
+        mLocationOverlay.setDirectionIcon(
+                ((BitmapDrawable) context_s.getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
+        Log.i(TAG, "OOOOOOO:new:122:" + mIMyLocationProvider + " " + mLocationOverlay);
+        mLocationOverlay.enableMyLocation();
     }
 
     void remove_map_overlays()
@@ -1949,11 +1986,14 @@ public class MainActivity extends BaseProtectedActivity
 
         try
         {
-            mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
-            mLocationOverlay.setDirectionIcon(
-                    ((BitmapDrawable) getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
-            mLocationOverlay.enableMyLocation();
+            Log.i(TAG, "OOO:x:3");
+            enable_mylocation_overlay();
             map.getOverlays().add(mLocationOverlay);
+
+            if (gps_int_own == null)
+            {
+                gps_int_own = new GpsInterpolatorOwnLocation();
+            }
         }
         catch(Exception e)
         {
@@ -3629,6 +3669,7 @@ public class MainActivity extends BaseProtectedActivity
         {
             map.onResume();
 
+            Log.i(TAG, "remove_map_overlays:002");
             remove_map_overlays();
             try
             {
@@ -3642,6 +3683,7 @@ public class MainActivity extends BaseProtectedActivity
             catch(Exception e)
             {
             }
+            Log.i(TAG, "add_map_overlays:002");
             add_map_overlays();
         }
 

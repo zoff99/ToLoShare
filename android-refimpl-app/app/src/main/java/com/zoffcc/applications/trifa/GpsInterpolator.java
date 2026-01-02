@@ -1,6 +1,7 @@
 package com.zoffcc.applications.trifa;
 
 import android.location.Location;
+import android.location.LocationManager;
 import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
@@ -12,7 +13,7 @@ import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 public class GpsInterpolator
 {
 
-    final static String TAG = "CaptureService";
+    final static String TAG = "GpsInterpolator";
 
     private double lastLat, lastLon, lastBearing;
     private long lastUpdateTime = 0;
@@ -37,7 +38,7 @@ public class GpsInterpolator
             CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
             if (re.remoteBestLocation == null)
             {
-                re.remoteBestLocation = new Location("gps");
+                re.remoteBestLocation = new Location(LocationManager.GPS_PROVIDER);
             }
             re.remoteBestLocation.setAccuracy(acc);
             re.remoteBestLocation.setLatitude(newLat);
