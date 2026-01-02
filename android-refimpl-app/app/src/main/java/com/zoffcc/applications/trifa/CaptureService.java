@@ -40,6 +40,7 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSL
 public class CaptureService extends Service
 {
     final static String TAG = "CaptureService";
+    static final String INVALID_BEARING = "FFF";
 
     static boolean GPS_SERVICE_STARTED = false;
     private static final int _30_SECONDS = 1000 * 30;
@@ -58,6 +59,7 @@ public class CaptureService extends Service
     static HashMap<String, remote_location_entry> remote_location_data = new HashMap<>();
     public static class remote_location_entry {
         Location remoteBestLocation = null;
+        boolean has_bearing = false;
         GpsInterpolator gps_i = null;
         String remote_location_txt = "";
         // String remote_location_time_txt = "";
@@ -313,6 +315,12 @@ public class CaptureService extends Service
 
     static byte[] getGeoMsg(Location location)
     {
+        String bearing = "" + location.getBearing();
+        if (!location.hasBearing())
+        {
+            bearing = INVALID_BEARING;
+        }
+
         String temp_string = "X" + // the pkt ID will be added here later. needs to be exactly 1 char!
                              GEO_COORD_PROTO_MAGIC +
                              GEO_COORD_PROTO_VERSION  + ":BEGINGEO:" +
@@ -320,7 +328,7 @@ public class CaptureService extends Service
                              location.getLongitude() + ":" +
                              location.getAltitude() + ":" +
                              location.getAccuracy() + ":" +
-                             location.getBearing() + ":ENDGEO";
+                             bearing + ":ENDGEO";
         // Log.i(TAG, "raw:" + temp_string);
         // Log.i(TAG, "rawlen:" + temp_string.length());
 

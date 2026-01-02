@@ -49,7 +49,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -135,7 +134,6 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
@@ -151,6 +149,7 @@ import permissions.dispatcher.RuntimePermissions;
 
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
+import static com.zoffcc.applications.trifa.CaptureService.INVALID_BEARING;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
@@ -5263,13 +5262,10 @@ public class MainActivity extends BaseProtectedActivity
             {
                 if (!remote_location_data.containsKey(f_pubkey))
                 {
-                    init_friend_location_data_struct(friend_name, f_pubkey);
+                    init_friend_location_data_struct(friend_name, f_pubkey, false);
                 }
-                else
-                {
-                    CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                    re.friend_name = friend_name;
-                }
+                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                re.friend_name = friend_name;
             }
         }
         catch(Exception e)
@@ -5566,7 +5562,24 @@ public class MainActivity extends BaseProtectedActivity
                                         float lon = Float.parseFloat(separated[3]);
                                         // float alt = Float.parseFloat(separated[4]); // not used
                                         float acc = Float.parseFloat(separated[5]);
-                                        float bearing = Float.parseFloat(separated[6]);
+                                        float bearing = 0;
+                                        boolean has_bearing = true;
+                                        try
+                                        {
+                                            if (!separated[6].equals(INVALID_BEARING))
+                                            {
+                                                has_bearing = true;
+                                                bearing = Float.parseFloat(separated[6]);
+                                            }
+                                            else
+                                            {
+                                                bearing = 0;
+                                                has_bearing = false;
+                                            }
+                                        }
+                                        catch(Exception e)
+                                        {
+                                        }
 
                                         String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
                                         String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
@@ -5579,7 +5592,7 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 if (!remote_location_data.containsKey(f_pubkey))
                                                 {
-                                                    init_friend_location_data_struct(tox_friend_get_name(friend_number), f_pubkey);
+                                                    init_friend_location_data_struct(tox_friend_get_name(friend_number), f_pubkey, has_bearing);
                                                 }
                                             }
                                         }
@@ -5638,7 +5651,7 @@ public class MainActivity extends BaseProtectedActivity
                                             CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                                             if (f_pubkey != null)
                                             {
-                                                re.gps_i.onGpsUpdate(lat, lon, bearing, acc, INTERPOLATE_POS_STEPS, f_pubkey);
+                                                re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, acc, INTERPOLATE_POS_STEPS, f_pubkey);
                                             }
                                         }
                                         catch(Exception e)
@@ -5761,12 +5774,13 @@ public class MainActivity extends BaseProtectedActivity
         map.postInvalidate();
     }
 
-    private static void init_friend_location_data_struct(String friend_name, String f_pubkey)
+    private static void init_friend_location_data_struct(String friend_name, String f_pubkey, boolean has_bearing)
     {
         try
         {
             CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
             re.friend_name = friend_name;
+            re.has_bearing = has_bearing;
             re.gps_i = new GpsInterpolator();
             remote_location_data.put(f_pubkey, re);
         }

@@ -2,7 +2,6 @@ package com.zoffcc.applications.trifa;
 
 import android.location.Location;
 import android.location.LocationManager;
-import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -16,7 +15,10 @@ public class GpsInterpolator
 
     final static String TAG = "GpsInterpolator";
 
-    private double lastLat, lastLon, lastBearing;
+    private double lastLat;
+    private double lastLon;
+    private double lastBearing;
+    private boolean last_has_bearing;
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
 
@@ -44,7 +46,14 @@ public class GpsInterpolator
             re.remoteBestLocation.setAccuracy(acc);
             re.remoteBestLocation.setLatitude(newLat);
             re.remoteBestLocation.setLongitude(newLon);
-            re.remoteBestLocation.setBearing((float)newBearing);
+            if (re.has_bearing)
+            {
+                re.remoteBestLocation.setBearing((float) newBearing);
+            }
+            else
+            {
+                re.remoteBestLocation.removeBearing();
+            }
         }
         catch(Exception e)
         {
@@ -63,20 +72,38 @@ public class GpsInterpolator
      * Called on every new GPS update.
      * Calculates the time since the last update and sleeps between steps.
      */
-    public void onGpsUpdate(double newLat, double newLon, double newBearing, float acc, int steps, String f_pubkey) {
+    public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing, float acc, int steps, String f_pubkey) {
         long currentTime = System.currentTimeMillis();
 
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
+        double newBearing;
         if ((!PREF__gps_smooth_friends) || (isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
             lastLat = newLat;
             lastLon = newLon;
+            if (has_bearing)
+            {
+                newBearing = newBearing_;
+            }
+            else
+            {
+                newBearing = lastBearing;
+            }
             lastBearing = newBearing;
             lastUpdateTime = currentTime;
             isFirstFix = false;
             push_geo_pos(newLat, newLon, newBearing, acc, f_pubkey);
             return;
+        }
+
+        if (has_bearing)
+        {
+            newBearing = newBearing_;
+        }
+        else
+        {
+            newBearing = lastBearing;
         }
 
         // Determine sleep time per step (total delta / number of steps)
