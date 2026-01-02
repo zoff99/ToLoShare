@@ -1923,6 +1923,27 @@ public class MainActivity extends BaseProtectedActivity
     private static void enable_mylocation_overlay()
     {
         Log.i(TAG, "OOOOOOO:new:xx:");
+        try
+        {
+            mLocationOverlay.disableMyLocation();
+        }
+        catch(Exception e)
+        {
+        }
+        try
+        {
+            mIMyLocationProvider.stopLocationProvider();
+        }
+        catch(Exception e)
+        {
+        }
+        try
+        {
+            mLocationOverlay.disableMyLocation();
+        }
+        catch(Exception e)
+        {
+        }
         mLocationOverlay = null;
         mIMyLocationProvider = null;
         //if (mIMyLocationProvider == null)
@@ -1945,6 +1966,28 @@ public class MainActivity extends BaseProtectedActivity
 
     void remove_map_overlays()
     {
+        try
+        {
+            mLocationOverlay.disableMyLocation();
+        }
+        catch(Exception e)
+        {
+        }
+        try
+        {
+            mIMyLocationProvider.stopLocationProvider();
+        }
+        catch(Exception e)
+        {
+        }
+        try
+        {
+            mLocationOverlay.disableMyLocation();
+        }
+        catch(Exception e)
+        {
+        }
+
         try
         {
             for (Overlay ov : map.getOverlays())
