@@ -487,6 +487,8 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__rnnoise_active = false;
     static boolean PREF__trust_all_webcerts = false; // HINT: !!be careful with this option!!
     static int PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
+    static boolean PREF__gps_smooth_own = false;
+    static boolean PREF__gps_smooth_friends = false;
 
     final static String push_instance_name = "com.zoffcc.applications.push_toloshare";
 

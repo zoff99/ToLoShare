@@ -8,6 +8,7 @@ import org.osmdroid.util.GeoPoint;
 
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 
 public class GpsInterpolator
@@ -68,7 +69,7 @@ public class GpsInterpolator
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
-        if ((isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
+        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
             lastLat = newLat;
             lastLon = newLon;
             lastBearing = newBearing;

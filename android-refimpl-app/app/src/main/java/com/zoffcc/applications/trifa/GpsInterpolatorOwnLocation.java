@@ -5,6 +5,7 @@ import android.location.LocationManager;
 
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
 
 public class GpsInterpolatorOwnLocation
@@ -45,7 +46,7 @@ public class GpsInterpolatorOwnLocation
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
-        if ((isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
+        if ((!PREF__gps_smooth_own) || (isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
             lastLat = location.getLatitude();
             lastLon = location.getLongitude();
             lastBearing = location.getBearing();
