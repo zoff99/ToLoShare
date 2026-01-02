@@ -65,6 +65,7 @@ import android.renderscript.ScriptIntrinsicYuvToRGB;
 import android.renderscript.Type;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -1934,6 +1935,11 @@ public class MainActivity extends BaseProtectedActivity
             final DisplayMetrics dm = getResources().getDisplayMetrics();
             ScaleBarOverlay mScaleBarOverlay = new ScaleBarOverlay(map);
             mScaleBarOverlay.setCentred(true);
+            mScaleBarOverlay.setEnableAdjustLength(true);
+            mScaleBarOverlay.setMaxLength(3);
+            mScaleBarOverlay.setLineWidth(dp_to_px(2));
+            mScaleBarOverlay.setTextSize(dp_to_px(18));
+            mScaleBarOverlay.setUnitsOfMeasure(ScaleBarOverlay.UnitsOfMeasure.metric);
             mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 40);
             map.getOverlays().add(mScaleBarOverlay);
         }
@@ -6534,6 +6540,20 @@ public class MainActivity extends BaseProtectedActivity
         if (main_handler_s != null)
         {
             main_handler_s.post(myRunnable);
+        }
+    }
+
+    public static int dp_to_px(final float dpValue)
+    {
+        try
+        {
+            int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue,
+                                                     context_s.getResources().getDisplayMetrics());
+            return px;
+        }
+        catch(Exception e)
+        {
+            return (int)dpValue;
         }
     }
 
