@@ -15,8 +15,6 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
 {
     final static String TAG = "MyLocNewOverlay2";
 
-    private boolean mIsLocationEnabled = false;
-
     public MyLocationNewOverlay2(IMyLocationProvider myLocationProvider, MapView mapView)
     {
         super(myLocationProvider, mapView);
