@@ -58,10 +58,9 @@ public class GpsInterpolatorOwnLocation
         }
 
         // Determine sleep time per step (total delta / number of steps)
-        long sleepTimePerStep = timeDelta / (steps + 1);
-
+        long sleepTimePerStep = timeDelta / steps;
         for (int i = 1; i <= steps; i++) {
-            double fraction = (double) i / (steps + 1);
+            double fraction = (double) i / steps;
 
             // Interpolate Coordinates
             double interpolatedLat = lastLat + (location.getLatitude() - lastLat) * fraction;
