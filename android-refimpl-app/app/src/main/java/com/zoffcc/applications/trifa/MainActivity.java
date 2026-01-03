@@ -537,7 +537,7 @@ public class MainActivity extends BaseProtectedActivity
     Spinner spinner_own_status = null;
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
-    private static final ExecutorService executor = new ThreadPoolExecutor(
+    private static final ExecutorService executor_friend_location_task = new ThreadPoolExecutor(
             1,                      // Core pool size
             1,                      // Maximum pool size
             0L, TimeUnit.MILLISECONDS,
@@ -547,7 +547,21 @@ public class MainActivity extends BaseProtectedActivity
 
     public static void runTaskFriendLocationIncoming(Runnable task)
     {
-        executor.execute(task);
+        executor_friend_location_task.execute(task);
+    }
+
+    // 1 worker thread, 0 queue capacity, silently drop if busy
+    private static final ExecutorService executor_own_location_task = new ThreadPoolExecutor(
+            1,                      // Core pool size
+            1,                      // Maximum pool size
+            0L, TimeUnit.MILLISECONDS,
+            new SynchronousQueue<>(), // Queue with 0 capacity
+            new ThreadPoolExecutor.DiscardPolicy() // Drop new work if busy
+    );
+
+    public static void runTaskOwnLocation(Runnable task)
+    {
+        executor_own_location_task.execute(task);
     }
 
     /** @noinspection CommentedOutCode*/
@@ -1635,7 +1649,16 @@ public class MainActivity extends BaseProtectedActivity
                             // Exit
                             try
                             {
-                                executor.shutdown();
+                                executor_friend_location_task.shutdown();
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            try
+                            {
+                                executor_own_location_task.shutdown();
                             }
                             catch (Exception e)
                             {
