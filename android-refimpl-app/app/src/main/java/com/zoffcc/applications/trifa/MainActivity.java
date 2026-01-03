@@ -275,7 +275,7 @@ public class MainActivity extends BaseProtectedActivity
 
     static boolean DEBUG_THREAD_STARTED = false;
     static boolean GEO_TIME_THREAD_STARTED = false;
-    static final int INTERPOLATE_POS_STEPS = 5;
+    static final int INTERPOLATE_POS_STEPS = 10;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
