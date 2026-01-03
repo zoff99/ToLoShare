@@ -129,7 +129,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
@@ -532,6 +535,20 @@ public class MainActivity extends BaseProtectedActivity
     // main drawer ----------
 
     Spinner spinner_own_status = null;
+
+    // 1 worker thread, 0 queue capacity, silently drop if busy
+    private static final ExecutorService executor = new ThreadPoolExecutor(
+            1,                      // Core pool size
+            1,                      // Maximum pool size
+            0L, TimeUnit.MILLISECONDS,
+            new SynchronousQueue<>(), // Queue with 0 capacity
+            new ThreadPoolExecutor.DiscardPolicy() // Drop new work if busy
+    );
+
+    public static void runTaskFriendLocationIncoming(Runnable task)
+    {
+        executor.execute(task);
+    }
 
     /** @noinspection CommentedOutCode*/
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -1616,6 +1633,15 @@ public class MainActivity extends BaseProtectedActivity
                         else if (position == 10)
                         {
                             // Exit
+                            try
+                            {
+                                executor.shutdown();
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
                             try
                             {
                                 if (is_tox_started)
@@ -5535,209 +5561,228 @@ public class MainActivity extends BaseProtectedActivity
         {
             if (length > 0)
             {
-                final Thread t = new Thread()
+                try
                 {
-                    @Override
-                    public void run()
+                    if (data[0] == (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID)
                     {
-                        try
-                        {
-                            if (data[0] ==
-                                (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID)
-                            {
-                                final String geo_data_raw = new String(Arrays.copyOfRange(data, 1, data.length),
-                                                                       StandardCharsets.UTF_8);
-                                // Log.i(TAG, "GEO: " + geo_data_raw);
+                        final String geo_data_raw = new String(Arrays.copyOfRange(data, 1, data.length),
+                                                               StandardCharsets.UTF_8);
+                        // Log.i(TAG, "GEO: " + geo_data_raw);
 
-                                // example data: TzGeo00:BEGINGEO:<lat>>:<lon>:0.0:22.03:124.1:ENDGEO
+                        // example data: TzGeo00:BEGINGEO:<lat>>:<lon>:0.0:22.03:124.1:ENDGEO
 
-                                String[] separated = geo_data_raw.split(":");
-                                if (separated[0].equals("TzGeo00"))
+                        final Runnable process_incoming_gps_location = () -> {
+                                try
                                 {
-                                    if (separated[1].equals("BEGINGEO"))
+                                    String[] separated = geo_data_raw.split(":");
+                                    if (separated[0].equals("TzGeo00"))
                                     {
-                                        long current_ts_millis = System.currentTimeMillis();
-
-                                        float lat = Float.parseFloat(separated[2]);
-                                        float lon = Float.parseFloat(separated[3]);
-                                        // float alt = Float.parseFloat(separated[4]); // not used
-                                        float acc = Float.parseFloat(separated[5]);
-                                        float bearing = 0;
-                                        boolean has_bearing = true;
-                                        try
+                                        if (separated[1].equals("BEGINGEO"))
                                         {
-                                            if (!separated[6].equals(INVALID_BEARING))
-                                            {
-                                                has_bearing = true;
-                                                bearing = Float.parseFloat(separated[6]);
-                                            }
-                                            else
-                                            {
-                                                bearing = 0;
-                                                has_bearing = false;
-                                            }
-                                        }
-                                        catch(Exception e)
-                                        {
-                                        }
+                                            long current_ts_millis = System.currentTimeMillis();
 
-                                        String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
-                                        String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
-
-                                        String f_pubkey = null;
-                                        try
-                                        {
-                                            f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
-                                            if ((f_pubkey != null) && (f_pubkey.length() > 10))
+                                            float lat = Float.parseFloat(separated[2]);
+                                            float lon = Float.parseFloat(separated[3]);
+                                            // float alt = Float.parseFloat(separated[4]); // not used
+                                            float acc = Float.parseFloat(separated[5]);
+                                            float bearing = 0;
+                                            boolean has_bearing = true;
+                                            try
                                             {
-                                                if (!remote_location_data.containsKey(f_pubkey))
+                                                if (!separated[6].equals(INVALID_BEARING))
                                                 {
-                                                    init_friend_location_data_struct(tox_friend_get_name(friend_number), f_pubkey, has_bearing);
+                                                    has_bearing = true;
+                                                    bearing = Float.parseFloat(separated[6]);
+                                                }
+                                                else
+                                                {
+                                                    bearing = 0;
+                                                    has_bearing = false;
                                                 }
                                             }
-                                        }
-                                        catch(Exception e)
-                                        {
-                                            e.printStackTrace();
-                                        }
-
-                                        try
-                                        {
-                                            if ((f_pubkey != null) && (f_pubkey.length() > 10))
+                                            catch (Exception e)
                                             {
-                                                if (!remote_location_overlays.containsKey(f_pubkey))
+                                            }
+
+                                            String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(
+                                                    0);
+                                            String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(
+                                                    1);
+
+                                            String f_pubkey = null;
+                                            try
+                                            {
+                                                f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
+                                                if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                                 {
-                                                    CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
-                                                    DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
-                                                    directed_ol.setShowAccuracy(true);
-
-                                                    // HINT: make a drawable later!!
-                                                    if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey.equals(f_pubkey_pseudo_num_0)))
+                                                    if (!remote_location_data.containsKey(f_pubkey))
                                                     {
-                                                        Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
-                                                                R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#2B8A15"));
-                                                        directed_ol.setDirectionArrow(location_arrow_2);
+                                                        init_friend_location_data_struct(
+                                                                tox_friend_get_name(friend_number), f_pubkey,
+                                                                has_bearing);
                                                     }
-                                                    else if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey.equals(f_pubkey_pseudo_num_1)))
-                                                    {
-                                                        Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
-                                                                R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#A34100"));
-                                                        directed_ol.setDirectionArrow(location_arrow_2);
-                                                    }
-                                                    else
-                                                    {
-                                                        // #6F0BA3 dark purple
-                                                        // #A34100 brown-ish
-
-                                                        // HINT: fix me later
-                                                        // for now all other location pins are "dark purple"
-                                                        Bitmap location_arrow_2 = tintImage(((BitmapDrawable) context_s.getResources().getDrawable(
-                                                                R.drawable.round_navigation_color_48)).getBitmap(), Color.parseColor("#6F0BA3"));
-                                                        directed_ol.setDirectionArrow(location_arrow_2);
-                                                    }
-
-                                                    remote_ol.remote_location_overlay = directed_ol;
-                                                    remote_location_overlays.put(f_pubkey, remote_ol);
-                                                    map.getOverlays().add(directed_ol);
                                                 }
                                             }
-                                        }
-                                        catch(Exception e)
-                                        {
-                                        }
-
-                                        try
-                                        {
-                                            CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                            if (f_pubkey != null)
+                                            catch (Exception e)
                                             {
-                                                re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, acc, INTERPOLATE_POS_STEPS, f_pubkey);
+                                                e.printStackTrace();
                                             }
-                                        }
-                                        catch(Exception e)
-                                        {
-                                            e.printStackTrace();
-                                        }
 
-                                        if ((f_pubkey_pseudo_num_0 != null) &&
-                                            (f_pubkey != null) &&
-                                            (f_pubkey_pseudo_num_0.equals(f_pubkey)))
-                                        {
-                                            String final_f_pubkey = f_pubkey;
-                                            Runnable myRunnable = new Runnable()
+                                            try
                                             {
-                                                @Override
-                                                public void run()
+                                                if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                                 {
-                                                    try
+                                                    if (!remote_location_overlays.containsKey(f_pubkey))
                                                     {
-                                                        CaptureService.remote_location_entry re = remote_location_data.get(
-                                                                final_f_pubkey);
-                                                        re.remote_location_last_ts_millis = current_ts_millis;
-                                                        re.remote_location_txt = "name: " + re.friend_name + "\n" + "accur: " +
-                                                                                 (int) (Math.round(acc * 10f) / 10) + " m\n";
-                                                        set_debug_text_2(location_info_text(re.remote_location_last_ts_millis,
-                                                                                            re.remote_location_txt));
-                                                    }
-                                                    catch (Exception e)
-                                                    {
-                                                        Log.i(TAG, "EE.b:" + e.getMessage());
+                                                        CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
+                                                        DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(
+                                                                context_s);
+                                                        directed_ol.setShowAccuracy(true);
+
+                                                        // HINT: make a drawable later!!
+                                                        if ((f_pubkey_pseudo_num_0 != null) &&
+                                                            (f_pubkey.equals(f_pubkey_pseudo_num_0)))
+                                                        {
+                                                            Bitmap location_arrow_2 = tintImage(
+                                                                    ((BitmapDrawable) context_s.getResources().getDrawable(
+                                                                            R.drawable.round_navigation_color_48)).getBitmap(),
+                                                                    Color.parseColor("#2B8A15"));
+                                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                                        }
+                                                        else if ((f_pubkey_pseudo_num_1 != null) &&
+                                                                 (f_pubkey.equals(f_pubkey_pseudo_num_1)))
+                                                        {
+                                                            Bitmap location_arrow_2 = tintImage(
+                                                                    ((BitmapDrawable) context_s.getResources().getDrawable(
+                                                                            R.drawable.round_navigation_color_48)).getBitmap(),
+                                                                    Color.parseColor("#A34100"));
+                                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                                        }
+                                                        else
+                                                        {
+                                                            // #6F0BA3 dark purple
+                                                            // #A34100 brown-ish
+
+                                                            // HINT: fix me later
+                                                            // for now all other location pins are "dark purple"
+                                                            Bitmap location_arrow_2 = tintImage(
+                                                                    ((BitmapDrawable) context_s.getResources().getDrawable(
+                                                                            R.drawable.round_navigation_color_48)).getBitmap(),
+                                                                    Color.parseColor("#6F0BA3"));
+                                                            directed_ol.setDirectionArrow(location_arrow_2);
+                                                        }
+
+                                                        remote_ol.remote_location_overlay = directed_ol;
+                                                        remote_location_overlays.put(f_pubkey, remote_ol);
+                                                        map.getOverlays().add(directed_ol);
                                                     }
                                                 }
-                                            };
-
-                                            if (main_handler_s != null)
-                                            {
-                                                main_handler_s.post(myRunnable);
                                             }
-                                        }
-                                        else if ((f_pubkey_pseudo_num_1 != null) &&
-                                                 (f_pubkey != null) &&
-                                                 (f_pubkey_pseudo_num_1.equals(f_pubkey)))
-
-                                        {
-                                            String final_f_pubkey = f_pubkey;
-                                            Runnable myRunnable = new Runnable()
+                                            catch (Exception e)
                                             {
-                                                @Override
-                                                public void run()
+                                            }
+
+                                            try
+                                            {
+                                                CaptureService.remote_location_entry re = remote_location_data.get(
+                                                        f_pubkey);
+                                                if (f_pubkey != null)
                                                 {
-                                                    try
-                                                    {
-                                                        CaptureService.remote_location_entry re = remote_location_data.get(
-                                                                final_f_pubkey);
-                                                        re.remote_location_last_ts_millis = current_ts_millis;
-                                                        re.remote_location_txt = "name: " + re.friend_name + "\n" + "accur: " +
-                                                                                 (int) (Math.round(acc * 10f) / 10) + " m\n";
-                                                        set_debug_text_3(location_info_text(re.remote_location_last_ts_millis,
-                                                                                            re.remote_location_txt));
-                                                    }
-                                                    catch (Exception e)
-                                                    {
-                                                        Log.i(TAG, "EE.b:" + e.getMessage());
-                                                    }
+                                                    re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, acc,
+                                                                         INTERPOLATE_POS_STEPS, f_pubkey);
                                                 }
-                                            };
-
-                                            if (main_handler_s != null)
-                                            {
-                                                main_handler_s.post(myRunnable);
                                             }
-                                        }
+                                            catch (Exception e)
+                                            {
+                                                e.printStackTrace();
+                                            }
 
-                                        CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                        re.last_remote_location_ts_millis = current_ts_millis;
+                                            if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey != null) &&
+                                                (f_pubkey_pseudo_num_0.equals(f_pubkey)))
+                                            {
+                                                String final_f_pubkey = f_pubkey;
+                                                Runnable myRunnable = new Runnable()
+                                                {
+                                                    @Override
+                                                    public void run()
+                                                    {
+                                                        try
+                                                        {
+                                                            CaptureService.remote_location_entry re = remote_location_data.get(
+                                                                    final_f_pubkey);
+                                                            re.remote_location_last_ts_millis = current_ts_millis;
+                                                            re.remote_location_txt =
+                                                                    "name: " + re.friend_name + "\n" + "accur: " +
+                                                                    (int) (Math.round(acc * 10f) / 10) + " m\n";
+                                                            set_debug_text_2(location_info_text(
+                                                                    re.remote_location_last_ts_millis,
+                                                                    re.remote_location_txt));
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            Log.i(TAG, "EE.b:" + e.getMessage());
+                                                        }
+                                                    }
+                                                };
+
+                                                if (main_handler_s != null)
+                                                {
+                                                    main_handler_s.post(myRunnable);
+                                                }
+                                            }
+                                            else if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) &&
+                                                     (f_pubkey_pseudo_num_1.equals(f_pubkey)))
+
+                                            {
+                                                String final_f_pubkey = f_pubkey;
+                                                Runnable myRunnable = new Runnable()
+                                                {
+                                                    @Override
+                                                    public void run()
+                                                    {
+                                                        try
+                                                        {
+                                                            CaptureService.remote_location_entry re = remote_location_data.get(
+                                                                    final_f_pubkey);
+                                                            re.remote_location_last_ts_millis = current_ts_millis;
+                                                            re.remote_location_txt =
+                                                                    "name: " + re.friend_name + "\n" + "accur: " +
+                                                                    (int) (Math.round(acc * 10f) / 10) + " m\n";
+                                                            set_debug_text_3(location_info_text(
+                                                                    re.remote_location_last_ts_millis,
+                                                                    re.remote_location_txt));
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            Log.i(TAG, "EE.b:" + e.getMessage());
+                                                        }
+                                                    }
+                                                };
+
+                                                if (main_handler_s != null)
+                                                {
+                                                    main_handler_s.post(myRunnable);
+                                                }
+                                            }
+
+                                            CaptureService.remote_location_entry re = remote_location_data.get(
+                                                    f_pubkey);
+                                            re.last_remote_location_ts_millis = current_ts_millis;
+                                        }
                                     }
                                 }
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+                        };
+                        runTaskFriendLocationIncoming(process_incoming_gps_location);
                     }
-                };
-                t.start();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
         catch(Exception e)
@@ -5774,15 +5819,18 @@ public class MainActivity extends BaseProtectedActivity
         map.postInvalidate();
     }
 
-    private static void init_friend_location_data_struct(String friend_name, String f_pubkey, boolean has_bearing)
+    synchronized private static void init_friend_location_data_struct(String friend_name, String f_pubkey, boolean has_bearing)
     {
         try
         {
-            CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
-            re.friend_name = friend_name;
-            re.has_bearing = has_bearing;
-            re.gps_i = new GpsInterpolator();
-            remote_location_data.put(f_pubkey, re);
+            if (!remote_location_data.containsKey(f_pubkey))
+            {
+                CaptureService.remote_location_entry re = new CaptureService.remote_location_entry();
+                re.friend_name = friend_name;
+                re.has_bearing = has_bearing;
+                re.gps_i = new GpsInterpolator();
+                remote_location_data.put(f_pubkey, re);
+            }
         }
         catch(Exception e)
         {

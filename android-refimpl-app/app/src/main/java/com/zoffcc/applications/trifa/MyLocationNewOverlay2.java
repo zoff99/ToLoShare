@@ -23,7 +23,7 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
 
     @Override
     public void onLocationChanged(final Location location, IMyLocationProvider source) {
-        // Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
+        Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
         final MyLocationNewOverlay2 this_ = this;
         final Thread t = new Thread()
         {
@@ -43,7 +43,7 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
     }
 
     public void onLocationChanged_real(final Location location, IMyLocationProvider source) {
-        // Log.i(TAG, "onLocationChanged:1:XXXXXXXXXXXXXXXXX");
+        Log.i(TAG, "onLocationChanged:1:XXXXXXXXXXXXXXXXX");
         super.onLocationChanged(location, source);
     }
 }
