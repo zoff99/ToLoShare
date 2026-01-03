@@ -1895,6 +1895,8 @@ public class MainActivity extends BaseProtectedActivity
 
         if (PREF__normal_main_view)
         {
+            Log.i(TAG, "remove_map_overlays:005b");
+            remove_map_overlays();
             map.onPause();
         }
         else
@@ -1949,18 +1951,18 @@ public class MainActivity extends BaseProtectedActivity
                 if (!PREF__normal_main_view) {
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
+                    main_gallery_container.bringToFront();
                     map.onResume();
                     Log.i(TAG, "OOO:x:2");
-                    // enable_mylocation_overlay();
                     Log.i(TAG, "remove_map_overlays:006");
                     remove_map_overlays();
                     Log.i(TAG, "add_map_overlays:006");
                     add_map_overlays();
-                    // TODO: this hides the main drawer. how to fix?
-                    main_gallery_container.bringToFront();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
+                    Log.i(TAG, "remove_map_overlays:006b");
+                    remove_map_overlays();
                     map.onPause();
                 }
             }
@@ -2025,13 +2027,6 @@ public class MainActivity extends BaseProtectedActivity
 
     void remove_map_overlays()
     {
-        try
-        {
-            mLocationOverlay.disableMyLocation();
-        }
-        catch(Exception e)
-        {
-        }
         try
         {
             mIMyLocationProvider.stopLocationProvider();
