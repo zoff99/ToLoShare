@@ -5666,7 +5666,7 @@ public class MainActivity extends BaseProtectedActivity
                                                     CaptureService.remote_location_overlay_entry ro = remote_location_overlays.get(f_pubkey);
                                                     select_location_icon(old_has_bearing, has_bearing, f_pubkey,
                                                               f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1,
-                                                                         true, ro.remote_location_overlay);
+                                                                         false, ro.remote_location_overlay);
                                                 }
                                             }
                                         }
