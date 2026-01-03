@@ -5599,7 +5599,7 @@ public class MainActivity extends BaseProtectedActivity
                                             else
                                             {
                                                 bearing = 0;
-                                                // has_bearing = false;
+                                                has_bearing = false;
                                                 // Log.i(TAG, "has_bearing = false");
                                             }
                                         }
