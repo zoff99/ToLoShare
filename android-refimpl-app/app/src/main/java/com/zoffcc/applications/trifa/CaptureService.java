@@ -63,7 +63,7 @@ public class CaptureService extends Service
         GpsInterpolator gps_i = null;
         String remote_location_txt = "";
         // String remote_location_time_txt = "";
-        long last_remote_location_ts_millis = 0;
+        // long last_remote_location_ts_millis = 0;
         long remote_location_last_ts_millis = 0;
         String friend_name = "remote";
     }
