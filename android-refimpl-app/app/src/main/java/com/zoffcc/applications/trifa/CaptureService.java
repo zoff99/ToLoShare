@@ -19,6 +19,7 @@ import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
 import java.util.HashMap;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
@@ -33,10 +34,9 @@ import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_mi
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
-import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_friend_list_size;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
-/** @noinspection CommentedOutCode*/
+/** @noinspection CommentedOutCode, CallToPrintStackTrace , Convert2Lambda */
 public class CaptureService extends Service
 {
     final static String TAG = "CaptureService";
@@ -174,7 +174,7 @@ public class CaptureService extends Service
             private final String TAG1 = "_location_";
 
             @Override
-            public void onLocationChanged(Location location)
+            public void onLocationChanged(@NonNull Location location)
             {
                 // Log.i(TAG1, "onLocationChanged: " + location);
 
@@ -207,6 +207,7 @@ public class CaptureService extends Service
                     long[] friends = MainActivity.tox_self_get_friend_list();
                     for (int fc = 0; fc < friends.length; fc++)
                     {
+                        //noinspection unused
                         final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
                         // Log.i(TAG1, "res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
                     }
@@ -218,18 +219,18 @@ public class CaptureService extends Service
 
                 own_location_last_ts_millis = System.currentTimeMillis();
                 own_location_txt = "provider: " + location.getProvider() + "\n" +
-                                   "accur: " + (int)(Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
+                                   "accur: " + (Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
                 set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
             }
 
             @Override
-            public void onStatusChanged(String provider, int status, Bundle extras)
+            public void onStatusChanged(@NonNull String provider, int status, Bundle extras)
             {
                 Log.i(TAG1, "onStatusChanged: " + provider + " " +  status);
             }
 
             @Override
-            public void onProviderEnabled(String provider)
+            public void onProviderEnabled(@NonNull String provider)
             {
                 Log.i(TAG1, "onProviderEnabled: " + provider);
                 try
@@ -244,13 +245,13 @@ public class CaptureService extends Service
                         }
                     }
                 }
-                catch(Exception e)
+                catch(Exception ignored)
                 {
                 }
             }
 
             @Override
-            public void onProviderDisabled(String provider)
+            public void onProviderDisabled(@NonNull String provider)
             {
                 Log.i(TAG1, "onProviderDisabled: " + provider);
             }
@@ -260,7 +261,7 @@ public class CaptureService extends Service
         {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
         }
-        catch(Exception e)
+        catch(Exception ignored)
         {
         }
 
@@ -268,7 +269,7 @@ public class CaptureService extends Service
         {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, mLocationListener);
         }
-        catch(Exception e)
+        catch(Exception ignored)
         {
         }
     }
@@ -313,6 +314,7 @@ public class CaptureService extends Service
         }
     }
 
+    /** @noinspection UnnecessaryLocalVariable*/
     static byte[] getGeoMsg(Location location)
     {
         String bearing = "" + location.getBearing();
@@ -336,6 +338,7 @@ public class CaptureService extends Service
         return data_bin;
     }
 
+    /** @noinspection unused*/
     public void stopLocationTracking()
     {
         locationManager.removeUpdates(mLocationListener);

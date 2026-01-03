@@ -3,14 +3,14 @@ package com.zoffcc.applications.trifa;
 import android.location.Location;
 import android.location.LocationManager;
 
-import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
-
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
 
+/** @noinspection FieldCanBeLocal, CommentedOutCode */
 public class GpsInterpolatorOwnLocation
 {
 
+    /** @noinspection unused*/
     final static String TAG = "GpsInterpolatorOL";
 
     private double lastLat, lastLon, lastBearing;
@@ -30,7 +30,7 @@ public class GpsInterpolatorOwnLocation
             interpolated_location.setBearing((float) newBearing);
             myLocationNewOverlay2.onLocationChanged_real(interpolated_location, mIMyLocationProvider);
         }
-        catch(Exception e)
+        catch(Exception ignored)
         {
         }
     }

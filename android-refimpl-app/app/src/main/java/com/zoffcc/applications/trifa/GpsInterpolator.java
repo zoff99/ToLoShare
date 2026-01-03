@@ -10,15 +10,16 @@ import static com.zoffcc.applications.trifa.CaptureService.remote_location_overl
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 
+/** @noinspection CommentedOutCode*/
 public class GpsInterpolator
 {
 
+    /** @noinspection unused*/
     final static String TAG = "GpsInterpolator";
 
     private double lastLat;
     private double lastLon;
     private double lastBearing;
-    private boolean last_has_bearing;
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
 
@@ -28,34 +29,40 @@ public class GpsInterpolator
         {
             // Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
             CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
-            remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
-            remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
-            remote_ol.remote_location_overlay.setBearing((float)newBearing);
+            if (remote_ol != null)
+            {
+                remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
+                remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
+                remote_ol.remote_location_overlay.setBearing((float)newBearing);
+            }
         }
-        catch(Exception e)
+        catch(Exception ignored)
         {
         }
 
         try
         {
             CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-            if (re.remoteBestLocation == null)
+            if (re != null)
             {
-                re.remoteBestLocation = new Location(LocationManager.GPS_PROVIDER);
-            }
-            re.remoteBestLocation.setAccuracy(acc);
-            re.remoteBestLocation.setLatitude(newLat);
-            re.remoteBestLocation.setLongitude(newLon);
-            if (re.has_bearing)
-            {
-                re.remoteBestLocation.setBearing((float) newBearing);
-            }
-            else
-            {
-                re.remoteBestLocation.removeBearing();
+                if (re.remoteBestLocation == null)
+                {
+                    re.remoteBestLocation = new Location(LocationManager.GPS_PROVIDER);
+                }
+                re.remoteBestLocation.setAccuracy(acc);
+                re.remoteBestLocation.setLatitude(newLat);
+                re.remoteBestLocation.setLongitude(newLon);
+                if (re.has_bearing)
+                {
+                    re.remoteBestLocation.setBearing((float) newBearing);
+                }
+                else
+                {
+                    re.remoteBestLocation.removeBearing();
+                }
             }
         }
-        catch(Exception e)
+        catch(Exception ignored)
         {
         }
 
@@ -63,7 +70,7 @@ public class GpsInterpolator
         {
             follow_friend_on_map(f_pubkey);
         }
-        catch(Exception e)
+        catch(Exception ignored)
         {
         }
     }
