@@ -9,7 +9,6 @@ import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MA
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 
@@ -26,7 +25,7 @@ public class GpsInterpolator
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
 
-    void push_geo_pos(double newLat, double newLon, double newBearing, float acc, String f_pubkey)
+    void push_geo_pos(double newLat, double newLon, double newBearing, float acc, boolean has_bearing, String f_pubkey)
     {
         try
         {
@@ -55,7 +54,7 @@ public class GpsInterpolator
                 re.remoteBestLocation.setAccuracy(acc);
                 re.remoteBestLocation.setLatitude(newLat);
                 re.remoteBestLocation.setLongitude(newLon);
-                if (re.has_bearing)
+                if (has_bearing)
                 {
                     re.remoteBestLocation.setBearing((float) newBearing);
                 }
@@ -105,7 +104,7 @@ public class GpsInterpolator
             lastBearing = newBearing;
             lastUpdateTime = currentTime;
             isFirstFix = false;
-            push_geo_pos(newLat, newLon, newBearing, acc, f_pubkey);
+            push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey);
             return;
         }
 
@@ -131,7 +130,15 @@ public class GpsInterpolator
             double interpolatedLon = lastLon + (newLon - lastLon) * fraction;
 
             // Interpolate Bearing (Shortest path)
-            double interpolatedBearing = interpolateBearing(lastBearing, newBearing, fraction);
+            double interpolatedBearing;
+            if (has_bearing)
+            {
+                interpolatedBearing = interpolateBearing(lastBearing, newBearing, fraction);
+            }
+            else
+            {
+                interpolatedBearing = lastBearing;
+            }
 
             // Sleep to create smooth visual motion
             try {
@@ -140,7 +147,7 @@ public class GpsInterpolator
                 }
                 //Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
                 //           ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
-                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, f_pubkey);
+                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
                 break;

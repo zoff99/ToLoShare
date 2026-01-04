@@ -2,7 +2,6 @@ package com.zoffcc.applications.trifa;
 
 import android.location.Location;
 import android.location.LocationManager;
-import android.util.Log;
 
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MAX;
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
@@ -21,7 +20,8 @@ public class GpsInterpolatorOwnLocation
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
 
-    void push_geo_pos(double newLat, double newLon, double newBearing, double acc, MyLocationNewOverlay2 myLocationNewOverlay2)
+    void push_geo_pos(double newLat, double newLon, double newBearing, double acc, boolean has_bearing,
+                      MyLocationNewOverlay2 myLocationNewOverlay2)
     {
         try
         {
@@ -30,7 +30,14 @@ public class GpsInterpolatorOwnLocation
             interpolated_location.setAccuracy((float)acc);
             interpolated_location.setLatitude(newLat);
             interpolated_location.setLongitude(newLon);
-            interpolated_location.setBearing((float) newBearing);
+            if (has_bearing)
+            {
+                interpolated_location.setBearing((float) newBearing);
+            }
+            else
+            {
+                interpolated_location.removeBearing();
+            }
             myLocationNewOverlay2.onLocationChanged_real(interpolated_location, mIMyLocationProvider);
         }
         catch(Exception ignored)
@@ -54,12 +61,15 @@ public class GpsInterpolatorOwnLocation
             (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
             lastLat = location.getLatitude();
             lastLon = location.getLongitude();
-            lastBearing = location.getBearing();
+            if (location.hasBearing())
+            {
+                lastBearing = location.getBearing();
+            }
             lastAcc = location.getAccuracy();
             lastUpdateTime = currentTime;
             // Log.i(TAG, "timeDelta=" + timeDelta);
             isFirstFix = false;
-            push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, myLocationNewOverlay2);
+            push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, location.hasBearing(), myLocationNewOverlay2);
             return;
         }
 
@@ -77,7 +87,15 @@ public class GpsInterpolatorOwnLocation
             double interpolatedLon = lastLon + (location.getLongitude() - lastLon) * fraction;
 
             // Interpolate Bearing (Shortest path)
-            double interpolatedBearing = interpolateBearing(lastBearing, location.getBearing(), fraction);
+            double interpolatedBearing;
+            if (location.hasBearing())
+            {
+                interpolatedBearing = interpolateBearing(lastBearing, location.getBearing(), fraction);
+            }
+            else
+            {
+                interpolatedBearing = lastBearing;
+            }
 
             // Sleep to create smooth visual motion
             try {
@@ -86,7 +104,8 @@ public class GpsInterpolatorOwnLocation
                 }
                 //Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
                 //           ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
-                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, location.getAccuracy(), myLocationNewOverlay2);
+                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, location.getAccuracy(),
+                             location.hasBearing(), myLocationNewOverlay2);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
                 break;
@@ -95,7 +114,10 @@ public class GpsInterpolatorOwnLocation
 
         lastLat = location.getLatitude();
         lastLon = location.getLongitude();
-        lastBearing = location.getBearing();
+        if (location.hasBearing())
+        {
+            lastBearing = location.getBearing();
+        }
     }
 
     private double interpolateBearing(double start, double end, double fraction) {
