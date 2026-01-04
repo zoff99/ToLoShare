@@ -5,9 +5,12 @@ import android.location.LocationManager;
 
 import org.osmdroid.util.GeoPoint;
 
+import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MAX;
+import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 
 /** @noinspection CommentedOutCode*/
@@ -86,7 +89,9 @@ public class GpsInterpolator
         long timeDelta = currentTime - lastUpdateTime;
 
         double newBearing;
-        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (timeDelta > 3000) || (steps < 1) || (steps > 20)) {
+        if ((!PREF__gps_smooth_own) || (isFirstFix) ||
+            (timeDelta < GPS_UPDATE_FREQ_MS_MIN) ||
+            (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
             lastLat = newLat;
             lastLon = newLon;
             if (has_bearing)
@@ -113,6 +118,8 @@ public class GpsInterpolator
             newBearing = lastBearing;
         }
 
+        lastUpdateTime = currentTime;
+
         // Determine sleep time per step (total delta / number of steps)
         long sleepTimePerStep = timeDelta / steps;
 
@@ -128,11 +135,11 @@ public class GpsInterpolator
 
             // Sleep to create smooth visual motion
             try {
-                if (sleepTimePerStep > 0) {
+                if ((sleepTimePerStep > 0) && (i > 1)) {
                     Thread.sleep(sleepTimePerStep);
                 }
-                // System.out.printf("Step %d: Lat %.6f, Lon %.6f, Bearing %.2f%n",
-                //                  i, interpolatedLat, interpolatedLon, interpolatedBearing);
+                //Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
+                //           ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, f_pubkey);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
@@ -144,7 +151,6 @@ public class GpsInterpolator
         lastLat = newLat;
         lastLon = newLon;
         lastBearing = newBearing;
-        lastUpdateTime = currentTime;
     }
 
     private double interpolateBearing(double start, double end, double fraction) {

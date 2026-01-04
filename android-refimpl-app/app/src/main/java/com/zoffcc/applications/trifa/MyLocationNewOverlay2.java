@@ -1,6 +1,7 @@
 package com.zoffcc.applications.trifa;
 
 import android.location.Location;
+import android.util.Log;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
@@ -22,7 +23,7 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
 
     @Override
     public void onLocationChanged(final Location location, IMyLocationProvider source) {
-        // Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
+        Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
         final MyLocationNewOverlay2 this_ = this;
         final Runnable process_own_gps_location = () -> {
             try

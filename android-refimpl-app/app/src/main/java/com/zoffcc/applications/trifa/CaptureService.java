@@ -26,6 +26,7 @@ import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
+import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
@@ -44,6 +45,9 @@ public class CaptureService extends Service
 
     static boolean GPS_SERVICE_STARTED = false;
     private static final int _30_SECONDS = 1000 * 30;
+    static final int GPS_UPDATE_FREQ_MS = 1000;
+    static final int GPS_UPDATE_FREQ_MS_MIN = 800;
+    static final int GPS_UPDATE_FREQ_MS_MAX = 1200;
     Notification notification_gps = null;
     NotificationManager nmn_gps = null;
     NotificationChannel notification_channel_gpsservice = null;
@@ -209,7 +213,7 @@ public class CaptureService extends Service
                     {
                         //noinspection unused
                         final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
-                        // Log.i(TAG1, "res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+                        // Log.i(TAG1, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
                     }
                 }
                 catch(Exception e)
@@ -259,7 +263,7 @@ public class CaptureService extends Service
 
         try
         {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
         }
         catch(Exception ignored)
         {
@@ -267,7 +271,7 @@ public class CaptureService extends Service
 
         try
         {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, mLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
         }
         catch(Exception ignored)
         {
