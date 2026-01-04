@@ -333,7 +333,7 @@ public class JavaFriendTester
         // load_main_gallery_images();
         screenshot_full("007");
 
-        wait_(40);
+        wait_(80);
         Log.i(TAG, "taking last screenshot ...");
         screenshot_full("099");
         Log.i(TAG, "taking last screenshot ... DONE");
