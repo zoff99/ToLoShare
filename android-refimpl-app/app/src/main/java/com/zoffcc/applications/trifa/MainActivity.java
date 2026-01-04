@@ -321,8 +321,8 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
     //**MOCK**// private MockLocationSimulator simulator;
-    static int NUMBER_OF_MOCK_FRIENDS = 15;
-    private MockFriendLocationSimulator[] friend_simulator;
+    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 15;
+    //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -2012,12 +2012,12 @@ public class MainActivity extends BaseProtectedActivity
         // Start the driving simulation
         //**MOCK**// simulator.startSimulation();
 
-        friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
-        for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
-        {
-            friend_simulator[j] = new MockFriendLocationSimulator(this, j);
-            friend_simulator[j].startSimulation();
-        }
+        //**MOCK**// friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
+        //**MOCK**// for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+        //**MOCK**// {
+        //**MOCK**//     friend_simulator[j] = new MockFriendLocationSimulator(this, j);
+        //**MOCK**//     friend_simulator[j].startSimulation();
+        //**MOCK**// }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
@@ -3776,16 +3776,16 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**//     simulator.stopSimulation();
         //**MOCK**// }
 
-        if (friend_simulator != null)
-        {
-            for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
-            {
-                if (friend_simulator[j] != null)
-                {
-                    friend_simulator[j].stopSimulation();
-                }
-            }
-        }
+        //**MOCK**// if (friend_simulator != null)
+        //**MOCK**// {
+        //**MOCK**//     for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+        //**MOCK**//     {
+        //**MOCK**//         if (friend_simulator[j] != null)
+        //**MOCK**//         {
+        //**MOCK**//             friend_simulator[j].stopSimulation();
+        //**MOCK**//         }
+        //**MOCK**//     }
+        //**MOCK**// }
     }
 
     @Override
@@ -5665,10 +5665,10 @@ public class MainActivity extends BaseProtectedActivity
                                             f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
 
                                             //**MOCK**//
-                                            if ((f_pubkey == null) || (f_pubkey.equals("-1")))
-                                            {
-                                                f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
-                                            }
+                                            //**MOCK**// if ((f_pubkey == null) || (f_pubkey.equals("-1")))
+                                            //**MOCK**// {
+                                            //**MOCK**//     f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                            //**MOCK**// }
                                             //**MOCK**//
 
                                             if ((f_pubkey != null) && (f_pubkey.length() > 10))
@@ -5695,9 +5695,9 @@ public class MainActivity extends BaseProtectedActivity
                                         }
                                         catch (Exception e)
                                         {
-                                            e.printStackTrace();
+                                            //**MOCK**// e.printStackTrace();
                                             //**MOCK**//
-                                            f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                            //**MOCK**// f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
                                             //**MOCK**//
                                         }
 
