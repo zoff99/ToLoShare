@@ -319,6 +319,7 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_txt = "";
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
+    private MockLocationSimulator simulator;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -2000,6 +2001,13 @@ public class MainActivity extends BaseProtectedActivity
             waiting_container.setVisibility(View.VISIBLE);
             main_gallery_container.setVisibility(View.GONE);
         }
+
+        /*
+         * adb shell appops set your.package.name android:mock_location allow
+         */
+        simulator = new MockLocationSimulator(this);
+        // Start the driving simulation
+        simulator.startSimulation();
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
@@ -3753,6 +3761,10 @@ public class MainActivity extends BaseProtectedActivity
     protected void onDestroy()
     {
         super.onDestroy();
+        // Important: Stop simulation and clean up the test provider
+        if (simulator != null) {
+            simulator.stopSimulation();
+        }
     }
 
     @Override
