@@ -66,12 +66,21 @@ public class MockLocationSimulator {
         // 15s: Stop at a red light
         actionHandler.postDelayed(() -> setStopped(true), 15000);
 
-        // 10s: Resume driving and turn 45 degrees left
+        // 20s: Resume driving and turn 45 degrees left
         actionHandler.postDelayed(() -> {
             setStopped(false);
             setSpeed(15.0f);
             turn(-45);
-        }, 10000);
+        }, 20000);
+
+        // 30s: Stop at a red light
+        actionHandler.postDelayed(() -> setStopped(true), 30000);
+
+        // 35s: Slow down to 1m/s (~3 km/h)
+        actionHandler.postDelayed(() -> {
+            setStopped(false);
+            setSpeed(1.0f);
+        }, 35000);
     }
 
     private void updateMockLocation() {
@@ -98,6 +107,7 @@ public class MockLocationSimulator {
 
         if (isStopped)
         {
+            mockLocation.setBearing(0.0f);
             mockLocation.removeBearing();
         }
         else
