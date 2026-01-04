@@ -57,6 +57,7 @@ import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_c
 import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
 import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
+import static com.zoffcc.applications.trifa.MainActivity.main_activity_s;
 import static com.zoffcc.applications.trifa.MainActivity.main_gallery_container;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.map;
@@ -248,12 +249,14 @@ public class JavaFriendTester
                     // the above does not trigger the "setOnCheckedChangeListener" for some reason
 
                     map.onResume();
-                    mLocationOverlay.enableMyLocation();
                     main_gallery_container.bringToFront();
 
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
                     main_gallery_container.bringToFront();
+                    main_activity_s.remove_map_overlays();
+                    Log.i(TAG, "add_map_overlays:006");
+                    main_activity_s.add_map_overlays();
                     Log.i(TAG, "trigger setOnCheckedChangeListener");
                 }
                 catch (Exception e)
