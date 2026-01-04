@@ -275,7 +275,8 @@ public class MainActivity extends BaseProtectedActivity
 
     static boolean DEBUG_THREAD_STARTED = false;
     static boolean GEO_TIME_THREAD_STARTED = false;
-    static final int SMOOTH_POS_STEPS = 15;
+    static final int SMOOTH_POS_STEPS_OWN = 5;
+    static final int SMOOTH_POS_STEPS_FRIENDS = 5;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -320,6 +321,8 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
     //**MOCK**// private MockLocationSimulator simulator;
+    static int NUMBER_OF_MOCK_FRIENDS = 15;
+    private MockFriendLocationSimulator[] friend_simulator;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -2008,6 +2011,13 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**// simulator = new MockLocationSimulator(this);
         // Start the driving simulation
         //**MOCK**// simulator.startSimulation();
+
+        friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
+        for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+        {
+            friend_simulator[j] = new MockFriendLocationSimulator(this, j);
+            friend_simulator[j].startSimulation();
+        }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
@@ -3765,6 +3775,17 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**// if (simulator != null) {
         //**MOCK**//     simulator.stopSimulation();
         //**MOCK**// }
+
+        if (friend_simulator != null)
+        {
+            for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+            {
+                if (friend_simulator[j] != null)
+                {
+                    friend_simulator[j].stopSimulation();
+                }
+            }
+        }
     }
 
     @Override
@@ -5597,7 +5618,7 @@ public class MainActivity extends BaseProtectedActivity
                     {
                         final String geo_data_raw = new String(Arrays.copyOfRange(data, 1, data.length),
                                                                StandardCharsets.UTF_8);
-                        // Log.i(TAG, "GEO: " + geo_data_raw);
+                        // Log.i(TAG, "fn: " + friend_number + " GEO: " + geo_data_raw);
 
                         // example data: TzGeo00:BEGINGEO:<lat>>:<lon>:0.0:22.03:124.1:ENDGEO
 
@@ -5623,14 +5644,12 @@ public class MainActivity extends BaseProtectedActivity
                                             if (!separated[6].equals(INVALID_BEARING))
                                             {
                                                 has_bearing = true;
-                                                // Log.i(TAG, "has_bearing = true");
                                                 bearing = Float.parseFloat(separated[6]);
                                             }
                                             else
                                             {
                                                 bearing = 0;
                                                 has_bearing = false;
-                                                // Log.i(TAG, "has_bearing = false");
                                             }
                                         }
                                         catch (Exception e)
@@ -5644,6 +5663,14 @@ public class MainActivity extends BaseProtectedActivity
                                         try
                                         {
                                             f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
+
+                                            //**MOCK**//
+                                            if ((f_pubkey == null) || (f_pubkey.equals("-1")))
+                                            {
+                                                f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                            }
+                                            //**MOCK**//
+
                                             if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                             {
                                                 if (!remote_location_data.containsKey(f_pubkey))
@@ -5669,8 +5696,10 @@ public class MainActivity extends BaseProtectedActivity
                                         catch (Exception e)
                                         {
                                             e.printStackTrace();
+                                            //**MOCK**//
+                                            f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                            //**MOCK**//
                                         }
-                                        // Log.i(TAG, "old_has_bearing = " + old_has_bearing);
 
                                         try
                                         {
@@ -5710,12 +5739,12 @@ public class MainActivity extends BaseProtectedActivity
                                             if (f_pubkey != null)
                                             {
                                                 re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, acc,
-                                                                     SMOOTH_POS_STEPS, f_pubkey);
+                                                                     SMOOTH_POS_STEPS_FRIENDS, f_pubkey);
                                             }
                                         }
                                         catch (Exception e)
                                         {
-                                            e.printStackTrace();
+                                            // e.printStackTrace();
                                         }
 
                                         if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey != null) && (f_pubkey_pseudo_num_0.equals(f_pubkey)))
@@ -5781,16 +5810,26 @@ public class MainActivity extends BaseProtectedActivity
                                         }
 
                                         CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                        re.has_bearing = has_bearing;
                                         re.remote_location_last_ts_millis = current_ts_millis;
                                     }
                                 }
                             }
                             catch (Exception e)
                             {
-                                e.printStackTrace();
+                                // e.printStackTrace();
                             }
                         };
-                        runTaskFriendLocationIncoming(process_incoming_gps_location);
+                        if (PREF__gps_smooth_friends)
+                        {
+                            runTaskFriendLocationIncoming(process_incoming_gps_location);
+                        }
+                        else
+                        {
+                            // HINT: if we don't use smooth driving we just kick out the location update quickly
+                            //       in the background
+                            new Thread(process_incoming_gps_location).start();
+                        }
                     }
                 }
                 catch (Exception e)
@@ -5808,18 +5847,19 @@ public class MainActivity extends BaseProtectedActivity
                                              String f_pubkey_pseudo_num_0, String f_pubkey_pseudo_num_1,
                                              boolean force_icon, DirectedLocationOverlay directed_ol)
     {
+        // Log.i(TAG, "select_location_icon: f_pubkey: " + f_pubkey);
         if ((old_has_bearing != has_bearing) || (force_icon))
         {
-            // Log.i(TAG, "force_icon, old_has_bearing != has_bearing :" + force_icon + " " + old_has_bearing + " " + has_bearing);
+            // Log.i(TAG, "select_location_icon: force_icon, old_has_bearing != has_bearing :" + force_icon + " " + old_has_bearing + " " + has_bearing);
             int icon = R.drawable.osm_ic_center_map;
             if (has_bearing)
             {
                 icon = R.drawable.round_navigation_color_48;
-                // Log.i(TAG, "#########   nav  icon #########");
+                // Log.i(TAG, "select_location_icon: #########   nav  icon #########");
             }
             else
             {
-                // Log.i(TAG, "********* circle icon *********");
+                // Log.i(TAG, "select_location_icon: ********* circle icon *********");
             }
             if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey.equals(f_pubkey_pseudo_num_0)))
             {
@@ -5831,7 +5871,7 @@ public class MainActivity extends BaseProtectedActivity
             }
             else
             {
-                setDirectionArrowFriend("#2B8A15", icon, directed_ol);
+                setDirectionArrowFriend("#FF8A15", icon, directed_ol);
             }
         }
     }

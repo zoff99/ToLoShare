@@ -2,6 +2,7 @@ package com.zoffcc.applications.trifa;
 
 import android.location.Location;
 import android.location.LocationManager;
+import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -9,6 +10,7 @@ import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MA
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
 
@@ -87,8 +89,10 @@ public class GpsInterpolator
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
+        // Log.i(TAG, "onGpsUpdate: timeDelta=" + timeDelta);
+
         double newBearing;
-        if ((!PREF__gps_smooth_own) || (isFirstFix) ||
+        if ((!PREF__gps_smooth_friends) || (isFirstFix) ||
             (timeDelta < GPS_UPDATE_FREQ_MS_MIN) ||
             (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
             lastLat = newLat;
@@ -145,8 +149,8 @@ public class GpsInterpolator
                 if ((sleepTimePerStep > 0) && (i > 1)) {
                     Thread.sleep(sleepTimePerStep);
                 }
-                //Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
-                //           ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
+                // Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
+                //            ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status

@@ -1,13 +1,12 @@
 package com.zoffcc.applications.trifa;
 
 import android.location.Location;
-import android.util.Log;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import static com.zoffcc.applications.trifa.MainActivity.SMOOTH_POS_STEPS;
+import static com.zoffcc.applications.trifa.MainActivity.SMOOTH_POS_STEPS_OWN;
 import static com.zoffcc.applications.trifa.MainActivity.gps_int_own;
 import static com.zoffcc.applications.trifa.MainActivity.runTaskOwnLocation;
 
@@ -28,7 +27,7 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
         final Runnable process_own_gps_location = () -> {
             try
             {
-                gps_int_own.onGpsUpdate(location, SMOOTH_POS_STEPS, this_);
+                gps_int_own.onGpsUpdate(location, SMOOTH_POS_STEPS_OWN, this_);
             }
             catch (Exception ignored)
             {
