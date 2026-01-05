@@ -1,6 +1,6 @@
-<b>ToFShare - Share Files via Tox</b><br>
+<b>ToLoShare - Share your Location via Tox</b><br>
 
-A way to easily share files via Tox.
-Currently Images are displayed in a gallery style listing.
-
-
+A way to easily share your Location via Tox.
+You can share your location live on a map (openstreetmap) with friends and family.
+<br>
+Have a look at the desktop version: https://github.com/zoff99/toloshare_material

@@ -1,1 +1,1 @@
-ToFShare FileShare via Tox
+ToLoShare Location Share via Tox
