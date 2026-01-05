@@ -64,7 +64,7 @@ public class Aboutpage extends AppCompatActivity
             AboutPage aboutPage = new AboutPage(this).
                     isRTL(false).
                     setImage(R.drawable.web_hi_res_512).
-                    addWebsite("https://github.com/zoff99/ToxAndroidRefImpl/blob/zoff99/dev003/README.md");
+                    addWebsite("https://github.com/zoff99/ToLoShare/blob/master/README.md");
 
             String abis = "??";
             try
