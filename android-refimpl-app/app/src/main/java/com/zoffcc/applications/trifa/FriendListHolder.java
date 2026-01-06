@@ -896,6 +896,8 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
 
     static void show_messagelist_acticvity_for_friend(Context c, String friend_pubkey)
     {
+        // HINT: disable clicking on a Friend to show the message list
+        /*
         try
         {
             fl_loading_progressbar.setVisibility(View.VISIBLE);
@@ -908,6 +910,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
         Intent intent = new Intent(c, MessageListActivity.class);
         intent.putExtra("friendnum", tox_friend_by_public_key__wrapper(friend_pubkey));
         c.startActivity(intent);
+         */
     }
 
     public void show_confirm_adddefaultft_dialog(final View view, final FriendList f2)

@@ -145,7 +145,7 @@ public class MessageListActivity extends AppCompatActivity
     ImageButton ml_phone_icon = null;
     ImageButton ml_video_icon = null;
     ImageButton ml_attach_button_01 = null;
-    ImageButton ml_button_recaudio = null;
+    // ImageButton ml_button_recaudio = null;
     ImageButton audio_rec_popup_button = null;
     static TextView audio_rec_popup_time = null;
     static ViewGroup audio_rec_popup_container = null;
@@ -317,8 +317,8 @@ public class MessageListActivity extends AppCompatActivity
         ml_phone_icon = (ImageButton) findViewById(R.id.ml_phone_icon);
         ml_video_icon = (ImageButton) findViewById(R.id.ml_video_icon);
         ml_attach_button_01 = (ImageButton) findViewById(R.id.ml_button_01);
-        ml_button_recaudio = (ImageButton) findViewById(R.id.ml_button_recaudio);
-        ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
+        //ml_button_recaudio = (ImageButton) findViewById(R.id.ml_button_recaudio);
+        //ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
         audio_rec_popup_button = findViewById(R.id.audio_rec_popup_button);
         audio_rec_popup_time = findViewById(R.id.audio_rec_popup_time);
         audio_rec_popup_container = findViewById(R.id.audio_rec_popup_container);
@@ -621,270 +621,6 @@ public class MessageListActivity extends AppCompatActivity
         };
         t.start();
 
-        ml_button_recaudio.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-
-                if (ml_is_rec_ok)
-                {
-                    return false;
-                }
-
-                if (ml_is_recording)
-                {
-                    return false;
-                }
-
-                // display_toast("LONG", false, 0);
-                final Thread ml_rec_audio_thread = new Thread()
-                {
-                    @Override
-                    public void run()
-                    {
-                        String audio_rec_filename_final = null;
-                        ml_is_recording = true;
-                        ml_is_rec_ok = false;
-                        ((ImageButton) v).setImageResource(R.drawable.baseline_stop_circle_24);
-                        v.setBackgroundColor(Color.parseColor("#FF0000"));
-
-                        set_recording_pop_text_s("0:00");
-                        set_recording_pop_visibilty_s(true);
-
-                        try
-                        {
-                            Log.i(TAG, "onCreate:record_audio:start");
-                            AudioRecorder mAudioRecorder = AudioRecorder.getInstance();
-                            final String fpubkey = tox_friend_get_public_key__wrapper(friendnum);
-                            String audio_rec_filename = SD_CARD_TMP_DIR + "/" + fpubkey + "_" + System.nanoTime();
-                            String audio_rec_filename_uniq_part  = get_uniq_tmp_filename(audio_rec_filename ,1000);
-                            audio_rec_filename_final = audio_rec_filename + "_" + audio_rec_filename_uniq_part + ".file.m4a";
-                            File f = new File(audio_rec_filename_final);
-                            boolean file_exists = true;
-                            try
-                            {
-                                file_exists = f.exists();
-                            }
-                            catch(Exception e)
-                            {
-                                ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
-                                v.setBackgroundColor(Color.TRANSPARENT);
-                                set_recording_pop_visibilty_s(false);
-                                ml_is_recording = false;
-                                ml_is_rec_ok = false;
-                                return;
-                            }
-
-                            long count = 0;
-                            while(file_exists)
-                            {
-                                audio_rec_filename = SD_CARD_TMP_DIR + "/" + fpubkey + "_" + System.nanoTime();
-                                audio_rec_filename_uniq_part  = get_uniq_tmp_filename(audio_rec_filename ,1000);
-                                audio_rec_filename_final = audio_rec_filename + "_" + audio_rec_filename_uniq_part + ".file.m4a";
-                                f = new File(audio_rec_filename_final);
-                                try
-                                {
-                                    file_exists = f.exists();
-                                }
-                                catch(Exception e)
-                                {
-                                    ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
-                                    v.setBackgroundColor(Color.TRANSPARENT);
-                                    set_recording_pop_visibilty_s(false);
-                                    ml_is_recording = false;
-                                    ml_is_rec_ok = false;
-                                    return;
-                                }
-
-                                try
-                                {
-                                    Thread.sleep(50);
-                                }
-                                catch(Exception e)
-                                {
-                                }
-                                count++;
-
-                                if (count > 50)
-                                {
-                                    // HINT: just in case of an endless loop, we return here
-                                    ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
-                                    v.setBackgroundColor(Color.TRANSPARENT);
-                                    set_recording_pop_visibilty_s(false);
-                                    ml_is_recording = false;
-                                    ml_is_rec_ok = false;
-                                    return;
-                                }
-                            }
-
-                            File mAudioFile = new File(audio_rec_filename_final);
-                            // Log.i(TAG, "onCreate:record_audio:file=" + audio_rec_filename_final);
-                            mAudioRecorder.prepareRecord(MediaRecorder.AudioSource.MIC, MediaRecorder.OutputFormat.MPEG_4,
-                                                         MediaRecorder.AudioEncoder.AAC, mAudioFile);
-                            boolean rec_start_result = mAudioRecorder.startRecord();
-                            if (!rec_start_result)
-                            {
-                                // HINT: some problem on starting the recording
-                                ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
-                                v.setBackgroundColor(Color.TRANSPARENT);
-                                set_recording_pop_visibilty_s(false);
-                                ml_is_recording = false;
-                                ml_is_rec_ok = false;
-                                return;
-                            }
-
-                            while (ml_is_recording)
-                            {
-                                try
-                                {
-                                    Thread.sleep(200);
-                                }
-                                catch (Exception ignored)
-                                {
-                                }
-
-                                set_recording_pop_text_s(seconds_time_format_or_empty(mAudioRecorder.progress()));
-
-                                if (mAudioRecorder.progress() > MAX_FRIEND_AUDIO_RECORDING_MSG_SECONDS)
-                                {
-                                    // HINT: stop after x seconds of recording so it does not record endless
-                                    Log.i(TAG, "onCreate:record_audio:auto_stop");
-                                    ml_is_rec_ok = true;
-                                    ml_is_recording = false;
-                                }
-                            }
-                            ((ImageButton) v).setImageResource(R.drawable.baseline_pending_24);
-                            v.setBackgroundColor(Color.TRANSPARENT);
-                            set_recording_pop_visibilty_s(false);
-                            int rec_result = mAudioRecorder.stopRecord();
-                            Log.i(TAG, "onCreate:record_audio:finished:res=" + rec_result);
-                            if (rec_result == -1)
-                            {
-                                ml_is_rec_ok = false;
-                            }
-                        }
-                        catch(Exception e)
-                        {
-                            Log.i(TAG, "onCreate:record_audio:EE:" + e.getMessage());
-                            e.printStackTrace();
-                        }
-                        ((ImageButton) v).setImageResource(R.drawable.baseline_keyboard_voice_24);
-                        v.setBackgroundColor(Color.TRANSPARENT);
-                        set_recording_pop_visibilty_s(false);
-
-                        if (ml_is_rec_ok)
-                        {
-                            Log.i(TAG, "onCreate:record_audio:------ OK ------");
-                            Log.i(TAG, "onCreate:record_audio:------ OK ------");
-                            Log.i(TAG, "onCreate:record_audio:------ OK ------");
-
-                            if (audio_rec_filename_final != null)
-                            {
-                                Log.i(TAG, "onCreate:record_audio:add to FT queue ...");
-                                File f2 = new File(audio_rec_filename_final);
-                                add_outgoing_file(v.getContext(), MainActivity.message_list_activity.get_current_friendnum(),
-                                                  f2.getParent(), f2.getName(), null, f2.length(),
-                                                  false, true, true, false);
-                            }
-                        }
-
-                        try
-                        {
-                            if ((audio_rec_filename_final != null) && (audio_rec_filename_final.length() > 10))
-                            {
-                                new File(audio_rec_filename_final).delete();
-                            }
-                        }
-                        catch (Exception ignored)
-                        {
-                        }
-                        ml_is_rec_ok = false;
-                        ml_is_recording = false;
-                    }
-                };
-                ml_rec_audio_thread.start();
-
-                return true;
-            }
-        });
-
-        audio_rec_popup_button.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(final View v)
-            {
-                if (ml_is_rec_ok)
-                {
-                    return;
-                }
-
-                if (ml_is_recording)
-                {
-                    ml_is_rec_ok = true;
-                    ml_is_recording = false;
-                    return;
-                }
-            }
-        });
-
-        audio_rec_popup_time.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(final View v)
-            {
-                if (ml_is_rec_ok)
-                {
-                    return;
-                }
-
-                if (ml_is_recording)
-                {
-                    ml_is_rec_ok = true;
-                    ml_is_recording = false;
-                    return;
-                }
-            }
-        });
-
-        audio_rec_popup_container.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(final View v)
-            {
-                if (ml_is_rec_ok)
-                {
-                    return;
-                }
-
-                if (ml_is_recording)
-                {
-                    ml_is_rec_ok = true;
-                    ml_is_recording = false;
-                    return;
-                }
-            }
-        });
-
-        ml_button_recaudio.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(final View v)
-            {
-                if (ml_is_rec_ok)
-                {
-                    return;
-                }
-
-                if (ml_is_recording)
-                {
-                    ml_is_rec_ok = true;
-                    ml_is_recording = false;
-                    return;
-                }
-
-                display_toast(v.getContext().getString(R.string.MessageListActivity_longpress_to_record_audiomsg), false, 0);
-            }
-        });
-
         Log.i(TAG, "onCreate:099");
         oncreate_finished = true;
     }
@@ -903,8 +639,6 @@ public class MessageListActivity extends AppCompatActivity
         Log.i(TAG, "onPause");
         super.onPause();
 
-        ml_button_recaudio.setImageResource(R.drawable.baseline_keyboard_voice_24);
-        ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
         set_recording_pop_visibilty_s(false);
         ml_is_recording = false;
         ml_is_rec_ok = false;
@@ -927,8 +661,6 @@ public class MessageListActivity extends AppCompatActivity
     protected void onStop()
     {
         super.onStop();
-        ml_button_recaudio.setImageResource(R.drawable.baseline_keyboard_voice_24);
-        ml_button_recaudio.setBackgroundColor(Color.TRANSPARENT);
         ml_is_recording = false;
         ml_is_rec_ok = false;
     }
