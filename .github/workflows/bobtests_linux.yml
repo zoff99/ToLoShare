@@ -67,10 +67,17 @@ jobs:
              echo "------------------------"
              java -version
              javac -version
+
       - name: start tester
         shell: bash
         run: |
              cd java_tox_tester-master/ ; ls -al ; ./do_wait_for_app.sh > /home/runner/work/ToLoShare/ToLoShare/android-refimpl-app/tester.log 2>&1 &
+
+      - name: enable debug app permissions
+        shell: bash
+        run: |
+             ./tools/debug__enable_permissions.sh
+
       - name: check disk space
         shell: bash
         run: |
