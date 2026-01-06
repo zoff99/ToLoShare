@@ -26,6 +26,7 @@
             android:layout_height="wrap_content"
             android:textOff="gallery view"
             android:textOn="main view"
+            android:tooltipText="toogle map view"
             app:showText="false"
             tools:ignore="HardcodedText" />
 
@@ -35,6 +36,7 @@
             android:layout_height="wrap_content"
             android:textOff="gallery view"
             android:textOn="main view"
+            android:tooltipText="toogle friend GPS smoothing"
             app:showText="false"
             tools:ignore="HardcodedText" />
 
@@ -44,6 +46,7 @@
             android:layout_height="wrap_content"
             android:textOff="gallery view"
             android:textOn="main view"
+            android:tooltipText="toogle own GPS smoothing"
             app:showText="false"
             tools:ignore="HardcodedText" />
 
@@ -236,6 +239,7 @@
                             android:padding="0dp"
                             android:layout_marginRight="6dp"
                             android:alpha="0.5"
+                            android:tooltipText="follow own position on map"
                             android:background="@drawable/transparent"
                             android:scaleType="centerInside"
                             android:src="@drawable/outline_arrow_circle_right_24" />
@@ -270,6 +274,7 @@
                             android:padding="0dp"
                             android:layout_marginRight="6dp"
                             android:alpha="0.5"
+                            android:tooltipText="follow this friends positon on map"
                             android:background="@drawable/transparent"
                             android:scaleType="centerInside"
                             android:src="@drawable/outline_arrow_circle_right_24" />
@@ -305,6 +310,7 @@
                             android:padding="0dp"
                             android:layout_marginRight="6dp"
                             android:alpha="0.5"
+                            android:tooltipText="follow this friends positon on map"
                             android:background="@drawable/transparent"
                             android:scaleType="centerInside"
                             android:src="@drawable/outline_arrow_circle_right_24" />
@@ -339,6 +345,7 @@
                             android:padding="0dp"
                             android:layout_marginRight="6dp"
                             android:alpha="0.5"
+                            android:tooltipText="unpin map, do not follow anyone"
                             android:background="@drawable/transparent"
                             android:scaleType="centerInside"
                             android:src="@drawable/outline_cancel_24" />
