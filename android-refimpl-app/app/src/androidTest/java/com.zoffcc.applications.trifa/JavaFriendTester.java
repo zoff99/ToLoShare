@@ -77,8 +77,7 @@ public class JavaFriendTester
             StartMainActivityWrapper.class);
     //
     @Rule
-    public GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(Manifest.permission.RECORD_AUDIO,
-                                                                               Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    public GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(Manifest.permission.WRITE_EXTERNAL_STORAGE,
                                                                                Manifest.permission.ACCESS_COARSE_LOCATION,
                                                                                Manifest.permission.ACCESS_FINE_LOCATION);
     private static Activity currentActivity = null;
@@ -509,7 +508,6 @@ public class JavaFriendTester
     {
         // ----- persmission -----
         ArrayList<String> permissions = new ArrayList<>();
-        permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
