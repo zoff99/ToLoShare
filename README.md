@@ -1,5 +1,7 @@
 # Tox Location Share (for Android)
 
+<img src="https://raw.githubusercontent.com/zoff99/ToLoShare/refs/heads/master/fastlane/metadata/android/en-US/icon.png" width="120">
+
 This is a simplified version of [TRIfA](https://github.com/zoff99/ToxAndroidRefImpl) (the Tox Message Application for Android) that focuses on stable location sharing.
 This is a work in progress, feel free to help out.
 
