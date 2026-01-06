@@ -158,6 +158,7 @@ import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_F
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
+import static com.zoffcc.applications.trifa.CaptureService.fusion_m;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
@@ -496,6 +497,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__trust_all_webcerts = false; // HINT: !!be careful with this option!!
     static int PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
     static boolean PREF__gps_smooth_own = false;
+    static boolean PREF__gps_dead_reconing_own = false;
     static boolean PREF__gps_smooth_friends = false;
 
     final static String push_instance_name = "com.zoffcc.applications.push_toloshare";
@@ -1923,6 +1925,13 @@ public class MainActivity extends BaseProtectedActivity
         if (PREF__normal_main_view)
         {
             Log.i(TAG, "remove_map_overlays:005b");
+            try
+            {
+                fusion_m.stopSensorFusion();
+            }
+            catch(Exception e)
+            {
+            }
             remove_map_overlays();
             map.onPause();
         }
@@ -1935,6 +1944,16 @@ public class MainActivity extends BaseProtectedActivity
             remove_map_overlays();
             Log.i(TAG, "add_map_overlays:005");
             add_map_overlays();
+            try
+            {
+                if ((PREF__gps_smooth_own) && (PREF__gps_dead_reconing_own))
+                {
+                    fusion_m.startSensorFusion();
+                }
+            }
+            catch(Exception e)
+            {
+            }
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -3807,6 +3826,13 @@ public class MainActivity extends BaseProtectedActivity
         super.onPause();
 
         global_showing_mainview = false;
+        try
+        {
+            fusion_m.stopSensorFusion();
+        }
+        catch(Exception e)
+        {
+        }
 
         MainActivity.friend_list_fragment = null;
     }
@@ -3838,6 +3864,16 @@ public class MainActivity extends BaseProtectedActivity
             }
             Log.i(TAG, "add_map_overlays:002");
             add_map_overlays();
+            try
+            {
+                if ((PREF__gps_smooth_own) && (PREF__gps_dead_reconing_own))
+                {
+                    fusion_m.startSensorFusion();
+                }
+            }
+            catch(Exception e)
+            {
+            }
         }
 
 

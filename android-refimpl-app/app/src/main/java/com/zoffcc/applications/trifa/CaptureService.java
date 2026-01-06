@@ -27,8 +27,11 @@ import androidx.core.location.LocationListenerCompat;
 
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_dead_reconing_own;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
+import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.mapController;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
@@ -41,6 +44,7 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSL
 public class CaptureService extends Service
 {
     final static String TAG = "CaptureService";
+
     static final String INVALID_BEARING = "FFF";
 
     static boolean GPS_SERVICE_STARTED = false;
@@ -54,6 +58,7 @@ public class CaptureService extends Service
     String channelId_gps = "chl_svc1";
     LocationManager locationManager = null;
     LocationListenerCompat mLocationListener = null;
+    public static LocationFusionManager fusion_m = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
     final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
@@ -191,29 +196,18 @@ public class CaptureService extends Service
                         return;
                     }
                     currentBestLocation = new Location(location);
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-                if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
-                {
-                    set_map_center_to(location);
-                }
-
-                try
-                {
-                    final byte[] data_bin = getGeoMsg(location);
-                    int data_bin_len = data_bin.length;
-                    data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
-
-                    long[] friends = MainActivity.tox_self_get_friend_list();
-                    for (int fc = 0; fc < friends.length; fc++)
+                    if (PREF__gps_dead_reconing_own)
                     {
-                        //noinspection unused
-                        final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
-                        // Log.i(TAG1, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+                        if (PREF__gps_smooth_own)
+                        {
+                            try
+                            {
+                                fusion_m.onGpsLocationChanged(location);
+                            }
+                            catch (Exception e)
+                            {
+                            }
+                        }
                     }
                 }
                 catch(Exception e)
@@ -221,10 +215,23 @@ public class CaptureService extends Service
                     e.printStackTrace();
                 }
 
-                own_location_last_ts_millis = System.currentTimeMillis();
-                own_location_txt = "provider: " + location.getProvider() + "\n" +
-                                   "accur: " + (Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
-                set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
+                if (!PREF__gps_dead_reconing_own)
+                {
+                    update_gps_position(location, true);
+                }
+                else
+                {
+                    try
+                    {
+                        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                        {
+                            set_map_center_to(location);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
             }
 
             @Override
@@ -274,6 +281,89 @@ public class CaptureService extends Service
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
         }
         catch(Exception ignored)
+        {
+        }
+
+        if (PREF__gps_dead_reconing_own)
+        {
+            fusion_m = new LocationFusionManager(this);
+            try
+            {
+                if (PREF__gps_smooth_own)
+                {
+                    fusion_m.startSensorFusion();
+                }
+            }
+            catch (Exception e)
+            {
+            }
+        }
+    }
+
+    static void broadcastFusedLocation(double currentLat, double currentLng, float currentMovementBearing)
+    {
+        try
+        {
+            if (PREF__gps_dead_reconing_own)
+            {
+                currentBestLocation.setLatitude(currentLat);
+                currentBestLocation.setLatitude(currentLng);
+                currentBestLocation.setBearing(currentMovementBearing);
+                update_gps_position(currentBestLocation, false);
+                if (PREF__gps_dead_reconing_own)
+                {
+                    mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
+                }
+            }
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    private static void update_gps_position(@NonNull Location location, boolean update_map)
+    {
+        try
+        {
+            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+            {
+                if (update_map)
+                {
+                    set_map_center_to(location);
+                }
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
+        try
+        {
+            final byte[] data_bin = getGeoMsg(location);
+            int data_bin_len = data_bin.length;
+            data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
+
+            long[] friends = MainActivity.tox_self_get_friend_list();
+            for (int fc = 0; fc < friends.length; fc++)
+            {
+                //noinspection unused
+                final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
+                // Log.i(TAG1, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            own_location_last_ts_millis = System.currentTimeMillis();
+            own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
+                               (Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
+            set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
+        }
+        catch(Exception e)
         {
         }
     }
