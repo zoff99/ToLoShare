@@ -158,14 +158,6 @@
                         android:elevation="10dp" />
                 </LinearLayout>
 
-                <com.zoffcc.applications.trifa.CustomVideoImageView
-                    android:id="@+id/ngc_video_view"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginTop="0dp"
-                    android:layout_weight="140"
-                    android:background="@color/md_always_black_1000" />
-
                 <LinearLayout
                     android:layout_width="8dp"
                     android:layout_height="match_parent"
@@ -197,14 +189,6 @@
                     android:orientation="vertical"
                     android:visibility="visible">
 
-                    <com.zoffcc.applications.trifa.CustomVideoImageView
-                        android:id="@+id/ngc_video_own_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="35"
-                        android:background="@color/md_always_black_1000"
-                        tools:ignore="NestedWeights" />
-
                     <TextView
                         android:id="@+id/ngc_camera_info_text"
                         android:layout_width="match_parent"
@@ -212,7 +196,7 @@
                         android:layout_weight="28"
                         android:background="@android:color/transparent"
                         android:text=""
-                        android:textColor="@color/textColorPrimary" />
+                        />
 
                     <ImageButton
                         android:id="@+id/ngc_camera_next_button"
@@ -316,14 +300,6 @@
                 android:layout_width="match_parent"
                 android:layout_weight="1"
                 android:layout_height="0dp">
-
-                <fragment
-                    android:id="@+id/ml_fragment"
-                    android:name="com.zoffcc.applications.trifa.GroupMessageListFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    tools:layout="@layout/group_message_list_layout" />
 
                 <LinearLayout
                     android:id="@+id/audio_rec_popup_container"
