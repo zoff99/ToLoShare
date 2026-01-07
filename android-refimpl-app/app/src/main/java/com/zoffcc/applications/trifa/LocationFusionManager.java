@@ -28,8 +28,6 @@ public class LocationFusionManager implements SensorEventListener
 
     private double currentLat;
     private double currentLng;
-    private double lastLat;
-    private double lastLng;
     private float currentMovementBearing = 0.0f;
     private float velocityX = 0;
     private float velocityY = 0;
@@ -49,14 +47,11 @@ public class LocationFusionManager implements SensorEventListener
     public void onGpsLocationChanged(Location location) {
         this.currentLat = location.getLatitude();
         this.currentLng = location.getLongitude();
-        this.lastLat = currentLat;
-        this.lastLng = currentLng;
         // The GPS also provides a high-accuracy 1Hz bearing to re-sync
         if (location.hasBearing()) {
             this.currentMovementBearing = location.getBearing();
         }
-        // Log.i(TAG, "onGpsLocationChanged:1: " + this.lastLat + " " + this.lastLng);
-        Log.i(TAG, "onGpsLocationChanged:1: " + this.currentMovementBearing);
+        // Log.i(TAG, "onGpsLocationChanged:1: " + this.currentMovementBearing);
         this.velocityX = 0;
         this.velocityY = 0;
     }
