@@ -5887,7 +5887,7 @@ public class MainActivity extends BaseProtectedActivity
         if ((old_has_bearing != has_bearing) || (force_icon))
         {
             // Log.i(TAG, "select_location_icon: force_icon, old_has_bearing != has_bearing :" + force_icon + " " + old_has_bearing + " " + has_bearing);
-            int icon = R.drawable.osm_ic_center_map;
+            int icon = R.drawable.adjust_256dp; // R.drawable.osm_ic_center_map;
             if (has_bearing)
             {
                 icon = R.drawable.round_navigation_color_48;
