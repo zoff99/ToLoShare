@@ -196,41 +196,21 @@ public class CaptureService extends Service
                         return;
                     }
                     currentBestLocation = new Location(location);
-                    if (PREF__gps_dead_reconing_own)
-                    {
-                        if (PREF__gps_smooth_own)
-                        {
-                            try
-                            {
-                                fusion_m.onGpsLocationChanged(location);
-                            }
-                            catch (Exception e)
-                            {
-                            }
-                        }
-                    }
                 }
                 catch(Exception e)
                 {
                     e.printStackTrace();
                 }
 
-                if (!PREF__gps_dead_reconing_own)
+                try
                 {
-                    update_gps_position(location, true);
+                    if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                    {
+                        set_map_center_to(location);
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    try
-                    {
-                        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
-                        {
-                            set_map_center_to(location);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                    }
                 }
             }
 
@@ -304,20 +284,18 @@ public class CaptureService extends Service
     {
         try
         {
-            if (PREF__gps_dead_reconing_own)
+            if ((PREF__gps_dead_reconing_own) && (currentBestLocation != null))
             {
                 currentBestLocation.setLatitude(currentLat);
-                currentBestLocation.setLatitude(currentLng);
+                currentBestLocation.setLongitude(currentLng);
                 currentBestLocation.setBearing(currentMovementBearing);
-                update_gps_position(currentBestLocation, false);
-                if (PREF__gps_dead_reconing_own)
-                {
-                    mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
-                }
+                update_gps_position(currentBestLocation, true);
+                mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
             }
         }
         catch(Exception e)
         {
+            e.printStackTrace();
         }
     }
 

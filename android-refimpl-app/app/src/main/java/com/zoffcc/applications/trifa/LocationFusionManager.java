@@ -40,7 +40,7 @@ public class LocationFusionManager implements SensorEventListener
         this.currentLng = location.getLongitude();
         this.lastLat = currentLat;
         this.lastLng = currentLng;
-        // Log.i(TAG, "onGpsLocationChanged:1: " + this.lastLat + " " + this.lastLng);
+        Log.i(TAG, "onGpsLocationChanged:1: " + this.lastLat + " " + this.lastLng);
         // The GPS also provides a high-accuracy 1Hz bearing to re-sync
         if (location.hasBearing()) {
             this.currentMovementBearing = location.getBearing();
@@ -78,7 +78,7 @@ public class LocationFusionManager implements SensorEventListener
                 if (PREF__gps_smooth_own)
                 {
                     // Now 'Lat/Lng/bearing' updates at the sensor rate (e.g., 50-100Hz)
-                    // Log.i(TAG, "onGpsLocationChanged:2: " + currentLat + " " + currentLng);
+                    Log.i(TAG, "onGpsLocationChanged:2: " + currentLat + " " + currentLng);
                     broadcastFusedLocation(currentLat, currentLng, currentMovementBearing);
                 }
             }
@@ -115,7 +115,7 @@ public class LocationFusionManager implements SensorEventListener
     public void startSensorFusion() {
         if (sensorManager != null && linearAccelSensor != null) {
             Log.i(TAG, "startSensorFusion");
-            sensorManager.registerListener(this, linearAccelSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, linearAccelSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
 
