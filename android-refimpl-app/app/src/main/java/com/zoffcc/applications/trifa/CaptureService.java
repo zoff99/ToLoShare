@@ -51,8 +51,8 @@ public class CaptureService extends Service
     static boolean GPS_SERVICE_STARTED = false;
     private static final int _30_SECONDS = 1000 * 30;
     static final int GPS_UPDATE_FREQ_MS = 1000;
-    static final int GPS_UPDATE_FREQ_MS_MIN = 800;
-    static final int GPS_UPDATE_FREQ_MS_MAX = 1200;
+    static final int GPS_UPDATE_FREQ_MS_MIN = 700;
+    static final int GPS_UPDATE_FREQ_MS_MAX = 1300;
     Notification notification_gps = null;
     NotificationManager nmn_gps = null;
     NotificationChannel notification_channel_gpsservice = null;
@@ -229,13 +229,17 @@ public class CaptureService extends Service
                 Log.i(TAG1, "onProviderEnabled: " + provider);
                 try
                 {
-                    Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    if (lastKnownLocation != null)
+                    if (provider.equals(LocationManager.GPS_PROVIDER))
                     {
-                        Log.i(TAG1, "onProviderEnabled: lastKnownLocation = " + lastKnownLocation);
-                        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                        Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                        if (lastKnownLocation != null)
                         {
-                            set_map_center_to(lastKnownLocation);
+                            Log.i(TAG1, "onProviderEnabled: provider = " + provider +
+                                        " lastKnownLocation = " + lastKnownLocation);
+                            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                            {
+                                set_map_center_to(lastKnownLocation);
+                            }
                         }
                     }
                 }
