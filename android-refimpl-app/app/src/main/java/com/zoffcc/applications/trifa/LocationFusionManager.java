@@ -9,6 +9,7 @@ import android.location.Location;
 import android.util.Log;
 
 import static com.zoffcc.applications.trifa.CaptureService.broadcastFusedLocation;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_dead_reconing_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 
 public class LocationFusionManager implements SensorEventListener
@@ -75,7 +76,7 @@ public class LocationFusionManager implements SensorEventListener
                 // Calculate bearing between the last two fused points
                 currentMovementBearing = calculateMovementBearing(lastLat, lastLng, currentLat, currentLng);
 
-                if (PREF__gps_smooth_own)
+                if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own))
                 {
                     // Now 'Lat/Lng/bearing' updates at the sensor rate (e.g., 50-100Hz)
                     Log.i(TAG, "onGpsLocationChanged:2: " + currentLat + " " + currentLng);
@@ -115,7 +116,7 @@ public class LocationFusionManager implements SensorEventListener
     public void startSensorFusion() {
         if (sensorManager != null && linearAccelSensor != null) {
             Log.i(TAG, "startSensorFusion");
-            sensorManager.registerListener(this, linearAccelSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, linearAccelSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
     }
 

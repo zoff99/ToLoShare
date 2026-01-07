@@ -204,10 +204,7 @@ public class CaptureService extends Service
 
                 try
                 {
-                    if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
-                    {
-                        set_map_center_to(location);
-                    }
+                    update_gps_position(currentBestLocation, true);
                 }
                 catch (Exception e)
                 {
@@ -266,7 +263,14 @@ public class CaptureService extends Service
 
         if (PREF__gps_dead_reconing_own)
         {
-            fusion_m = new LocationFusionManager(this);
+            try
+            {
+                fusion_m = new LocationFusionManager(this);
+            }
+            catch(Exception e)
+            {
+            }
+
             try
             {
                 if (PREF__gps_smooth_own)
@@ -284,12 +288,11 @@ public class CaptureService extends Service
     {
         try
         {
-            if ((PREF__gps_dead_reconing_own) && (currentBestLocation != null))
+            if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own) && (currentBestLocation != null))
             {
                 currentBestLocation.setLatitude(currentLat);
                 currentBestLocation.setLongitude(currentLng);
                 currentBestLocation.setBearing(currentMovementBearing);
-                update_gps_position(currentBestLocation, true);
                 mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
             }
         }

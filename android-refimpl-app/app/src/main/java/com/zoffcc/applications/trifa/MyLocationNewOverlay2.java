@@ -26,7 +26,17 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
 
     @Override
     public void onLocationChanged(final Location location, IMyLocationProvider source) {
-        if (!PREF__gps_dead_reconing_own)
+        if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own))
+        {
+            try
+            {
+                fusion_m.onGpsLocationChanged(location);
+            }
+            catch (Exception e)
+            {
+            }
+        }
+        else
         {
             // Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
             final MyLocationNewOverlay2 this_ = this;
@@ -40,16 +50,6 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
                 }
             };
             runTaskOwnLocation(process_own_gps_location);
-        }
-        else
-        {
-            try
-            {
-                fusion_m.onGpsLocationChanged(location);
-            }
-            catch (Exception e)
-            {
-            }
         }
     }
 
