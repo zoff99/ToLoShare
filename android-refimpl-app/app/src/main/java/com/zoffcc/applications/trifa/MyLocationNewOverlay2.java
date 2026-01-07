@@ -56,13 +56,13 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
     public void onLocationChanged_injection(final Location location, IMyLocationProvider source) {
         if (PREF__gps_dead_reconing_own)
         {
-            Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
+            // Log.i(TAG, "onLocationChanged:0:00000000000000000:" + source + " " + location);
             super.onLocationChanged(location, source);
         }
     }
 
     public void onLocationChanged_real(final Location location, IMyLocationProvider source) {
-        Log.i(TAG, "onLocationChanged:1:XXXXXXXXXXXXXXXXX");
+        // Log.i(TAG, "onLocationChanged:1:XXXXXXXXXXXXXXXXX");
         super.onLocationChanged(location, source);
     }
 }

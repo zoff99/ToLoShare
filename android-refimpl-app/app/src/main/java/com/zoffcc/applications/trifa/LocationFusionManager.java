@@ -18,6 +18,13 @@ public class LocationFusionManager implements SensorEventListener
 
     private SensorManager sensorManager;
     private Sensor linearAccelSensor;
+    private Sensor gravitySensor;
+    private Sensor magneticSensor;
+
+    private float[] gravityValues = new float[3];
+    private float[] magneticValues = new float[3];
+    private boolean hasGravity = false;
+    private boolean hasMagnetic = false;
 
     private double currentLat;
     private double currentLng;
@@ -32,6 +39,9 @@ public class LocationFusionManager implements SensorEventListener
     public LocationFusionManager(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         linearAccelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        // We use Gravity and Magnetometer to calculate orientation
+        gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         Log.i(TAG, "new LocationFusionManager");
     }
 
@@ -41,45 +51,46 @@ public class LocationFusionManager implements SensorEventListener
         this.currentLng = location.getLongitude();
         this.lastLat = currentLat;
         this.lastLng = currentLng;
-        Log.i(TAG, "onGpsLocationChanged:1: " + this.lastLat + " " + this.lastLng);
         // The GPS also provides a high-accuracy 1Hz bearing to re-sync
         if (location.hasBearing()) {
             this.currentMovementBearing = location.getBearing();
         }
+        // Log.i(TAG, "onGpsLocationChanged:1: " + this.lastLat + " " + this.lastLng);
+        Log.i(TAG, "onGpsLocationChanged:1: " + this.currentMovementBearing);
         this.velocityX = 0;
         this.velocityY = 0;
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // 1. Handle Compass Data
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            System.arraycopy(event.values, 0, gravityValues, 0, 3);
+            hasGravity = true;
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            System.arraycopy(event.values, 0, magneticValues, 0, 3);
+            hasMagnetic = true;
+        }
+
+        if (hasGravity && hasMagnetic) {
+            updateCompassBearing();
+        }
+
+        // 2. Handle Dead Reckoning (Position)
         if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             if (lastSensorTimestamp != 0) {
-                // 1. Store the "old" fused position before moving
-                lastLat = currentLat;
-                lastLng = currentLng;
-
                 final float dT = (event.timestamp - lastSensorTimestamp) * NS2S;
 
-                // 1. Integrate acceleration to get velocity (v = v0 + a*t)
                 velocityX += event.values[0] * dT;
                 velocityY += event.values[1] * dT;
 
-                // 2. Integrate velocity to get displacement (d = v*t)
                 double deltaX = velocityX * dT;
                 double deltaY = velocityY * dT;
 
-                // 3. Convert displacement (meters) to Lat/Lng offsets
-                // Approximate: 1 degree lat is ~111,111 meters
                 currentLat += (deltaY / 111111.0);
                 currentLng += (deltaX / (111111.0 * Math.cos(Math.toRadians(currentLat))));
 
-                // Calculate bearing between the last two fused points
-                currentMovementBearing = calculateMovementBearing(lastLat, lastLng, currentLat, currentLng);
-
-                if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own))
-                {
-                    // Now 'Lat/Lng/bearing' updates at the sensor rate (e.g., 50-100Hz)
-                    Log.i(TAG, "onGpsLocationChanged:2: " + currentLat + " " + currentLng);
+                if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own)) {
                     broadcastFusedLocation(currentLat, currentLng, currentMovementBearing);
                 }
             }
@@ -89,6 +100,22 @@ public class LocationFusionManager implements SensorEventListener
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    private void updateCompassBearing() {
+        float[] R = new float[9];
+        float[] I = new float[9];
+        if (SensorManager.getRotationMatrix(R, I, gravityValues, magneticValues)) {
+            float[] orientation = new float[3];
+            SensorManager.getOrientation(R, orientation);
+
+            // orientation[0] is azimuth (bearing) in radians
+            float azimuthInRadians = orientation[0];
+            float azimuthInDegrees = (float) Math.toDegrees(azimuthInRadians);
+
+            // Normalize to 0-360
+            currentMovementBearing = (azimuthInDegrees + 360) % 360;
+        }
+    }
 
     /**
      * Calculates the high-frequency bearing based on dead reckoning.
@@ -117,6 +144,8 @@ public class LocationFusionManager implements SensorEventListener
         if (sensorManager != null && linearAccelSensor != null) {
             Log.i(TAG, "startSensorFusion");
             sensorManager.registerListener(this, linearAccelSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, gravitySensor, SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, magneticSensor, SensorManager.SENSOR_DELAY_UI);
         }
     }
 
@@ -132,6 +161,8 @@ public class LocationFusionManager implements SensorEventListener
             lastSensorTimestamp = 0;
             velocityX = 0;
             velocityY = 0;
+            hasGravity = false;
+            hasMagnetic = false;
         }
     }
 }

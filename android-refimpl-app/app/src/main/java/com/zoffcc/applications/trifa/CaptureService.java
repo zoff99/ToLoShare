@@ -46,6 +46,7 @@ public class CaptureService extends Service
     final static String TAG = "CaptureService";
 
     static final String INVALID_BEARING = "FFF";
+    final static String LOC_PROVIDER_NAME_FUSEDDR = "fused-dr";
 
     static boolean GPS_SERVICE_STARTED = false;
     private static final int _30_SECONDS = 1000 * 30;
@@ -64,6 +65,10 @@ public class CaptureService extends Service
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
 
     static Location currentBestLocation = null;
+    static long last_position_timestamp_ms = 0;
+    static long last_real_position_timestamp_ms = 0;
+    final static long UPDATE_FROM_FUSED_AFTER_GPS_STALE_SECONDS = 2;
+    final static long USE_FUSED_FOR_MAX_SECONDS = 15;
 
     static HashMap<String, remote_location_entry> remote_location_data = new HashMap<>();
     public static class remote_location_entry {
@@ -204,6 +209,7 @@ public class CaptureService extends Service
 
                 try
                 {
+                    last_real_position_timestamp_ms = System.currentTimeMillis();
                     update_gps_position(currentBestLocation, true);
                 }
                 catch (Exception e)
@@ -290,10 +296,24 @@ public class CaptureService extends Service
         {
             if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own) && (currentBestLocation != null))
             {
-                currentBestLocation.setLatitude(currentLat);
-                currentBestLocation.setLongitude(currentLng);
-                currentBestLocation.setBearing(currentMovementBearing);
-                mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
+                long now = System.currentTimeMillis();
+                long delta = (now - last_position_timestamp_ms) / 1000;
+                long delta_real = (now - last_real_position_timestamp_ms) / 1000;
+                if (delta_real < USE_FUSED_FOR_MAX_SECONDS)
+                {
+                    currentBestLocation.setLatitude(currentLat);
+                    currentBestLocation.setLongitude(currentLng);
+                    currentBestLocation.setBearing(currentMovementBearing);
+                    currentBestLocation.setProvider(LOC_PROVIDER_NAME_FUSEDDR);
+                    mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
+                    if (last_position_timestamp_ms != 0)
+                    {
+                        if (delta >= UPDATE_FROM_FUSED_AFTER_GPS_STALE_SECONDS)
+                        {
+                            update_gps_position(currentBestLocation, true);
+                        }
+                    }
+                }
             }
         }
         catch(Exception e)
@@ -304,6 +324,8 @@ public class CaptureService extends Service
 
     private static void update_gps_position(@NonNull Location location, boolean update_map)
     {
+        last_position_timestamp_ms = System.currentTimeMillis();
+
         try
         {
             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
