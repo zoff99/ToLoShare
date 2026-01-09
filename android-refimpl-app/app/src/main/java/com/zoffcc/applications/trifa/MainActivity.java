@@ -41,6 +41,7 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -2079,8 +2080,13 @@ public class MainActivity extends BaseProtectedActivity
             mLocationOverlay = new MyLocationNewOverlay2(mIMyLocationProvider, map);
             Log.i(TAG, "OOOOOOO:new:1:b");
         }
-        mLocationOverlay.setDirectionIcon(
-                ((BitmapDrawable) context_s.getResources().getDrawable(R.drawable.round_navigation_color_48)).getBitmap());
+
+
+        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImageWithShadow(
+                ((BitmapDrawable) context_s.getResources().getDrawable(
+                        R.drawable.round_navigation_color_48)).getBitmap(),
+                Color.parseColor("#3142f0"));
+        mLocationOverlay.setDirectionIcon(location_arrow_2);
         Log.i(TAG, "OOOOOOO:new:122:" + mIMyLocationProvider + " " + mLocationOverlay);
         mLocationOverlay.enableMyLocation();
     }
@@ -5915,7 +5921,7 @@ public class MainActivity extends BaseProtectedActivity
     /** @noinspection SameParameterValue*/
     private static void setDirectionArrowFriend(String color, int drawable_res_id, DirectedLocationOverlay directed_ol)
     {
-        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImage(
+        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImageWithShadow(
                 ((BitmapDrawable) context_s.getResources().getDrawable(
                         drawable_res_id)).getBitmap(),
                 Color.parseColor(color));
@@ -6869,6 +6875,42 @@ public class MainActivity extends BaseProtectedActivity
             return (int)dpValue;
         }
     }
+
+    public static Bitmap tintImageWithShadow(Bitmap bitmap, int tintColor)
+    {
+        int shadowRadius = 15; // Width of the shadow blur
+        int shadowColor = 0xFF000000; // Black shadow
+
+        // 1. Setup the blur for the shadow
+        Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        shadowPaint.setMaskFilter(new BlurMaskFilter(shadowRadius, BlurMaskFilter.Blur.NORMAL));
+
+        // 2. Extract the alpha channel into a temporary bitmap to create the shadow shape
+        int[] offset = new int[2];
+        Bitmap alphaBitmap = bitmap.extractAlpha(shadowPaint, offset);
+
+        // 3. Create a result bitmap with extra space for the shadow padding
+        Bitmap bitmapResult = Bitmap.createBitmap(
+                bitmap.getWidth() + Math.abs(offset[0]) * 2,
+                bitmap.getHeight() + Math.abs(offset[1]) * 2,
+                Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmapResult);
+
+        // 4. Draw the black shadow first
+        Paint shadowColorPaint = new Paint();
+        shadowColorPaint.setColor(shadowColor);
+        canvas.drawBitmap(alphaBitmap, Math.abs(offset[0]), Math.abs(offset[1]), shadowColorPaint);
+
+        // 5. Draw the tinted image on top of the shadow
+        Paint tintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        tintPaint.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, Math.abs(offset[0]), Math.abs(offset[1]), tintPaint);
+
+        alphaBitmap.recycle(); // Clean up memory
+        return bitmapResult;
+    }
+
 
     public static Bitmap tintImage(Bitmap bitmap, int color)
     {
