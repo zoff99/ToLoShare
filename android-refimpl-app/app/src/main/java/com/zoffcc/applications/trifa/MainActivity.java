@@ -2082,7 +2082,7 @@ public class MainActivity extends BaseProtectedActivity
         }
 
 
-        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImageWithShadow(
+        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImageWithBorder(
                 ((BitmapDrawable) context_s.getResources().getDrawable(
                         R.drawable.round_navigation_color_48)).getBitmap(),
                 Color.parseColor("#3142f0"));
@@ -5921,7 +5921,7 @@ public class MainActivity extends BaseProtectedActivity
     /** @noinspection SameParameterValue*/
     private static void setDirectionArrowFriend(String color, int drawable_res_id, DirectedLocationOverlay directed_ol)
     {
-        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImageWithShadow(
+        @SuppressLint("UseCompatLoadingForDrawables") Bitmap location_arrow_2 = tintImageWithBorder(
                 ((BitmapDrawable) context_s.getResources().getDrawable(
                         drawable_res_id)).getBitmap(),
                 Color.parseColor(color));
@@ -6874,6 +6874,45 @@ public class MainActivity extends BaseProtectedActivity
         {
             return (int)dpValue;
         }
+    }
+
+    public static Bitmap tintImageWithBorder(Bitmap bitmap, int tintColor)
+    {
+        int borderSize = 10; // Thickness of the border
+        int borderColor = 0xFF000000; // Solid black border
+
+        // 1. Prepare paint for the border silhouette
+        Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        // Use BlurMaskFilter with OUTER to expand the alpha shape in all directions
+        borderPaint.setMaskFilter(new BlurMaskFilter(borderSize, BlurMaskFilter.Blur.OUTER));
+
+        // 2. Get the alpha silhouette (expanded by the borderSize)
+        int[] offset = new int[2];
+        Bitmap alphaBitmap = bitmap.extractAlpha(borderPaint, offset);
+
+        // 3. Create a result bitmap with room for the border
+        // Offset is usually negative, so we use its absolute value for padding
+        int padding = Math.abs(offset[0]);
+        Bitmap bitmapResult = Bitmap.createBitmap(
+                bitmap.getWidth() + (padding * 2),
+                bitmap.getHeight() + (padding * 2),
+                Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmapResult);
+
+        // 4. Draw the border silhouette first
+        // Note: drawBitmap with extractAlpha results uses the paint's color
+        Paint shadowColorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        shadowColorPaint.setColor(borderColor);
+        canvas.drawBitmap(alphaBitmap, padding + offset[0], padding + offset[1], shadowColorPaint);
+
+        // 5. Draw the tinted image on top, centered in the padding
+        Paint tintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        tintPaint.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, padding, padding, tintPaint);
+
+        alphaBitmap.recycle(); // Important for memory management
+        return bitmapResult;
     }
 
     public static Bitmap tintImageWithShadow(Bitmap bitmap, int tintColor)
