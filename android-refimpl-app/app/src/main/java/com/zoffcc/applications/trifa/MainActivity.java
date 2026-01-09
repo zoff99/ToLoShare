@@ -4619,7 +4619,7 @@ public class MainActivity extends BaseProtectedActivity
             {
                 location_time_txt = "last: " + minutes + " minutes ago";
             }
-            else if (seconds > 0)
+            else if (seconds > 1)
             {
                 location_time_txt = "last: " + seconds + " seconds ago";
             }
