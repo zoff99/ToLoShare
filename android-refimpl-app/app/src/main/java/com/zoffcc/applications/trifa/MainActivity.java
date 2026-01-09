@@ -5737,7 +5737,6 @@ public class MainActivity extends BaseProtectedActivity
                                         }
                                         catch (Exception e)
                                         {
-                                            //**MOCK**// e.printStackTrace();
                                             //**MOCK**//
                                             //**MOCK**// f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
                                             //**MOCK**//
