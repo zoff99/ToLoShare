@@ -6876,9 +6876,48 @@ public class MainActivity extends BaseProtectedActivity
         }
     }
 
-    public static Bitmap tintImageWithBorder(Bitmap bitmap, int tintColor)
+    public static Bitmap tintImageWithBorder(Bitmap bitmap, int tintColor) {
+        int borderSize = 4; // Thickness of the hard border
+        int borderColor = 0xFF000000; // Solid black
+
+        // 1. Calculate the new dimensions
+        int newWidth = bitmap.getWidth() + (borderSize * 2);
+        int newHeight = bitmap.getHeight() + (borderSize * 2);
+        Bitmap bitmapResult = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmapResult);
+
+        // 2. Prepare the silhouette paint
+        // ExtractAlpha creates a bitmap that only contains the transparency of the original
+        Bitmap alphaBitmap = bitmap.extractAlpha();
+        Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        borderPaint.setColor(borderColor);
+
+        // 3. Draw the silhouette at offsets to create a hard border
+        // This covers Top, Bottom, Left, Right, and Diagonals
+        for (int x = -borderSize; x <= borderSize; x++) {
+            for (int y = -borderSize; y <= borderSize; y++) {
+                // Only draw if we are on the edge of the border radius
+                if (x * x + y * y <= borderSize * borderSize) {
+                    canvas.drawBitmap(alphaBitmap, borderSize + x, borderSize + y, borderPaint);
+                }
+            }
+        }
+
+        // 4. Draw the tinted image on top in the center
+        Paint tintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        tintPaint.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, borderSize, borderSize, tintPaint);
+
+        // Cleanup
+        alphaBitmap.recycle();
+
+        return bitmapResult;
+    }
+
+    public static Bitmap tintImageWithBorderBlurred(Bitmap bitmap, int tintColor)
     {
-        int borderSize = 10; // Thickness of the border
+        int borderSize = 8; // Thickness of the border
         int borderColor = 0xFF000000; // Solid black border
 
         // 1. Prepare paint for the border silhouette
