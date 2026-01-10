@@ -56,6 +56,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.renderscript.Allocation;
@@ -104,10 +105,14 @@ import com.zoffcc.applications.sorm.Message;
 import com.zoffcc.applications.sorm.OrmaDatabase;
 
 import org.osmdroid.api.IMapController;
+import org.osmdroid.bonuspack.routing.OSRMRoadManager;
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
@@ -131,6 +136,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -182,6 +188,7 @@ import static com.zoffcc.applications.trifa.HelperGeneric.draw_main_top_icon;
 import static com.zoffcc.applications.trifa.HelperGeneric.get_battery_percent;
 import static com.zoffcc.applications.trifa.HelperGeneric.initializeScreenshotSecurity;
 import static com.zoffcc.applications.trifa.HelperGeneric.is_nightmode_active;
+import static com.zoffcc.applications.trifa.HelperGeneric.px2dp;
 import static com.zoffcc.applications.trifa.HelperGeneric.update_savedata_file_wrapper_throttled_last_trigger_ts;
 import static com.zoffcc.applications.trifa.HelperMsgNotification.change_msg_notification;
 import static com.zoffcc.applications.trifa.HelperRelay.get_own_relay_connection_status_real;
@@ -239,6 +246,7 @@ import static com.zoffcc.applications.trifa.TrifaToxService.is_tox_started;
 import static com.zoffcc.applications.trifa.TrifaToxService.manually_logged_out;
 import static com.zoffcc.applications.trifa.TrifaToxService.orma;
 import static com.zoffcc.applications.trifa.TrifaToxService.vfs;
+import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_CAR;
 
 /*
 
@@ -309,12 +317,17 @@ public class MainActivity extends BaseProtectedActivity
     static ImageButton btn_follow_self = null;
     static ImageButton btn_follow_friend_0 = null;
     static ImageButton btn_follow_friend_1 = null;
+    static ImageButton btn_route_to_friend_0 = null;
+    static ImageButton btn_route_to_friend_1 = null;
     static ImageButton btn_follow_stop = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
 
     static MapView map = null;
+    static RoadManager roadManager = null;
+    static ExecutorService routing_executor = Executors.newSingleThreadExecutor();
+    static Handler handler = new Handler(Looper.getMainLooper());
     static MyLocationNewOverlay2 mLocationOverlay = null;
     static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
@@ -641,6 +654,9 @@ public class MainActivity extends BaseProtectedActivity
         map.setTilesScaledToDpi(true);
         map.setMinZoomLevel(null);
 
+        roadManager = new OSRMRoadManager(this, BuildConfig.APPLICATION_ID);
+        ((OSRMRoadManager)roadManager).setMean(MEAN_BY_CAR);
+
         Log.i(TAG, "remove_map_overlays:001");
         remove_map_overlays();
         Log.i(TAG, "add_map_overlays:001");
@@ -664,6 +680,8 @@ public class MainActivity extends BaseProtectedActivity
         btn_follow_self = this.findViewById(R.id.btn_follow_self);
         btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
         btn_follow_friend_1 = this.findViewById(R.id.btn_follow_friend_1);
+        btn_route_to_friend_0 = this.findViewById(R.id.btn_route_to_friend_0);
+        btn_route_to_friend_1 = this.findViewById(R.id.btn_route_to_friend_1);
         btn_follow_stop = this.findViewById(R.id.btn_follow_stop);
 
         btn_follow_self.setOnClickListener(new View.OnClickListener()
@@ -714,6 +732,45 @@ public class MainActivity extends BaseProtectedActivity
             }
         });
 
+        btn_route_to_friend_0.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                try
+                {
+                    routing_executor.execute(() -> {
+                        try
+                        {
+                            String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
+                            if (f_pubkey != null)
+                            {
+                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                ArrayList<GeoPoint> waypoints = new ArrayList<>();
+                                GeoPoint startPoint = new GeoPoint(currentBestLocation.getLatitude(),
+                                                                   currentBestLocation.getLongitude());
+                                GeoPoint endPoint = new GeoPoint(re.remoteBestLocation.getLatitude(),
+                                                                 re.remoteBestLocation.getLongitude());
+                                waypoints.add(startPoint);
+                                waypoints.add(endPoint);
+                                Road road = roadManager.getRoad(waypoints);
+                                Polyline roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
+                                map.getOverlays().add(roadOverlay);
+                                map.invalidate();
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                        }
+                    });
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         btn_follow_friend_1.setOnClickListener(new View.OnClickListener()
         {
             @SuppressLint("ApplySharedPref")
@@ -741,6 +798,45 @@ public class MainActivity extends BaseProtectedActivity
             }
         });
 
+        btn_route_to_friend_1.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                try
+                {
+                    routing_executor.execute(() -> {
+                        try
+                        {
+                            String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(1);
+                            if (f_pubkey != null)
+                            {
+                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+                                ArrayList<GeoPoint> waypoints = new ArrayList<>();
+                                GeoPoint startPoint = new GeoPoint(currentBestLocation.getLatitude(),
+                                                                   currentBestLocation.getLongitude());
+                                GeoPoint endPoint = new GeoPoint(re.remoteBestLocation.getLatitude(),
+                                                                 re.remoteBestLocation.getLongitude());
+                                waypoints.add(startPoint);
+                                waypoints.add(endPoint);
+                                Road road = roadManager.getRoad(waypoints);
+                                Polyline roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
+                                map.getOverlays().add(roadOverlay);
+                                map.invalidate();
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                        }
+                    });
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         btn_follow_stop.setOnClickListener(new View.OnClickListener()
         {
             @SuppressLint("ApplySharedPref")
@@ -756,6 +852,38 @@ public class MainActivity extends BaseProtectedActivity
                 }
                 catch (Exception ee2)
                 {
+                }
+
+                try
+                {
+                    routing_executor.execute(() -> {
+                        try
+                        {
+                            try
+                            {
+                                for (Overlay ov : map.getOverlays())
+                                {
+                                    Log.i(TAG, "OVXXXX:44:" + ov + " " + ov.getClass());
+                                    if (ov.getClass().getName().equals("org.osmdroid.views.overlay.Polyline"))
+                                    {
+                                        Log.i(TAG, "OVXXXX:44:remove");
+                                        map.getOverlays().remove(ov);
+                                    }
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                            }
+                            map.invalidate();
+                        }
+                        catch(Exception e)
+                        {
+                        }
+                    });
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
                 }
             }
         });
@@ -1666,6 +1794,15 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 executor_own_location_task.shutdown();
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            try
+                            {
+                                routing_executor.shutdown();
                             }
                             catch (Exception e)
                             {

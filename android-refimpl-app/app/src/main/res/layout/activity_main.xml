@@ -267,6 +267,19 @@
                             tools:ignore="HardcodedText" />
 
                         <ImageButton
+                            android:id="@+id/btn_route_to_friend_0"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:cropToPadding="true"
+                            android:padding="0dp"
+                            android:layout_marginRight="6dp"
+                            android:alpha="0.5"
+                            android:tooltipText="show route to friend"
+                            android:background="@drawable/transparent"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/outline_assistant_navigation_24" />
+
+                        <ImageButton
                             android:id="@+id/btn_follow_friend_0"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
@@ -301,6 +314,19 @@
                             android:textSize="10sp"
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/btn_route_to_friend_1"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:cropToPadding="true"
+                            android:padding="0dp"
+                            android:layout_marginRight="6dp"
+                            android:alpha="0.5"
+                            android:tooltipText="show route to friend"
+                            android:background="@drawable/transparent"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/outline_assistant_navigation_24" />
 
                         <ImageButton
                             android:id="@+id/btn_follow_friend_1"
