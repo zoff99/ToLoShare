@@ -238,7 +238,7 @@ public class CaptureService extends Service
                                         " lastKnownLocation = " + lastKnownLocation);
                             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
                             {
-                                set_map_center_to(lastKnownLocation);
+                                set_map_center_to_animate(lastKnownLocation);
                             }
                         }
                     }
@@ -400,7 +400,7 @@ public class CaptureService extends Service
 
     }
 
-    static void set_map_center_to(Location location)
+    static void set_map_center_to_animate(Location location)
     {
         try
         {
@@ -409,6 +409,22 @@ public class CaptureService extends Service
                                                location.getLongitude());
             mapController.animateTo(new_center);
             // mapController.setCenter(new_center);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    static void set_map_center_to(Location location)
+    {
+        try
+        {
+            // HINT: follow own location on the map
+            GeoPoint new_center = new GeoPoint(location.getLatitude(),
+                                               location.getLongitude());
+            // mapController.animateTo(new_center);
+            mapController.setCenter(new_center);
         }
         catch(Exception e)
         {

@@ -169,6 +169,7 @@ import static com.zoffcc.applications.trifa.CaptureService.fusion_m;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
+import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_animate;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
 import static com.zoffcc.applications.trifa.HelperFriend.get_friend_pubkey_sorted_by_pubkey_num;
@@ -642,8 +643,8 @@ public class MainActivity extends BaseProtectedActivity
         // HINT: just set the HTTP User Agent explicitly here
         org.osmdroid.config.Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
 
-        int animationSpeedDefault = 0; // 1000;
-        int animationSpeedShort = 300; // 500;
+        int animationSpeedDefault = 600; // 1000;
+        int animationSpeedShort = 400; // 500;
         org.osmdroid.config.Configuration.getInstance().setAnimationSpeedDefault(animationSpeedDefault); //used in animateTo() calls
         org.osmdroid.config.Configuration.getInstance().setAnimationSpeedShort(animationSpeedShort); //during zoom animation
 
@@ -702,7 +703,7 @@ public class MainActivity extends BaseProtectedActivity
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
                     settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
 
-                    set_map_center_to(currentBestLocation);
+                    set_map_center_to_animate(currentBestLocation);
                 }
                 catch (Exception ee2)
                 {
@@ -728,7 +729,7 @@ public class MainActivity extends BaseProtectedActivity
                     if (f_pubkey != null)
                     {
                         CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                        set_map_center_to(re.remoteBestLocation);
+                        set_map_center_to_animate(re.remoteBestLocation);
                     }
                 }
                 catch (Exception ee2)
@@ -794,7 +795,7 @@ public class MainActivity extends BaseProtectedActivity
                     if (f_pubkey != null)
                     {
                         CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                        set_map_center_to(re.remoteBestLocation);
+                        set_map_center_to_animate(re.remoteBestLocation);
                     }
                 }
                 catch (Exception ee2)
