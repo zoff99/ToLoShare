@@ -210,7 +210,7 @@ public class CaptureService extends Service
                 try
                 {
                     last_real_position_timestamp_ms = System.currentTimeMillis();
-                    update_gps_position(currentBestLocation, true);
+                    update_gps_position(currentBestLocation, false);
                 }
                 catch (Exception e)
                 {
@@ -408,6 +408,7 @@ public class CaptureService extends Service
             GeoPoint new_center = new GeoPoint(location.getLatitude(),
                                                location.getLongitude());
             mapController.animateTo(new_center);
+            // mapController.setCenter(new_center);
         }
         catch(Exception e)
         {

@@ -83,7 +83,9 @@ public class GpsInterpolator
      * Called on every new GPS update.
      * Calculates the time since the last update and sleeps between steps.
      */
-    public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing, float acc, int steps, String f_pubkey) {
+    public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing,
+                            boolean old_has_bearing,
+                            float acc, int steps, String f_pubkey) {
         long currentTime = System.currentTimeMillis();
 
         // Calculate time elapsed since last GPS fix
@@ -97,7 +99,11 @@ public class GpsInterpolator
             (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
             lastLat = newLat;
             lastLon = newLon;
-            if (has_bearing)
+            if (old_has_bearing != has_bearing)
+            {
+                newBearing = newBearing_;
+            }
+            else if (has_bearing)
             {
                 newBearing = newBearing_;
             }
@@ -135,7 +141,11 @@ public class GpsInterpolator
 
             // Interpolate Bearing (Shortest path)
             double interpolatedBearing;
-            if (has_bearing)
+            if (old_has_bearing != has_bearing)
+            {
+                interpolatedBearing = newBearing;
+            }
+            else if (has_bearing)
             {
                 interpolatedBearing = interpolateBearing(lastBearing, newBearing, fraction);
             }

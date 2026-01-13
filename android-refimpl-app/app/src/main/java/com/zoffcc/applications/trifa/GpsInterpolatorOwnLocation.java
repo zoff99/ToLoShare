@@ -5,7 +5,10 @@ import android.location.LocationManager;
 
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MAX;
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
+import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
+import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
 
 /** @noinspection FieldCanBeLocal, CommentedOutCode */
@@ -15,7 +18,10 @@ public class GpsInterpolatorOwnLocation
     /** @noinspection unused*/
     final static String TAG = "GpsInterpolatorOL";
 
-    private double lastLat, lastLon, lastBearing;
+    private double lastLat;
+    private double lastLon;
+    private double lastBearing;
+    private boolean lastHasBearing = false;
     private double lastAcc;
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
@@ -39,6 +45,10 @@ public class GpsInterpolatorOwnLocation
                 interpolated_location.removeBearing();
             }
             myLocationNewOverlay2.onLocationChanged_real(interpolated_location, mIMyLocationProvider);
+            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+            {
+                set_map_center_to_proxy_uithread(interpolated_location);
+            }
         }
         catch(Exception ignored)
         {
@@ -61,16 +71,26 @@ public class GpsInterpolatorOwnLocation
             (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
             lastLat = location.getLatitude();
             lastLon = location.getLongitude();
-            if (location.hasBearing())
+            if (lastHasBearing != location.hasBearing())
+            {
+                lastBearing = location.getBearing();
+            }
+            else if (location.hasBearing())
             {
                 lastBearing = location.getBearing();
             }
             lastAcc = location.getAccuracy();
             lastUpdateTime = currentTime;
+            lastHasBearing = location.hasBearing();
             // Log.i(TAG, "timeDelta=" + timeDelta);
             isFirstFix = false;
             push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, location.hasBearing(), myLocationNewOverlay2);
             return;
+        }
+
+        if (lastHasBearing != location.hasBearing())
+        {
+            lastBearing = location.getBearing();
         }
 
         // Update state for next fix
@@ -88,7 +108,11 @@ public class GpsInterpolatorOwnLocation
 
             // Interpolate Bearing (Shortest path)
             double interpolatedBearing;
-            if (location.hasBearing())
+            if (lastHasBearing != location.hasBearing())
+            {
+                interpolatedBearing = lastBearing;
+            }
+            else if (location.hasBearing())
             {
                 interpolatedBearing = interpolateBearing(lastBearing, location.getBearing(), fraction);
             }
@@ -114,10 +138,8 @@ public class GpsInterpolatorOwnLocation
 
         lastLat = location.getLatitude();
         lastLon = location.getLongitude();
-        if (location.hasBearing())
-        {
-            lastBearing = location.getBearing();
-        }
+        lastBearing = location.getBearing();
+        lastHasBearing = location.hasBearing();
     }
 
     private double interpolateBearing(double start, double end, double fraction) {

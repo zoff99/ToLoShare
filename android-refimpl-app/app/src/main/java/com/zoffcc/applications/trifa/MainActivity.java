@@ -285,8 +285,8 @@ public class MainActivity extends BaseProtectedActivity
 
     static boolean DEBUG_THREAD_STARTED = false;
     static boolean GEO_TIME_THREAD_STARTED = false;
-    static final int SMOOTH_POS_STEPS_OWN = 5;
-    static final int SMOOTH_POS_STEPS_FRIENDS = 5;
+    static final int SMOOTH_POS_STEPS_OWN = 20;
+    static final int SMOOTH_POS_STEPS_FRIENDS = 20;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -336,7 +336,7 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
     //**MOCK**// private MockLocationSimulator simulator;
-    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 15;
+    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 1;
     //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
 
     static int AudioMode_old;
@@ -641,6 +641,11 @@ public class MainActivity extends BaseProtectedActivity
 
         // HINT: just set the HTTP User Agent explicitly here
         org.osmdroid.config.Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
+
+        int animationSpeedDefault = 0; // 1000;
+        int animationSpeedShort = 300; // 500;
+        org.osmdroid.config.Configuration.getInstance().setAnimationSpeedDefault(animationSpeedDefault); //used in animateTo() calls
+        org.osmdroid.config.Configuration.getInstance().setAnimationSpeedShort(animationSpeedShort); //during zoom animation
 
         Log.i(TAG, "M:STARTUP:setContentView start");
         setContentView(R.layout.activity_main);
@@ -5916,8 +5921,8 @@ public class MainActivity extends BaseProtectedActivity
                                             CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                                             if (f_pubkey != null)
                                             {
-                                                re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, acc,
-                                                                     SMOOTH_POS_STEPS_FRIENDS, f_pubkey);
+                                                re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, old_has_bearing,
+                                                                     acc, SMOOTH_POS_STEPS_FRIENDS, f_pubkey);
                                             }
                                         }
                                         catch (Exception e)
