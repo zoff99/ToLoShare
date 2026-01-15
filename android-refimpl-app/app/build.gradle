@@ -271,7 +271,7 @@ dependencies {
     implementation("com.daimajia.swipelayout:library:1.2.0@aar")
     //
     //noinspection KtxExtensionAvailable
-    implementation('androidx.sqlite:sqlite:2.5.2') {
+    implementation('androidx.sqlite:sqlite:2.6.2') {
         transitive = true
     }
     implementation('com.github.zoff99:pkgs_guardianprojectIOCipher:1.0.19') {
