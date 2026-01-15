@@ -311,7 +311,7 @@ dependencies {
     //
     //
     //
-    implementation 'org.unifiedpush.android:connector:3.1.2'
+    implementation 'org.unifiedpush.android:connector:3.2.0'
     implementation 'org.unifiedpush.android:connector-ui:1.1.0'
     //
     //
