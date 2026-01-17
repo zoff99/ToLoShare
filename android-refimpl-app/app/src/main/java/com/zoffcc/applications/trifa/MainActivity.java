@@ -724,7 +724,7 @@ public class MainActivity extends BaseProtectedActivity
         // set the default zoomlevel
         mapController.setZoom(PREF__map_last_zoom_level);
         // set the default starting point in the middle of europe
-        Log.i(TAG, "XXXXXXXXXXXXXXXX:1:" + PREF__map_last_lat + " " + PREF__map_last_lon);
+        // Log.i(TAG, "XXXXXXXXXXXXXXXX:1:" + PREF__map_last_lat + " " + PREF__map_last_lon);
         GeoPoint startPoint = new GeoPoint(PREF__map_last_lat, PREF__map_last_lon);
         mapController.setCenter(startPoint);
 
@@ -1852,7 +1852,7 @@ public class MainActivity extends BaseProtectedActivity
                                 GeoPoint map_center = (GeoPoint) map.getMapCenter();
                                 PREF__map_last_lat = map_center.getLatitude();
                                 PREF__map_last_lon = map_center.getLongitude();
-                                Log.i(TAG, "XXXXXXXXXXXXXXXX:99:" + PREF__map_last_lat + " " + PREF__map_last_lon);
+                                // Log.i(TAG, "XXXXXXXXXXXXXXXX:99:" + PREF__map_last_lat + " " + PREF__map_last_lon);
                                 settings_local.edit().putFloat("map_last_lat", (float) PREF__map_last_lat).commit();
                                 settings_local.edit().putFloat("map_last_lon", (float) PREF__map_last_lon).commit();
                             }
@@ -4058,7 +4058,7 @@ public class MainActivity extends BaseProtectedActivity
                 GeoPoint map_center = (GeoPoint) map.getMapCenter();
                 PREF__map_last_lat = map_center.getLatitude();
                 PREF__map_last_lon = map_center.getLongitude();
-                Log.i(TAG, "XXXXXXXXXXXXXXXX:2:" + PREF__map_last_lat + " " + PREF__map_last_lon);
+                // Log.i(TAG, "XXXXXXXXXXXXXXXX:2:" + PREF__map_last_lat + " " + PREF__map_last_lon);
                 settings_local.edit().putFloat("map_last_lat", (float) PREF__map_last_lat).commit();
                 settings_local.edit().putFloat("map_last_lon", (float) PREF__map_last_lon).commit();
             }
@@ -4103,7 +4103,7 @@ public class MainActivity extends BaseProtectedActivity
 
                 PREF__map_last_lat = settings.getFloat("map_last_lat", 48.2085f);
                 PREF__map_last_lon = settings.getFloat("map_last_lon", 16.3730f);
-                Log.i(TAG, "XXXXXXXXXXXXXXXX:3:" + PREF__map_last_lat + " " + PREF__map_last_lon);
+                // Log.i(TAG, "XXXXXXXXXXXXXXXX:3:" + PREF__map_last_lat + " " + PREF__map_last_lon);
                 GeoPoint startPoint = new GeoPoint(PREF__map_last_lat, PREF__map_last_lon);
                 mapController.setCenter(startPoint);
             }
