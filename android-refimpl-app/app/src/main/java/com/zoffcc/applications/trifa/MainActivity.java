@@ -1843,6 +1843,24 @@ public class MainActivity extends BaseProtectedActivity
                         }
                         else if (position == 10)
                         {
+                            try
+                            {
+                                PREF__map_last_zoom_level = map.getZoomLevel(true);
+                                SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(context_s);
+                                settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
+
+                                GeoPoint map_center = (GeoPoint) map.getMapCenter();
+                                PREF__map_last_lat = map_center.getLatitude();
+                                PREF__map_last_lon = map_center.getLongitude();
+                                Log.i(TAG, "XXXXXXXXXXXXXXXX:99:" + PREF__map_last_lat + " " + PREF__map_last_lon);
+                                settings_local.edit().putFloat("map_last_lat", (float) PREF__map_last_lat).commit();
+                                settings_local.edit().putFloat("map_last_lon", (float) PREF__map_last_lon).commit();
+                            }
+                            catch (Exception ee2)
+                            {
+                            }
+
+
                             // Exit
                             try
                             {
@@ -4027,16 +4045,16 @@ public class MainActivity extends BaseProtectedActivity
 
         try
         {
+            PREF__map_last_zoom_level = map.getZoomLevel(true);
+            SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(this);
+            settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
+
             if (lat_lon_zoom_first_save)
             {
                 lat_lon_zoom_first_save = false;
             }
             else
             {
-                PREF__map_last_zoom_level = map.getZoomLevel(true);
-                SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(this);
-                settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
-
                 GeoPoint map_center = (GeoPoint) map.getMapCenter();
                 PREF__map_last_lat = map_center.getLatitude();
                 PREF__map_last_lon = map_center.getLongitude();
