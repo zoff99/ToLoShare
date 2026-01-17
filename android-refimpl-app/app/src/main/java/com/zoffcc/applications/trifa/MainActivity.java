@@ -104,6 +104,7 @@ import com.zoffcc.applications.sorm.FriendList;
 import com.zoffcc.applications.sorm.Message;
 import com.zoffcc.applications.sorm.OrmaDatabase;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
@@ -512,6 +513,9 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__trust_all_webcerts = false; // HINT: !!be careful with this option!!
     static int PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
     static double PREF__map_last_zoom_level = 12.0;
+    static double PREF__map_last_lat = 48.2085f;
+    static double PREF__map_last_lon = 16.3730f;
+
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_dead_reconing_own = false; // keep "false", this it not really working properly!!
     static boolean PREF__gps_smooth_friends = false;
@@ -675,13 +679,36 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "add_map_overlays:001");
         add_map_overlays();
 
-        PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
+        try
+        {
+            PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
+        }
+        catch(Exception e)
+        {
+            // if it was saved as integer before
+        }
+        try
+        {
+            PREF__map_last_lat = settings.getFloat("map_last_lat", 48.2085f);
+        }
+        catch(Exception e)
+        {
+            // if it was saved as integer before
+        }
+        try
+        {
+            PREF__map_last_lon = settings.getFloat("map_last_lon", 16.3730f);
+        }
+        catch(Exception e)
+        {
+            // if it was saved as integer before
+        }
 
         mapController = map.getController();
         // set the default zoomlevel
         mapController.setZoom(PREF__map_last_zoom_level);
         // set the default starting point in the middle of europe
-        GeoPoint startPoint = new GeoPoint(48.2085, 16.3730);
+        GeoPoint startPoint = new GeoPoint(PREF__map_last_lat, PREF__map_last_lon);
         mapController.setCenter(startPoint);
 
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
@@ -3983,6 +4010,13 @@ public class MainActivity extends BaseProtectedActivity
             PREF__map_last_zoom_level = map.getZoomLevel(true);
             SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(this);
             settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
+
+            IGeoPoint map_center = map.getMapCenter();
+            PREF__map_last_lat = map_center.getLatitude();
+            PREF__map_last_lon = map_center.getLongitude();
+            settings_local.edit().putFloat("map_last_lat", (float) PREF__map_last_lat).commit();
+            settings_local.edit().putFloat("map_last_lon", (float) PREF__map_last_lon).commit();
+
         }
         catch (Exception ee2)
         {
@@ -4021,6 +4055,11 @@ public class MainActivity extends BaseProtectedActivity
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
                 PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
                 mapController.setZoom(PREF__map_last_zoom_level);
+
+                PREF__map_last_lat = settings.getFloat("map_last_lat", 48.2085f);
+                PREF__map_last_lon = settings.getFloat("map_last_lon", 16.3730f);
+                GeoPoint startPoint = new GeoPoint(PREF__map_last_lat, PREF__map_last_lon);
+                mapController.setCenter(startPoint);
             }
             catch (Exception ee2)
             {
