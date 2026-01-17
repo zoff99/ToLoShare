@@ -52,6 +52,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDex;
 
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_cancel;
+import static com.zoffcc.applications.trifa.MainActivity.DEBUG_ACTIVITY_STATES;
 import static com.zoffcc.applications.trifa.MainActivity.tox_service_fg;
 import static com.zoffcc.applications.trifa.TrifaToxService.is_tox_started;
 
@@ -108,6 +109,11 @@ public class MainApplication extends Application
         randnum = (int) (Math.random() * 1000d);
         Log.i(TAG, "MainApplication:" + randnum + ":" + "onCreate");
         super.onCreate();
+
+        if (DEBUG_ACTIVITY_STATES)
+        {
+            registerActivityLifecycleCallbacks(new MyLifecycleCallbacks());
+        }
 
         try
         {

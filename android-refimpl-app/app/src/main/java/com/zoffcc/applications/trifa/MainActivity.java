@@ -281,6 +281,7 @@ public class MainActivity extends BaseProtectedActivity
     final static boolean DEBUG_USE_LOGFRIEND = false; // set "false" for release builds
     public final static boolean DEBUG_BSN_ON_PROFILE = false; // set "false" for release builds
     static boolean WANT_DEBUG_THREAD = false; // set "false" for release builds
+    static boolean DEBUG_ACTIVITY_STATES = false; // set "false" for release builds
     // --------- global config ---------
     // --------- global config ---------
     // --------- global config ---------
@@ -522,6 +523,9 @@ public class MainActivity extends BaseProtectedActivity
 
     final static String push_instance_name = "com.zoffcc.applications.push_toloshare";
 
+    static boolean lat_lon_zoom_first_save = true;
+    static long lat_lon_zoom_last_ts = -1L;
+
     static String versionName = "";
     static int versionCode = -1;
     static PackageInfo packageInfo_s = null;
@@ -708,8 +712,12 @@ public class MainActivity extends BaseProtectedActivity
         // set the default zoomlevel
         mapController.setZoom(PREF__map_last_zoom_level);
         // set the default starting point in the middle of europe
+        Log.i(TAG, "XXXXXXXXXXXXXXXX:1:" + PREF__map_last_lat + " " + PREF__map_last_lon);
         GeoPoint startPoint = new GeoPoint(PREF__map_last_lat, PREF__map_last_lon);
         mapController.setCenter(startPoint);
+
+        lat_lon_zoom_first_save = true;
+        lat_lon_zoom_last_ts = -1;
 
         switch_normal_main_view = this.findViewById(R.id.switch_normal_main_view);
         switch_friend_gps_smoothing = this.findViewById(R.id.switch_friend_gps_smoothing);
@@ -4007,16 +4015,23 @@ public class MainActivity extends BaseProtectedActivity
 
         try
         {
-            PREF__map_last_zoom_level = map.getZoomLevel(true);
-            SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(this);
-            settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
+            if (lat_lon_zoom_first_save)
+            {
+                lat_lon_zoom_first_save = false;
+            }
+            else
+            {
+                PREF__map_last_zoom_level = map.getZoomLevel(true);
+                SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(this);
+                settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
 
-            IGeoPoint map_center = map.getMapCenter();
-            PREF__map_last_lat = map_center.getLatitude();
-            PREF__map_last_lon = map_center.getLongitude();
-            settings_local.edit().putFloat("map_last_lat", (float) PREF__map_last_lat).commit();
-            settings_local.edit().putFloat("map_last_lon", (float) PREF__map_last_lon).commit();
-
+                GeoPoint map_center = (GeoPoint) map.getMapCenter();
+                PREF__map_last_lat = map_center.getLatitude();
+                PREF__map_last_lon = map_center.getLongitude();
+                Log.i(TAG, "XXXXXXXXXXXXXXXX:2:" + PREF__map_last_lat + " " + PREF__map_last_lon);
+                settings_local.edit().putFloat("map_last_lat", (float) PREF__map_last_lat).commit();
+                settings_local.edit().putFloat("map_last_lon", (float) PREF__map_last_lon).commit();
+            }
         }
         catch (Exception ee2)
         {
@@ -4058,6 +4073,7 @@ public class MainActivity extends BaseProtectedActivity
 
                 PREF__map_last_lat = settings.getFloat("map_last_lat", 48.2085f);
                 PREF__map_last_lon = settings.getFloat("map_last_lon", 16.3730f);
+                Log.i(TAG, "XXXXXXXXXXXXXXXX:3:" + PREF__map_last_lat + " " + PREF__map_last_lon);
                 GeoPoint startPoint = new GeoPoint(PREF__map_last_lat, PREF__map_last_lon);
                 mapController.setCenter(startPoint);
             }
