@@ -33,7 +33,7 @@
     <!-- Required for high-frequency sensors on some Android versions -->
     <!--<uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" tools:ignore="HighSamplingRate" />-->
     <!--DEBUG<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />DEBUG-->
-    <!--<uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" tools:ignore="MockLocation,ProtectedPermissions" />-->
+    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" tools:ignore="MockLocation,ProtectedPermissions" />
 
     <application
         android:name=".MainApplication"
