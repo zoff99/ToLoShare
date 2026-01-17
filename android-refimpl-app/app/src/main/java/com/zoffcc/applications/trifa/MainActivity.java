@@ -336,7 +336,7 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_txt = "";
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
-     private MockLocationSimulator simulator;
+    //**MOCK**// private MockLocationSimulator simulator;
     //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 1;
     //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
 
@@ -558,13 +558,15 @@ public class MainActivity extends BaseProtectedActivity
     Spinner spinner_own_status = null;
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
-    private static final ExecutorService executor_friend_location_task = new ThreadPoolExecutor(
+    private static final ExecutorService executor_friend_location_task__unused__ = new ThreadPoolExecutor(
             1,                      // Core pool size
             1,                      // Maximum pool size
             0L, TimeUnit.MILLISECONDS,
             new SynchronousQueue<>(), // Queue with 0 capacity
             new ThreadPoolExecutor.DiscardPolicy() // Drop new work if busy
     );
+
+    private static final ExecutorService executor_friend_location_task = Executors.newSingleThreadExecutor();
 
     public static void runTaskFriendLocationIncoming(Runnable task)
     {
@@ -572,13 +574,15 @@ public class MainActivity extends BaseProtectedActivity
     }
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
-    private static final ExecutorService executor_own_location_task = new ThreadPoolExecutor(
+    private static final ExecutorService executor_own_location_task__unused__ = new ThreadPoolExecutor(
             1,                      // Core pool size
             1,                      // Maximum pool size
             0L, TimeUnit.MILLISECONDS,
             new SynchronousQueue<>(), // Queue with 0 capacity
             new ThreadPoolExecutor.DiscardPolicy() // Drop new work if busy
     );
+
+    private static final ExecutorService executor_own_location_task = Executors.newSingleThreadExecutor();
 
     public static void runTaskOwnLocation(Runnable task)
     {
@@ -2171,9 +2175,9 @@ public class MainActivity extends BaseProtectedActivity
         /*
          * adb shell appops set your.package.name android:mock_location allow
          */
-         simulator = new MockLocationSimulator(this);
+        //**MOCK**// simulator = new MockLocationSimulator(this);
         // Start the driving simulation
-         simulator.startSimulation();
+        //**MOCK**// simulator.startSimulation();
 
         //**MOCK**// friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
         //**MOCK**// for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
@@ -3940,9 +3944,9 @@ public class MainActivity extends BaseProtectedActivity
     {
         super.onDestroy();
         // Important: Stop simulation and clean up the test provider
-         if (simulator != null) {
-             simulator.stopSimulation();
-         }
+        //**MOCK**// if (simulator != null) {
+        //**MOCK**//     simulator.stopSimulation();
+        //**MOCK**// }
 
         //**MOCK**// if (friend_simulator != null)
         //**MOCK**// {

@@ -43,7 +43,9 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
             final Runnable process_own_gps_location = () -> {
                 try
                 {
+                    // Log.i(TAG, "onLocationChanged:0:11111111111");
                     gps_int_own.onGpsUpdate(location, SMOOTH_POS_STEPS_OWN, this_);
+                    // Log.i(TAG, "onLocationChanged:0:22222222222");
                 }
                 catch (Exception ignored)
                 {

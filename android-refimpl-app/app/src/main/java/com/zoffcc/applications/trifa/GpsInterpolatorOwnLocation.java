@@ -2,6 +2,7 @@ package com.zoffcc.applications.trifa;
 
 import android.location.Location;
 import android.location.LocationManager;
+import android.util.Log;
 
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MAX;
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
@@ -61,10 +62,12 @@ public class GpsInterpolatorOwnLocation
      */
     public void onGpsUpdate(Location location, int steps, MyLocationNewOverlay2 myLocationNewOverlay2) {
 
+        // Log.i(TAG, "__* START __");
         long currentTime = System.currentTimeMillis();
 
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
+        // Log.i(TAG, "timeDelta=" + timeDelta + " isFirstFix=" + isFirstFix);
 
         if ((!PREF__gps_smooth_own) || (isFirstFix) ||
             (timeDelta < GPS_UPDATE_FREQ_MS_MIN) ||
@@ -82,9 +85,9 @@ public class GpsInterpolatorOwnLocation
             lastAcc = location.getAccuracy();
             lastUpdateTime = currentTime;
             lastHasBearing = location.hasBearing();
-            // Log.i(TAG, "timeDelta=" + timeDelta);
             isFirstFix = false;
             push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, location.hasBearing(), myLocationNewOverlay2);
+            // Log.i(TAG, "** RETURN **");
             return;
         }
 
@@ -132,6 +135,7 @@ public class GpsInterpolatorOwnLocation
                              location.hasBearing(), myLocationNewOverlay2);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
+                // Log.i(TAG, "** BREAK **");
                 break;
             }
         }
@@ -140,6 +144,7 @@ public class GpsInterpolatorOwnLocation
         lastLon = location.getLongitude();
         lastBearing = location.getBearing();
         lastHasBearing = location.hasBearing();
+        // Log.i(TAG, "** DONE **");
     }
 
     private double interpolateBearing(double start, double end, double fraction) {

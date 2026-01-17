@@ -43,8 +43,9 @@ public class MockLocationSimulator {
             @Override
             public void run() {
                 updateMockLocation();
-                int baseDelay = 1000;
-                int jitter = new java.util.Random().nextInt(151);
+                final int baseDelay = 1000;
+                final int JITTER = 600;
+                int jitter = new java.util.Random().nextInt(JITTER + 1) - (JITTER /  2);
                 mainHandler.postDelayed(this, baseDelay + jitter);
             }
         });

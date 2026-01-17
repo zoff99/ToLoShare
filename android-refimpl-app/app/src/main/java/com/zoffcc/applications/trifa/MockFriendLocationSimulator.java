@@ -35,7 +35,10 @@ public class MockFriendLocationSimulator {
             @Override
             public void run() {
                 updateMockLocation();
-                mainHandler.postDelayed(this, 1000);
+                final int baseDelay = 1000;
+                final int JITTER = 600;
+                int jitter = new java.util.Random().nextInt(JITTER + 1) - (JITTER /  2);
+                mainHandler.postDelayed(this, baseDelay + jitter);
             }
         });
 
@@ -78,6 +81,7 @@ public class MockFriendLocationSimulator {
         // 5s: Speed up to 25m/s (~90 km/h)
         actionHandler.postDelayed(() -> setSpeed(25.0f), 5000);
 
+        /*
         // 10s: Turn 90 degrees right (East)
         actionHandler.postDelayed(() -> turn(90), 10000);
 
@@ -99,6 +103,8 @@ public class MockFriendLocationSimulator {
             setStopped(false);
             setSpeed(1.0f);
         }, 35000);
+
+         */
     }
 
     private void updateMockLocation() {
