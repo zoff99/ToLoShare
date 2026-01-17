@@ -511,6 +511,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__rnnoise_active = false;
     static boolean PREF__trust_all_webcerts = false; // HINT: !!be careful with this option!!
     static int PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
+    static double PREF__map_last_zoom_level = 12.0;
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_dead_reconing_own = false; // keep "false", this it not really working properly!!
     static boolean PREF__gps_smooth_friends = false;
@@ -633,6 +634,8 @@ public class MainActivity extends BaseProtectedActivity
         {
         }
 
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
         //load/initialize the osmdroid configuration, this can be done
         Context ctx = getApplicationContext();
         org.osmdroid.config.Configuration.getInstance().
@@ -672,9 +675,12 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "add_map_overlays:001");
         add_map_overlays();
 
-        // set a default starting point in the middle of europe
+        PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
+
         mapController = map.getController();
-        mapController.setZoom(12);
+        // set the default zoomlevel
+        mapController.setZoom(PREF__map_last_zoom_level);
+        // set the default starting point in the middle of europe
         GeoPoint startPoint = new GeoPoint(48.2085, 16.3730);
         mapController.setCenter(startPoint);
 
@@ -705,7 +711,7 @@ public class MainActivity extends BaseProtectedActivity
                     PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
                     set_follow_button_ui();
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
-                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+                    settings_local.edit().putInt("map_follow_mode", PREF__map_follow_mode).commit();
 
                     set_map_center_to_animate(currentBestLocation);
                 }
@@ -726,7 +732,7 @@ public class MainActivity extends BaseProtectedActivity
                     PREF__map_follow_mode = MAP_FOLLOW_MODE_FRIEND_0.value;
                     set_follow_button_ui();
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
-                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+                    settings_local.edit().putInt("map_follow_mode", PREF__map_follow_mode).commit();
 
                     // HINT: for this button we always use friend pseudo_#0
                     String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
@@ -792,7 +798,7 @@ public class MainActivity extends BaseProtectedActivity
                     PREF__map_follow_mode = MAP_FOLLOW_MODE_FRIEND_1.value;
                     set_follow_button_ui();
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
-                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+                    settings_local.edit().putInt("map_follow_mode", PREF__map_follow_mode).commit();
 
                     // HINT: for this button we always use friend pseudo_#1
                     String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(1);
@@ -858,7 +864,7 @@ public class MainActivity extends BaseProtectedActivity
                     PREF__map_follow_mode = MAP_FOLLOW_MODE_NONE.value;
                     set_follow_button_ui();
                     SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(view.getContext());
-                    settings_local.edit().putInt("PREF__map_follow_mode", PREF__map_follow_mode).commit();
+                    settings_local.edit().putInt("map_follow_mode", PREF__map_follow_mode).commit();
                 }
                 catch (Exception ee2)
                 {
@@ -949,7 +955,6 @@ public class MainActivity extends BaseProtectedActivity
         // EmojiManager.install(new com.vanniktech.emoji.twitter.TwitterEmojiProvider());
 
 
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         PREF__DB_secrect_key = settings.getString("DB_secrect_key", "");
 
         if (PREF__DB_secrect_key.isEmpty())
@@ -3973,6 +3978,16 @@ public class MainActivity extends BaseProtectedActivity
     {
         Log.i(TAG, "onPause");
 
+        try
+        {
+            PREF__map_last_zoom_level = map.getZoomLevel(true);
+            SharedPreferences settings_local = PreferenceManager.getDefaultSharedPreferences(this);
+            settings_local.edit().putFloat("map_last_zoom_level", (float) PREF__map_last_zoom_level).commit();
+        }
+        catch (Exception ee2)
+        {
+        }
+
         // mLocationOverlay.disableMyLocation();
         map.onPause();
 
@@ -4000,6 +4015,16 @@ public class MainActivity extends BaseProtectedActivity
         if (!PREF__normal_main_view)
         {
             map.onResume();
+
+            try
+            {
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+                PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
+                mapController.setZoom(PREF__map_last_zoom_level);
+            }
+            catch (Exception ee2)
+            {
+            }
 
             Log.i(TAG, "remove_map_overlays:002");
             remove_map_overlays();
@@ -4129,7 +4154,7 @@ public class MainActivity extends BaseProtectedActivity
         PREF__use_native_audio_play = settings.getBoolean("X_use_native_audio_play", true);
         PREF__tox_set_do_not_sync_av = settings.getBoolean("X_tox_set_do_not_sync_av", false);
 
-        PREF__map_follow_mode = settings.getInt("PREF__map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
+        PREF__map_follow_mode = settings.getInt("map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
         set_follow_button_ui();
 
         // reset trigger for throttled saving
