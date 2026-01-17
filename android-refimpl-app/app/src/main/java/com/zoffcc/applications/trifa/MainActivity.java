@@ -579,7 +579,13 @@ public class MainActivity extends BaseProtectedActivity
 
     public static void runTaskFriendLocationIncoming(Runnable task)
     {
-        executor_friend_location_task.execute(task);
+        try
+        {
+            executor_friend_location_task.execute(task);
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
@@ -595,7 +601,13 @@ public class MainActivity extends BaseProtectedActivity
 
     public static void runTaskOwnLocation(Runnable task)
     {
-        executor_own_location_task.execute(task);
+        try
+        {
+            executor_own_location_task.execute(task);
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     /** @noinspection CommentedOutCode*/
