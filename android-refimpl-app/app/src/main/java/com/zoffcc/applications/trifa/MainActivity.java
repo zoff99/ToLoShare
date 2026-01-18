@@ -115,6 +115,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
+import org.osmdroid.views.overlay.compass.CompassOverlay;
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
@@ -199,6 +201,7 @@ import static com.zoffcc.applications.trifa.HelperRelay.is_any_relay;
 import static com.zoffcc.applications.trifa.HelperRelay.own_push_token_load;
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_change_wrapper;
 import static com.zoffcc.applications.trifa.MessageListActivity.ml_friend_typing;
+import static com.zoffcc.applications.trifa.NorthingOverlay.set_northing_callback;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONNECTION_STATUS_MANUAL_LOGOUT;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.DELETE_SQL_AND_VFS_ON_ERROR;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
@@ -331,6 +334,7 @@ public class MainActivity extends BaseProtectedActivity
     static RoadManager roadManager = null;
     static ExecutorService routing_executor = Executors.newSingleThreadExecutor();
     static Handler handler = new Handler(Looper.getMainLooper());
+    static boolean map_is_northed = true;
     static MyLocationNewOverlay2 mLocationOverlay = null;
     static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
@@ -2343,13 +2347,6 @@ public class MainActivity extends BaseProtectedActivity
     {
         try
         {
-            /*
-            RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
-            mRotationGestureOverlay.setEnabled(true);
-            map.setMultiTouchControls(true);
-            map.getOverlays().add(mRotationGestureOverlay);
-            */
-
             final DisplayMetrics dm = getResources().getDisplayMetrics();
             ScaleBarOverlay mScaleBarOverlay = new ScaleBarOverlay(map);
             mScaleBarOverlay.setCentred(true);
@@ -2363,6 +2360,39 @@ public class MainActivity extends BaseProtectedActivity
         }
         catch(Exception e)
         {
+        }
+
+        try
+        {
+            RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
+            mRotationGestureOverlay.setEnabled(true);
+            map.setMultiTouchControls(true);
+            map.getOverlays().add(mRotationGestureOverlay);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            NorthingOverlay northing_ov = new NorthingOverlay(this, map);
+            northing_ov.set_is_northed(map_is_northed);
+
+            set_northing_callback(new NorthingOverlay.NorthingCallback() {
+                @Override
+                public void update_is_northing(boolean value)
+                {
+                    map_is_northed = value;
+                    Log.i(TAG, "map_is_northed=" + map_is_northed);
+                }
+            });
+
+            map.getOverlays().add(northing_ov);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
         }
 
         try
