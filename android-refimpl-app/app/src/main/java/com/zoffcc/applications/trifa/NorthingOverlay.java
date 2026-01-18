@@ -57,13 +57,14 @@ public class NorthingOverlay extends Overlay
         mDisplay = windowManager.getDefaultDisplay();
 
         createCompassFramePicture();
-        createCompassRosePicture();
-        // createPointerPicture();
+        set_picture();
 
         mCompassFrameCenterX = mCompassFrameBitmap.getWidth() / 2f - 0.5f;
         mCompassFrameCenterY = mCompassFrameBitmap.getHeight() / 2f - 0.5f;
         mCompassRoseCenterX = mCompassRoseBitmap.getWidth() / 2f - 0.5f;
         mCompassRoseCenterY = mCompassRoseBitmap.getHeight() / 2f - 0.5f;
+
+        invalidateCompass();
 
         Log.i(TAG, "NorthingOverlay");
     }
@@ -95,6 +96,19 @@ public class NorthingOverlay extends Overlay
         Log.i(TAG, "onResume");
     }
 
+    private void set_picture()
+    {
+        if (is_northed)
+        {
+            mMapView.setMapOrientation(0.0f);
+            createCompassRosePicture();
+        }
+        else
+        {
+            createPointerPicture();
+        }
+    }
+
     public void set_is_northed(boolean northed)
     {
         is_northed = northed;
@@ -102,6 +116,8 @@ public class NorthingOverlay extends Overlay
         {
             mMapView.setMapOrientation(0.0f);
         }
+
+        set_picture();
         invalidateCompass();
         mMapView.invalidate();
 
@@ -254,7 +270,9 @@ public class NorthingOverlay extends Overlay
         final int center = picBorderWidthAndHeight / 2;
 
         if (mCompassRoseBitmap != null)
+        {
             mCompassRoseBitmap.recycle();
+        }
         mCompassRoseBitmap = Bitmap.createBitmap(picBorderWidthAndHeight, picBorderWidthAndHeight,
                                                  Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(mCompassRoseBitmap);
@@ -302,7 +320,9 @@ public class NorthingOverlay extends Overlay
         final int center = picBorderWidthAndHeight / 2;
 
         if (mCompassRoseBitmap != null)
+        {
             mCompassRoseBitmap.recycle();
+        }
         mCompassRoseBitmap = Bitmap.createBitmap(picBorderWidthAndHeight, picBorderWidthAndHeight,
                                                  Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(mCompassRoseBitmap);

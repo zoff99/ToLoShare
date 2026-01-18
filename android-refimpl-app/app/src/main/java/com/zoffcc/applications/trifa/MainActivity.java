@@ -2364,10 +2364,12 @@ public class MainActivity extends BaseProtectedActivity
 
         try
         {
+            /*
             RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
             mRotationGestureOverlay.setEnabled(true);
             map.setMultiTouchControls(true);
             map.getOverlays().add(mRotationGestureOverlay);
+            */
         }
         catch(Exception e)
         {
