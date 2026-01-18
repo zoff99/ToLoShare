@@ -136,10 +136,9 @@ jobs:
             adb shell settings get global development_settings_enabled
             adb shell settings put global development_settings_enabled 1
             adb shell settings get global development_settings_enabled
-            cd android-refimpl-app
-            ./gradlew installDebug
+            cd android-refimpl-app/ ; pwd ; ./gradlew installDebug
             adb shell appops set com.zoffcc.applications.toloshare android:mock_location allow
-            ./gradlew app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.zoffcc.applications.trifa.JavaFriendTester || echo "NOERR"
+            cd android-refimpl-app/ ; pwd ;./gradlew app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.zoffcc.applications.trifa.JavaFriendTester || echo "NOERR"
             cat /home/runner/work/ToLoShare/ToLoShare/android-refimpl-app/logcat.txt
             echo "================"
             echo "================"
