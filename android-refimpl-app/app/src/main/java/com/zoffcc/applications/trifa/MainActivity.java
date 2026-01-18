@@ -513,7 +513,8 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__rnnoise_active = false;
     static boolean PREF__trust_all_webcerts = false; // HINT: !!be careful with this option!!
     static int PREF__map_follow_mode = MAP_FOLLOW_MODE_SELF.value;
-    static double PREF__map_last_zoom_level = 12.0;
+    static final float DEFAULT_ZOOM_LEVEL = 12.0f;
+    static double PREF__map_last_zoom_level = DEFAULT_ZOOM_LEVEL;
     static double PREF__map_last_lat = 48.2085f;
     static double PREF__map_last_lon = 16.3730f;
 
@@ -697,7 +698,7 @@ public class MainActivity extends BaseProtectedActivity
 
         try
         {
-            PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
+            PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", DEFAULT_ZOOM_LEVEL);
         }
         catch(Exception e)
         {
@@ -4098,7 +4099,7 @@ public class MainActivity extends BaseProtectedActivity
             try
             {
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-                PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", 12.0f);
+                PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", DEFAULT_ZOOM_LEVEL);
                 mapController.setZoom(PREF__map_last_zoom_level);
 
                 PREF__map_last_lat = settings.getFloat("map_last_lat", 48.2085f);
