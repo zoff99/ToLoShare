@@ -16,6 +16,6 @@ sed -i -e 's#<!--DEBUG##g' "$f1"
 sed -i -e 's#DEBUG-->##g' "$f1"
 
 sed -i -e 's#//\*\*MOCK\*\*//##g' "$f2"
-sed -i -e 's#DEFAULT_ZOOM_LEVEL = .*$#DEFAULT_ZOOM_LEVEL = 18.0f;#g' "$f2"
+sed -i -e 's#DEFAULT_ZOOM_LEVEL = .*$#DEFAULT_ZOOM_LEVEL = 16.0f;#g' "$f2"
 
 
