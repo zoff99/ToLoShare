@@ -1,5 +1,6 @@
 package com.zoffcc.applications.trifa;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
@@ -11,7 +12,7 @@ import android.os.SystemClock;
 
 public class MockLocationSimulator {
     private final LocationManager locationManager;
-    private final String provider = LocationManager.GPS_PROVIDER;
+    private final String provider = "gps";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Handler actionHandler = new Handler(Looper.getMainLooper());
 
@@ -26,15 +27,39 @@ public class MockLocationSimulator {
         setupMockProvider();
     }
 
+    @SuppressLint("WrongConstant")
     private void setupMockProvider() {
-        try {
-            if (locationManager.getProvider(provider) != null) {
+        try
+        {
+            if (locationManager.getProvider(provider) != null)
+            {
                 locationManager.removeTestProvider(provider);
             }
-            locationManager.addTestProvider(provider, false, false, false, false, true, true, true,
-                                            ProviderProperties.POWER_USAGE_MEDIUM, ProviderProperties.ACCURACY_FINE);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            locationManager.addTestProvider(provider, false, false, false,
+                                            false, true, true, true,
+                                            2, 1);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
             locationManager.setTestProviderEnabled(provider, true);
-        } catch (SecurityException ignored) {}
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public void startSimulation() {
