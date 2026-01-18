@@ -100,12 +100,11 @@ public class NorthingOverlay extends Overlay
     {
         if (is_northed)
         {
-            mMapView.setMapOrientation(0.0f);
-            createCompassRosePicture();
+            createPointerPicture();
         }
         else
         {
-            createPointerPicture();
+            createCompassRosePicture();
         }
     }
 
