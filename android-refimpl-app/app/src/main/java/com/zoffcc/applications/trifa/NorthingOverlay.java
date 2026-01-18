@@ -100,11 +100,11 @@ public class NorthingOverlay extends Overlay
     {
         if (is_northed)
         {
-            createPointerPicture();
+            createNorthPicture();
         }
         else
         {
-            createCompassRosePicture();
+            createCompassNeedlePicture();
         }
     }
 
@@ -243,7 +243,37 @@ public class NorthingOverlay extends Overlay
         drawTriangle(canvas, center, center, mCompassRadius * mScale, 270, outerPaint);
     }
 
-    private void createCompassRosePicture() {
+    private void createNorthPicture() {
+        // We only need one paint object now: for the "N" text itself.
+        final Paint textPaint = new Paint();
+        textPaint.setColor(Color.GRAY);
+        textPaint.setAntiAlias(true);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(20 * mScale); // Make the 'N' large enough to fill the area
+        // textPaint.setFakeBoldText(true);
+
+        // Calculate the canvas size
+        // We can use an arbitrary size if we remove mCompassRadius dependencies,
+        // but we will keep the original canvas size logic for context.
+        final int picBorderWidthAndHeight = (int) ((mCompassRadius + 5) * 2 * mScale);
+        final int center = picBorderWidthAndHeight / 2;
+
+        if (mCompassRoseBitmap != null) {
+            mCompassRoseBitmap.recycle();
+        }
+        mCompassRoseBitmap = Bitmap.createBitmap(picBorderWidthAndHeight, picBorderWidthAndHeight,
+                                                 Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(mCompassRoseBitmap);
+
+        // The canvas is transparent by default (ARGB_8888),
+        // so we just draw the "N" directly.
+
+        // Position the "N" exactly in the visual center of the canvas
+        // canvas.drawText uses the Y coordinate as the baseline for the text
+        canvas.drawText("N", center, center + (textPaint.getTextSize() / 3), textPaint);
+    }
+
+    private void createCompassNeedlePicture() {
         // Paint design of north triangle (it's common to paint north in red color)
         final Paint northPaint = new Paint();
         northPaint.setColor(0xFFA00000);
@@ -301,7 +331,7 @@ public class NorthingOverlay extends Overlay
     /**
      * A black pointer arrow.
      */
-    private void createPointerPicture() {
+    private void createPointerPicture2() {
         final Paint arrowPaint = new Paint();
         arrowPaint.setColor(Color.BLACK);
         arrowPaint.setAntiAlias(true);
