@@ -33,7 +33,9 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.map;
 import static com.zoffcc.applications.trifa.MainActivity.mapController;
+import static com.zoffcc.applications.trifa.MainActivity.map_is_northed;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
@@ -426,6 +428,14 @@ public class CaptureService extends Service
                                                location.getLongitude());
             // mapController.animateTo(new_center);
             mapController.setCenter(new_center);
+
+            if (!map_is_northed)
+            {
+                if (location.hasBearing())
+                {
+                    map.setMapOrientation(-location.getBearing());
+                }
+            }
         }
         catch(Exception e)
         {
