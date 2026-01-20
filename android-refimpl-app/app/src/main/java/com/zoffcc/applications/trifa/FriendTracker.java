@@ -23,7 +23,7 @@ public class FriendTracker {
     private final ConcurrentHashMap<String, Long> friendsMap_out = new ConcurrentHashMap<>();
     // Background thread pool with a single worker thread
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private static final long EXPIRATION_MS = 2_000; // x seconds
+    private static final long EXPIRATION_MS = 30_000; // x seconds
 
     public FriendTracker() {
         // Schedule a cleanup task to run every 1 minute
