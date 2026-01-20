@@ -1,11 +1,15 @@
 package com.zoffcc.applications.trifa;
 
+import android.util.Log;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class FriendTracker {
+    final static String TAG = "FriendTracker";
+
     private final ConcurrentHashMap<String, Long> friendsMap_in = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> friendsMap_out = new ConcurrentHashMap<>();
     // Background thread pool with a single worker thread
@@ -65,6 +69,8 @@ public class FriendTracker {
         long now = System.currentTimeMillis();
         friendsMap_out.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
         friendsMap_in.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
+
+        Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
     }
 
     public void shutdown() {
