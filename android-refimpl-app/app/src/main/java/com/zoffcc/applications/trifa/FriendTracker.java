@@ -1,14 +1,24 @@
 package com.zoffcc.applications.trifa;
 
+import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.zoffcc.applications.trifa.MainActivity.context_s;
+import static com.zoffcc.applications.trifa.MainActivity.in_count_view;
+import static com.zoffcc.applications.trifa.MainActivity.out_count_view;
+
 public class FriendTracker {
     final static String TAG = "FriendTracker";
+
+    Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private final ConcurrentHashMap<String, Long> friendsMap_in = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> friendsMap_out = new ConcurrentHashMap<>();
@@ -70,7 +80,45 @@ public class FriendTracker {
         friendsMap_out.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
         friendsMap_in.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
 
-        Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
+        // Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
+        try
+        {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try
+                    {
+                        in_count_view.updateText("" + friendsMap_in.size());
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
+            });
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try
+                    {
+                        out_count_view.updateText("" + friendsMap_out.size());
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
+            });
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     public void shutdown() {
