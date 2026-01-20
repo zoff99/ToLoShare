@@ -26,10 +26,12 @@ import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
+import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_dead_reconing_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
+import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
@@ -359,6 +361,21 @@ public class CaptureService extends Service
                 //noinspection unused
                 final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
                 // Log.i(TAG1, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+
+                if (res == 0)
+                {
+                    try
+                    {
+                        String f_pubkey = tox_friend_get_public_key__wrapper(fc);
+                        if ((f_pubkey != null) && (f_pubkey.length() > 10))
+                        {
+                            f_tracker.ping_outgoing(f_pubkey);
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
             }
         }
         catch(Exception e)

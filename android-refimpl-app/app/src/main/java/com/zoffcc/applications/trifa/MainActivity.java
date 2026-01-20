@@ -339,6 +339,7 @@ public class MainActivity extends BaseProtectedActivity
     static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
+    static FriendTracker f_tracker = null;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
@@ -723,6 +724,17 @@ public class MainActivity extends BaseProtectedActivity
         catch(Exception e)
         {
             // if it was saved as integer before
+        }
+
+        try
+        {
+            if (f_tracker == null)
+            {
+                f_tracker = new FriendTracker();
+            }
+        }
+        catch(Exception e)
+        {
         }
 
         mapController = map.getController();
@@ -1867,6 +1879,15 @@ public class MainActivity extends BaseProtectedActivity
 
 
                             // Exit
+                            try
+                            {
+                                f_tracker.shutdown();
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
                             try
                             {
                                 executor_friend_location_task.shutdown();
@@ -6005,6 +6026,8 @@ public class MainActivity extends BaseProtectedActivity
 
                                             if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                             {
+                                                f_tracker.ping_incoming(f_pubkey);
+
                                                 if (!remote_location_data.containsKey(f_pubkey))
                                                 {
                                                     init_friend_location_data_struct(tox_friend_get_name(friend_number),
