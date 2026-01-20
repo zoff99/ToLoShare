@@ -363,6 +363,22 @@
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
 
+                        <com.zoffcc.applications.trifa.TriangleTextView
+                            android:id="@+id/out_count"
+                            android:layout_width="25dp"
+                            android:layout_height="50dp"
+                            android:padding="0dp"
+                            android:layout_marginRight="0dp"
+                            android:scaleType="fitCenter" />
+
+                        <com.zoffcc.applications.trifa.TriangleTextView
+                            android:id="@+id/in_count"
+                            android:layout_width="25dp"
+                            android:layout_height="50dp"
+                            android:padding="0dp"
+                            android:layout_marginRight="6dp"
+                            android:scaleType="fitCenter" />
+
                         <ImageButton
                             android:id="@+id/btn_follow_stop"
                             android:layout_width="50dp"

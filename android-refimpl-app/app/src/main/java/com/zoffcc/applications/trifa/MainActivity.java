@@ -331,6 +331,8 @@ public class MainActivity extends BaseProtectedActivity
     static ArrayList<String> main_gallery_images = null;
 
     static MapView map = null;
+    static TriangleTextView out_count_view = null;
+    static TriangleTextView in_count_view = null;
     static RoadManager roadManager = null;
     static ExecutorService routing_executor = Executors.newSingleThreadExecutor();
     static Handler handler = new Handler(Looper.getMainLooper());
@@ -684,6 +686,13 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "M:STARTUP:setContentView start");
         setContentView(R.layout.activity_main);
         Log.i(TAG, "M:STARTUP:setContentView end");
+
+        out_count_view = findViewById(R.id.out_count);
+        out_count_view.updateText("0");
+        in_count_view = findViewById(R.id.in_count);
+        in_count_view.updateText("0");
+        in_count_view.setTriangleColor(Color.BLUE);
+        in_count_view.setDirection(TriangleTextView.Direction.DOWN);
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
