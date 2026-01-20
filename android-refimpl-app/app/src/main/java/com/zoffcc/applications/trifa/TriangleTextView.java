@@ -16,7 +16,7 @@ public class TriangleTextView extends View
     private Paint textPaint;
     private final Path trianglePath = new Path();
 
-    public enum Direction { UP, DOWN, LEFT, RIGHT }
+    public enum Direction { UP, DOWN, LEFT, RIGHT, CIRCLE }
 
     private int triangleSizeDp = 6;
     private int topPaddingDp = 8;
@@ -87,7 +87,7 @@ public class TriangleTextView extends View
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (currentCount == 0)
+        if ((currentCount == 0) && (currentDirection != Direction.CIRCLE))
         {
             canvas.drawColor(Color.TRANSPARENT);
             return;
@@ -101,32 +101,47 @@ public class TriangleTextView extends View
         int centerX = getWidth() / 2;
         int viewHeight = getHeight();
 
-        trianglePath.reset();
-
         switch (currentDirection) {
             case UP:
+                trianglePath.reset();
                 trianglePath.moveTo(centerX, paddingPx);
                 trianglePath.lineTo(centerX - sizePx, paddingPx + (sizePx * 2));
                 trianglePath.lineTo(centerX + sizePx, paddingPx + (sizePx * 2));
+                trianglePath.close();
                 break;
             case DOWN:
+                trianglePath.reset();
                 trianglePath.moveTo(centerX, paddingPx + (sizePx * 2));
                 trianglePath.lineTo(centerX - sizePx, paddingPx);
                 trianglePath.lineTo(centerX + sizePx, paddingPx);
+                trianglePath.close();
                 break;
             case LEFT:
+                trianglePath.reset();
                 trianglePath.moveTo(centerX - sizePx, paddingPx + sizePx);
                 trianglePath.lineTo(centerX + sizePx, paddingPx);
                 trianglePath.lineTo(centerX + sizePx, paddingPx + (sizePx * 2));
+                trianglePath.close();
                 break;
             case RIGHT:
+                trianglePath.reset();
                 trianglePath.moveTo(centerX + sizePx, paddingPx + sizePx);
                 trianglePath.lineTo(centerX - sizePx, paddingPx);
                 trianglePath.lineTo(centerX - sizePx, paddingPx + (sizePx * 2));
+                trianglePath.close();
+                break;
+            case CIRCLE:
                 break;
         }
-        trianglePath.close();
-        canvas.drawPath(trianglePath, trianglePaint);
+
+        if (currentDirection == Direction.CIRCLE)
+        {
+            canvas.drawCircle(centerX, paddingPx + (sizePx / 2), sizePx, trianglePaint);
+        }
+        else
+        {
+            canvas.drawPath(trianglePath, trianglePaint);
+        }
 
         // Draw Text at bottom with DP-based margin
         canvas.drawText("" + currentCount, centerX, viewHeight - bottomOffsetPx, textPaint);

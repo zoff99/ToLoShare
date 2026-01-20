@@ -305,6 +305,7 @@ public class MainActivity extends BaseProtectedActivity
     // static Thread ToxServiceThread = null;
     static Semaphore semaphore_videoout_bitmap = new Semaphore(1);
     static Semaphore semaphore_tox_savedata = new Semaphore(1);
+    static int global_online_friends = 0;
     Handler main_handler = null;
     static Handler main_handler_s = null;
     static Context context_s = null;
@@ -333,6 +334,7 @@ public class MainActivity extends BaseProtectedActivity
     static MapView map = null;
     static TriangleTextView out_count_view = null;
     static TriangleTextView in_count_view = null;
+    static TriangleTextView online_count = null;
     static RoadManager roadManager = null;
     static ExecutorService routing_executor = Executors.newSingleThreadExecutor();
     static Handler handler = new Handler(Looper.getMainLooper());
@@ -693,6 +695,10 @@ public class MainActivity extends BaseProtectedActivity
         in_count_view.updateCount(0);
         in_count_view.setTriangleColor(Color.BLUE);
         in_count_view.setDirection(TriangleTextView.Direction.DOWN);
+        online_count = findViewById(R.id.online_count);
+        online_count.updateCount(0);
+        online_count.setTriangleColor(Color.GRAY);
+        online_count.setDirection(TriangleTextView.Direction.CIRCLE);
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
@@ -5638,6 +5644,33 @@ public class MainActivity extends BaseProtectedActivity
         {
             // we just went OFFLINE
             append_logger_msg(TAG + "::" + "went OFFLINE:self connection status=" + a_TOX_CONNECTION);
+            global_online_friends = 0;
+            try
+            {
+                Runnable myRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            online_count.updateCount(global_online_friends);
+                            online_count.setTriangleColor(Color.GRAY);
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
+                };
+                if (main_handler_s != null)
+                {
+                    main_handler_s.post(myRunnable);
+                }
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
         }
 
         if (bootstrapping)
@@ -5774,6 +5807,75 @@ public class MainActivity extends BaseProtectedActivity
                     // Log.i(TAG, "" + get_friend_name_from_num(friend_number) + " friend_capabilities: " + friend_capabilities + " decoded:" + TOX_CAPABILITY_DECODE_TO_STRING(TOX_CAPABILITY_DECODE(friend_capabilities)) + " " + (1L << 63L));
                     f.capabilities = friend_capabilities;
                     update_friend_in_db_capabilities(f);
+
+                    global_online_friends++;
+                    try
+                    {
+                        Runnable myRunnable = new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    online_count.updateCount(global_online_friends);
+                                    online_count.setTriangleColor(Color.GREEN);
+                                }
+                                catch (Exception e)
+                                {
+                                }
+                            }
+                        };
+                        if (main_handler_s != null)
+                        {
+                            main_handler_s.post(myRunnable);
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+                else if (f.TOX_CONNECTION_real != TOX_CONNECTION_NONE.value)
+                {
+                    global_online_friends--;
+                    if (global_online_friends < 0)
+                    {
+                        global_online_friends = 0;
+                    }
+                    try
+                    {
+                        Runnable myRunnable = new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    online_count.updateCount(global_online_friends);
+                                    if (global_online_friends > 0)
+                                    {
+                                        online_count.setTriangleColor(Color.GREEN);
+                                    }
+                                    else
+                                    {
+                                        online_count.setTriangleColor(Color.GRAY);
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                }
+                            }
+                        };
+                        if (main_handler_s != null)
+                        {
+                            main_handler_s.post(myRunnable);
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
             }
 

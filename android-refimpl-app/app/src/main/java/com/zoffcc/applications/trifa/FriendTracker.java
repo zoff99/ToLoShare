@@ -11,7 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.in_count_view;
 import static com.zoffcc.applications.trifa.MainActivity.out_count_view;
 
@@ -24,7 +23,7 @@ public class FriendTracker {
     private final ConcurrentHashMap<String, Long> friendsMap_out = new ConcurrentHashMap<>();
     // Background thread pool with a single worker thread
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private static final long EXPIRATION_MS = 30_000; // 30 seconds
+    private static final long EXPIRATION_MS = 2_000; // x seconds
 
     public FriendTracker() {
         // Schedule a cleanup task to run every 1 minute
@@ -80,7 +79,7 @@ public class FriendTracker {
         friendsMap_out.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
         friendsMap_in.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
 
-        // Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
+        Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
         try
         {
             mainHandler.post(new Runnable() {
@@ -118,6 +117,7 @@ public class FriendTracker {
         }
         catch(Exception e)
         {
+            e.printStackTrace();
         }
     }
 
