@@ -688,9 +688,9 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "M:STARTUP:setContentView end");
 
         out_count_view = findViewById(R.id.out_count);
-        out_count_view.updateText("0");
+        out_count_view.updateCount(0);
         in_count_view = findViewById(R.id.in_count);
-        in_count_view.updateText("0");
+        in_count_view.updateCount(0);
         in_count_view.setTriangleColor(Color.BLUE);
         in_count_view.setDirection(TriangleTextView.Direction.DOWN);
 

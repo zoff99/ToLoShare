@@ -88,7 +88,7 @@ public class FriendTracker {
                 public void run() {
                     try
                     {
-                        in_count_view.updateText("" + friendsMap_in.size());
+                        in_count_view.updateCount(friendsMap_in.size());
                     }
                     catch(Exception e)
                     {
@@ -108,7 +108,7 @@ public class FriendTracker {
                 public void run() {
                     try
                     {
-                        out_count_view.updateText("" + friendsMap_out.size());
+                        out_count_view.updateCount(friendsMap_out.size());
                     }
                     catch(Exception e)
                     {

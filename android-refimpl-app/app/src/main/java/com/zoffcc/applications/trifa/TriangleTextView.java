@@ -5,11 +5,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
-
-import androidx.annotation.NonNull;
 
 public class TriangleTextView extends View
 {
@@ -24,7 +23,7 @@ public class TriangleTextView extends View
     private float textSizeSp = 18f;
     private int textBottomOffsetDp = 8;
 
-    private String currentText = "0";
+    private int currentCount = 0;
     private int triangleColor = Color.RED;
     private Direction currentDirection = Direction.UP;
 
@@ -33,9 +32,8 @@ public class TriangleTextView extends View
         init();
     }
 
-    // 2. Add this function to update the text from your Activity
-    public void updateText(String newText) {
-        this.currentText = newText;
+    public void updateCount(int newCount) {
+        this.currentCount = newCount;
         invalidate();
     }
 
@@ -89,6 +87,12 @@ public class TriangleTextView extends View
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (currentCount == 0)
+        {
+            canvas.drawColor(Color.TRANSPARENT);
+            return;
+        }
+
         // Convert DP values to Pixels for current screen density
         float sizePx = dpToPx(triangleSizeDp);
         float paddingPx = dpToPx(topPaddingDp);
@@ -125,7 +129,7 @@ public class TriangleTextView extends View
         canvas.drawPath(trianglePath, trianglePaint);
 
         // Draw Text at bottom with DP-based margin
-        canvas.drawText(currentText, centerX, viewHeight - bottomOffsetPx, textPaint);
+        canvas.drawText("" + currentCount, centerX, viewHeight - bottomOffsetPx, textPaint);
     }
 }
 
