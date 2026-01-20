@@ -79,7 +79,7 @@ public class FriendTracker {
         friendsMap_out.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
         friendsMap_in.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
 
-        Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
+        // Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
         try
         {
             mainHandler.post(new Runnable() {

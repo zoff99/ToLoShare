@@ -136,7 +136,7 @@ public class TriangleTextView extends View
 
         if (currentDirection == Direction.CIRCLE)
         {
-            canvas.drawCircle(centerX, paddingPx + (sizePx / 2), sizePx, trianglePaint);
+            canvas.drawCircle(centerX, paddingPx + sizePx, sizePx, trianglePaint);
         }
         else
         {

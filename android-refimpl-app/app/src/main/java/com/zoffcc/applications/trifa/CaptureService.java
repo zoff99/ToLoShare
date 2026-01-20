@@ -360,9 +360,9 @@ public class CaptureService extends Service
             {
                 //noinspection unused
                 final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
-                // Log.i(TAG1, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+                // Log.i(TAG, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
 
-                if (res == 0)
+                if (res == 1)
                 {
                     try
                     {
