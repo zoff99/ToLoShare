@@ -31,11 +31,15 @@ public class FriendTracker {
     }
 
     public void ping_incoming(String friend_key) {
+        int old_friendsMap_in_size = friendsMap_in.size();
         friendsMap_in.put(friend_key, System.currentTimeMillis());
+        do_paint_in(old_friendsMap_in_size);
     }
 
     public void ping_outgoing(String friend_key) {
+        int old_friendsMap_out_size = friendsMap_out.size();
         friendsMap_out.put(friend_key, System.currentTimeMillis());
+        do_paint_out(old_friendsMap_out_size);
     }
 
     public boolean isActive_in(String friend_key) {
@@ -75,49 +79,70 @@ public class FriendTracker {
      * Periodically removes expired entries from memory.
      */
     private void cleanup() {
+        int old_friendsMap_in_size = friendsMap_in.size();
+        int old_friendsMap_out_size = friendsMap_out.size();
         long now = System.currentTimeMillis();
         friendsMap_out.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
         friendsMap_in.entrySet().removeIf(entry -> (now - entry.getValue() > EXPIRATION_MS));
 
         // Log.i(TAG, "cleanup: out=" + friendsMap_out.size() + " in=" + friendsMap_in.size());
-        try
-        {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    try
-                    {
-                        in_count_view.updateCount(friendsMap_in.size());
-                    }
-                    catch(Exception e)
-                    {
-                    }
-                }
-            });
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
+        do_paint_out(old_friendsMap_out_size);
+        do_paint_in(old_friendsMap_in_size);
+    }
 
-        try
+    private void do_paint_in(int old_size)
+    {
+        if (old_size != friendsMap_in.size())
         {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    try
+            try
+            {
+                mainHandler.post(new Runnable()
+                {
+                    @Override
+                    public void run()
                     {
-                        out_count_view.updateCount(friendsMap_out.size());
+                        try
+                        {
+                            in_count_view.updateCount(friendsMap_in.size());
+                        }
+                        catch (Exception e)
+                        {
+                        }
                     }
-                    catch(Exception e)
-                    {
-                    }
-                }
-            });
+                });
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
-        catch(Exception e)
+    }
+
+    private void do_paint_out(int old_size)
+    {
+        if (old_size != friendsMap_out.size())
         {
-            e.printStackTrace();
+            try
+            {
+                mainHandler.post(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            out_count_view.updateCount(friendsMap_out.size());
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
