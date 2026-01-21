@@ -5639,11 +5639,25 @@ public class MainActivity extends BaseProtectedActivity
         {
             // we just went online
             append_logger_msg(TAG + "::" + "went online:self connection status=" + a_TOX_CONNECTION);
+            try
+            {
+                f_tracker.cleanup();
+            }
+            catch(Exception ignored)
+            {
+            }
         }
         else if ((connection_status_prev != TOX_CONNECTION_NONE.value) && (a_TOX_CONNECTION == TOX_CONNECTION_NONE.value))
         {
             // we just went OFFLINE
             append_logger_msg(TAG + "::" + "went OFFLINE:self connection status=" + a_TOX_CONNECTION);
+            try
+            {
+                f_tracker.cleanup();
+            }
+            catch(Exception ignored)
+            {
+            }
             global_online_friends = 0;
             try
             {
@@ -5808,6 +5822,13 @@ public class MainActivity extends BaseProtectedActivity
                     f.capabilities = friend_capabilities;
                     update_friend_in_db_capabilities(f);
 
+                    try
+                    {
+                        f_tracker.cleanup();
+                    }
+                    catch(Exception ignored)
+                    {
+                    }
                     global_online_friends++;
                     try
                     {
@@ -5838,6 +5859,13 @@ public class MainActivity extends BaseProtectedActivity
                 }
                 else if (f.TOX_CONNECTION_real != TOX_CONNECTION_NONE.value)
                 {
+                    try
+                    {
+                        f_tracker.cleanup();
+                    }
+                    catch(Exception ignored)
+                    {
+                    }
                     global_online_friends--;
                     if (global_online_friends < 0)
                     {
