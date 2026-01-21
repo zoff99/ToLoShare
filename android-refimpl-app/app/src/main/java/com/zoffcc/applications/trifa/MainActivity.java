@@ -71,6 +71,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -2193,9 +2194,11 @@ public class MainActivity extends BaseProtectedActivity
             }
             remove_map_overlays();
             map.onPause();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
         else
         {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             map.onResume();
             Log.i(TAG, "OOO:x:1");
             // enable_mylocation_overlay();
@@ -2257,6 +2260,7 @@ public class MainActivity extends BaseProtectedActivity
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
                     main_gallery_container.bringToFront();
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     map.onResume();
                     Log.i(TAG, "OOO:x:2");
                     Log.i(TAG, "remove_map_overlays:006");
@@ -2269,6 +2273,7 @@ public class MainActivity extends BaseProtectedActivity
                     Log.i(TAG, "remove_map_overlays:006b");
                     remove_map_overlays();
                     map.onPause();
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 }
             }
         });
@@ -4140,6 +4145,7 @@ public class MainActivity extends BaseProtectedActivity
         map.onPause();
 
         super.onPause();
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         global_showing_mainview = false;
         try
@@ -4162,6 +4168,7 @@ public class MainActivity extends BaseProtectedActivity
         global_showing_mainview = true;
         if (!PREF__normal_main_view)
         {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             map.onResume();
 
             try
@@ -4206,6 +4213,10 @@ public class MainActivity extends BaseProtectedActivity
             catch(Exception e)
             {
             }
+        }
+        else
+        {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
 
