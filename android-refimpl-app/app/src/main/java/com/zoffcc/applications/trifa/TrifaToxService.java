@@ -141,6 +141,7 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.RESEND_MSGS_DELTA_SECS;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_BOOTSTRAP_AGAIN_AFTER_OFFLINE_MILLIS;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_BOOTSTRAP_MIN_INTERVAL_SECS;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_MIN_NORMAL_ITERATE_DELTA_MS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_SHORTEST_NORMAL_ITERATE_DELTA_MS;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_FILE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_MSG_TYPE.TRIFA_MSG_TYPE_TEXT;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.USE_MAX_NUMBER_OF_BOOTSTRAP_NODES;
@@ -1017,9 +1018,9 @@ public class TrifaToxService extends Service
                 {
                     try
                     {
-                        if (tox_iteration_interval_ms < 1)
+                        if (tox_iteration_interval_ms < TOX_SHORTEST_NORMAL_ITERATE_DELTA_MS)
                         {
-                            Thread.sleep(1);
+                            Thread.sleep(TOX_SHORTEST_NORMAL_ITERATE_DELTA_MS);
                         }
                         else
                         {
@@ -1112,34 +1113,7 @@ public class TrifaToxService extends Service
 
                     MainActivity.tox_iterate();
 
-                    if (global_last_activity_outgoung_ft_ts > -1)
-                    {
-                        if ((global_last_activity_outgoung_ft_ts + 200) > System.currentTimeMillis())
-                        {
-                            // iterate faster if outgoing filetransfers are active
-                            tox_iteration_interval_ms = 5;
-                        }
-                        else
-                        {
-                            tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
-                        }
-                    }
-                    else if (global_last_activity_incoming_ft_ts > -1)
-                    {
-                        if ((global_last_activity_incoming_ft_ts + 200) > System.currentTimeMillis())
-                        {
-                            // iterate faster if incoming filetransfers are active
-                            tox_iteration_interval_ms = 5;
-                        }
-                        else
-                        {
-                            tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
-                        }
-                    }
-                    else
-                    {
-                        tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
-                    }
+                    tox_iteration_interval_ms = Math.max(TOX_MIN_NORMAL_ITERATE_DELTA_MS, MainActivity.tox_iteration_interval());
 
                     if ((last_check_battery_percent_ms + (CHECK_BATTERY_PERCENT_DELTA_SECS * 1000L)) < System.currentTimeMillis())
                     {

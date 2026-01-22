@@ -42,6 +42,7 @@ public class TRIFAGlobals
     static boolean global_showing_messageview = false;
     static boolean global_showing_mainview = false;
     final static int TOX_MIN_NORMAL_ITERATE_DELTA_MS = 100;
+    final static int TOX_SHORTEST_NORMAL_ITERATE_DELTA_MS = 40;
     static int global_tox_self_status = ToxVars.TOX_USER_STATUS.TOX_USER_STATUS_NONE.value;
 
     static String global_notification_token = null;
