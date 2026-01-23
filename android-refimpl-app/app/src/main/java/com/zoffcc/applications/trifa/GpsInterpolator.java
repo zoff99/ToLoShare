@@ -1,12 +1,8 @@
 package com.zoffcc.applications.trifa;
 
-import android.animation.ValueAnimator;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.view.animation.LinearInterpolator;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -30,8 +26,6 @@ public class GpsInterpolator
     private double lastBearing;
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
-    private Handler interpolationHandler = new Handler(Looper.getMainLooper());
-    private Runnable interpolationRunnable;
 
     void push_geo_pos(double newLat, double newLon, double newBearing, float acc, boolean has_bearing, String f_pubkey)
     {
@@ -85,101 +79,106 @@ public class GpsInterpolator
         }
     }
 
+    /**
+     * Called on every new GPS update.
+     * Calculates the time since the last update and sleeps between steps.
+     */
     public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing,
-                            boolean old_has_bearing, float acc, int steps, String f_pubkey) {
+                            boolean old_has_bearing,
+                            float acc, int steps, String f_pubkey) {
         long currentTime = System.currentTimeMillis();
+
+        // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
-        // 1. Validation & Instant Update Logic
-        if ((!PREF__gps_smooth_friends) || (isFirstFix) ||
-            (timeDelta < GPS_UPDATE_FREQ_MS_MIN) || (timeDelta > GPS_UPDATE_FREQ_MS_MAX)) {
+        // Log.i(TAG, "onGpsUpdate: timeDelta=" + timeDelta);
 
-            stopAnimation();
-            updateState(newLat, newLon, has_bearing ? newBearing_ : lastBearing, currentTime);
-            push_geo_pos(lastLat, lastLon, lastBearing, acc, has_bearing, f_pubkey);
+        double newBearing;
+        if ((!PREF__gps_smooth_friends) || (isFirstFix) ||
+            (timeDelta < GPS_UPDATE_FREQ_MS_MIN) ||
+            (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
+            lastLat = newLat;
+            lastLon = newLon;
+            if (old_has_bearing != has_bearing)
+            {
+                newBearing = newBearing_;
+            }
+            else if (has_bearing)
+            {
+                newBearing = newBearing_;
+            }
+            else
+            {
+                newBearing = lastBearing;
+            }
+            lastBearing = newBearing;
+            lastUpdateTime = currentTime;
             isFirstFix = false;
+            push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey);
             return;
         }
 
-        // 2. Prepare Interpolation Constants
-        final double startLat = lastLat;
-        final double startLon = lastLon;
-        final double startBearing = lastBearing;
-        final double targetBearing = has_bearing ? newBearing_ : lastBearing;
-        final long animationDuration = timeDelta;
-        final long startTime = System.currentTimeMillis();
-        final long frameDelay = 50; // 50ms = 20 FPS
+        if (has_bearing)
+        {
+            newBearing = newBearing_;
+        }
+        else
+        {
+            newBearing = lastBearing;
+        }
 
-        // 3. Stop any previous animation before starting a new one
-        stopAnimation();
+        lastUpdateTime = currentTime;
 
-        // 4. Manual Animation Loop (20 FPS)
-        interpolationRunnable = new Runnable() {
-            @Override
-            public void run() {
-                long elapsed = System.currentTimeMillis() - startTime;
-                double fraction = (double) elapsed / animationDuration;
+        // Determine sleep time per step (total delta / number of steps)
+        long sleepTimePerStep = timeDelta / steps;
 
-                if (fraction >= 1.0) {
-                    // Ensure we hit the exact final coordinate
-                    push_geo_pos(newLat, newLon, targetBearing, acc, has_bearing, f_pubkey);
-                    return;
-                }
+        for (int i = 1; i <= steps; i++) {
+            double fraction = (double) i / steps;
 
-                // Calculate current step
-                double currLat = startLat + (newLat - startLat) * fraction;
-                double currLon = startLon + (newLon - startLon) * fraction;
-                double currBearing = (old_has_bearing == has_bearing && has_bearing)
-                        ? interpolateBearing(startBearing, targetBearing, fraction)
-                        : targetBearing;
+            // Interpolate Coordinates
+            double interpolatedLat = lastLat + (newLat - lastLat) * fraction;
+            double interpolatedLon = lastLon + (newLon - lastLon) * fraction;
 
-                push_geo_pos(currLat, currLon, currBearing, acc, has_bearing, f_pubkey);
-
-                // Schedule next frame at 20 FPS
-                interpolationHandler.postDelayed(this, frameDelay);
+            // Interpolate Bearing (Shortest path)
+            double interpolatedBearing;
+            if (old_has_bearing != has_bearing)
+            {
+                interpolatedBearing = newBearing;
             }
-        };
+            else if (has_bearing)
+            {
+                interpolatedBearing = interpolateBearing(lastBearing, newBearing, fraction);
+            }
+            else
+            {
+                interpolatedBearing = lastBearing;
+            }
 
-        interpolationHandler.post(interpolationRunnable);
-
-        // Update state so the next GPS update knows where to start from
-        updateState(newLat, newLon, targetBearing, currentTime);
-    }
-
-    private void stopAnimation() {
-        if (interpolationRunnable != null) {
-            interpolationHandler.removeCallbacks(interpolationRunnable);
+            // Sleep to create smooth visual motion
+            try {
+                if ((sleepTimePerStep > 0) && (i > 1)) {
+                    Thread.sleep(sleepTimePerStep);
+                }
+                // Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
+                //            ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
+                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+                break;
+            }
         }
+
+        // Update state for next fix
+        lastLat = newLat;
+        lastLon = newLon;
+        lastBearing = newBearing;
     }
 
-    private void updateState(double lat, double lon, double bearing, long time) {
-        lastLat = lat;
-        lastLon = lon;
-        lastBearing = bearing;
-        lastUpdateTime = time;
-    }
-
-    /**
-     * Calculates the shortest path between two angles (0-360).
-     * Prevents the "spinning" bug when crossing the 359 -> 0 degree threshold.
-     */
     private double interpolateBearing(double start, double end, double fraction) {
-        // Normalize angles just in case
-        double startMod = (start % 360 + 360) % 360;
-        double endMod = (end % 360 + 360) % 360;
-
-        double diff = endMod - startMod;
-
-        // If the difference is more than 180, the shortest path is across the 360/0 line
-        if (diff > 180) {
-            diff -= 360;
-        } else if (diff < -180) {
-            diff += 360;
-        }
-
-        double result = startMod + (diff * fraction);
-
-        // Ensure the result stays within 0-360 range
+        double diff = end - start;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        double result = start + diff * fraction;
         return (result + 360) % 360;
     }
 }
