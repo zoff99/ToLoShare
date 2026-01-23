@@ -86,17 +86,17 @@ public class GpsInterpolator
     public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing,
                             boolean old_has_bearing,
                             float acc, int steps, String f_pubkey) {
+
         long currentTime = System.currentTimeMillis();
 
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
 
         // Log.i(TAG, "onGpsUpdate: timeDelta=" + timeDelta);
-
         double newBearing;
-        if ((!PREF__gps_smooth_friends) || (isFirstFix) ||
-            (timeDelta < GPS_UPDATE_FREQ_MS_MIN) ||
-            (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
+
+        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (steps < 1) || (steps > 30))
+        {
             lastLat = newLat;
             lastLon = newLon;
             if (old_has_bearing != has_bearing)
@@ -118,6 +118,11 @@ public class GpsInterpolator
             return;
         }
 
+        if (timeDelta > GPS_UPDATE_FREQ_MS_MAX)
+        {
+            timeDelta = 1000;
+        }
+
         if (has_bearing)
         {
             newBearing = newBearing_;
@@ -128,6 +133,9 @@ public class GpsInterpolator
         }
 
         lastUpdateTime = currentTime;
+        double lastLat_copy = lastLat;
+        double lastLon_copy = lastLon;
+        double lastBearing_copy = lastBearing;
 
         // Determine sleep time per step (total delta / number of steps)
         long sleepTimePerStep = timeDelta / steps;
@@ -136,8 +144,8 @@ public class GpsInterpolator
             double fraction = (double) i / steps;
 
             // Interpolate Coordinates
-            double interpolatedLat = lastLat + (newLat - lastLat) * fraction;
-            double interpolatedLon = lastLon + (newLon - lastLon) * fraction;
+            double interpolatedLat = lastLat_copy + (newLat - lastLat_copy) * fraction;
+            double interpolatedLon = lastLon_copy + (newLon - lastLon_copy) * fraction;
 
             // Interpolate Bearing (Shortest path)
             double interpolatedBearing;
@@ -147,12 +155,17 @@ public class GpsInterpolator
             }
             else if (has_bearing)
             {
-                interpolatedBearing = interpolateBearing(lastBearing, newBearing, fraction);
+                interpolatedBearing = interpolateBearing(lastBearing_copy, newBearing, fraction);
             }
             else
             {
-                interpolatedBearing = lastBearing;
+                interpolatedBearing = lastBearing_copy;
             }
+
+            // Update state for next fix
+            lastLat = newLat;
+            lastLon = newLon;
+            lastBearing = newBearing;
 
             // Sleep to create smooth visual motion
             try {
@@ -167,11 +180,6 @@ public class GpsInterpolator
                 break;
             }
         }
-
-        // Update state for next fix
-        lastLat = newLat;
-        lastLon = newLon;
-        lastBearing = newBearing;
     }
 
     private double interpolateBearing(double start, double end, double fraction) {
