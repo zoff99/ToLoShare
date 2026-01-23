@@ -349,8 +349,8 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
     //**MOCK**// private MockLocationSimulator simulator;
-    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 1;
-    //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
+     static int NUMBER_OF_MOCK_FRIENDS = 1;
+     private MockFriendLocationSimulator[] friend_simulator;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -2295,12 +2295,12 @@ public class MainActivity extends BaseProtectedActivity
         // Start the driving simulation
         //**MOCK**// simulator.startSimulation();
 
-        //**MOCK**// friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
-        //**MOCK**// for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
-        //**MOCK**// {
-        //**MOCK**//     friend_simulator[j] = new MockFriendLocationSimulator(this, j);
-        //**MOCK**//     friend_simulator[j].startSimulation();
-        //**MOCK**// }
+         friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
+         for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+         {
+             friend_simulator[j] = new MockFriendLocationSimulator(this, j);
+             friend_simulator[j].startSimulation();
+         }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
@@ -6167,12 +6167,12 @@ public class MainActivity extends BaseProtectedActivity
                                         {
                                             f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
 
-                                            //**MOCK**//
-                                            //**MOCK**// if ((f_pubkey == null) || (f_pubkey.equals("-1")))
-                                            //**MOCK**// {
-                                            //**MOCK**//     f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
-                                            //**MOCK**// }
-                                            //**MOCK**//
+
+                                             if ((f_pubkey == null) || (f_pubkey.equals("-1")))
+                                             {
+                                                 f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                             }
+
 
                                             if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                             {
@@ -6200,9 +6200,9 @@ public class MainActivity extends BaseProtectedActivity
                                         }
                                         catch (Exception e)
                                         {
-                                            //**MOCK**//
-                                            //**MOCK**// f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
-                                            //**MOCK**//
+
+                                             f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+
                                         }
 
                                         try
