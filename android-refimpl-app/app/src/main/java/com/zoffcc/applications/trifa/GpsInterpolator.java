@@ -91,6 +91,10 @@ public class GpsInterpolator
 
         // Calculate time elapsed since last GPS fix
         long timeDelta = currentTime - lastUpdateTime;
+        if (timeDelta < 1)
+        {
+            timeDelta = 1;
+        }
 
         // Log.i(TAG, "onGpsUpdate: timeDelta=" + timeDelta);
         double newBearing;
