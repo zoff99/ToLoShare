@@ -35,9 +35,18 @@ public class MockFriendLocationSimulator {
             @Override
             public void run() {
                 updateMockLocation();
-                final int baseDelay = 1000;
-                final int JITTER = 600;
-                int jitter = new java.util.Random().nextInt(JITTER + 1) - (JITTER /  2);
+
+                int baseDelay = 1000;
+                final int JITTER = 300;
+
+                // Simulate a "lost" update or network lag (e.g., 10% chance)
+                // If triggered, the next update will happen in ~2000ms instead of ~1000ms
+                if (new java.util.Random().nextDouble() < 0.10) {
+                    baseDelay = 2000;
+                }
+
+                int jitter = new java.util.Random().nextInt(JITTER + 1) - (JITTER / 2);
+
                 mainHandler.postDelayed(this, baseDelay + jitter);
             }
         });
@@ -77,11 +86,12 @@ public class MockFriendLocationSimulator {
      */
     private void runDrivingScript() {
         // 0s: Start driving straight at 10m/s
+        actionHandler.postDelayed(() -> setSpeed(10.0f), 0);
 
         // 5s: Speed up to 25m/s (~90 km/h)
         actionHandler.postDelayed(() -> setSpeed(25.0f), 5000);
 
-        /*
+
         // 10s: Turn 90 degrees right (East)
         actionHandler.postDelayed(() -> turn(90), 10000);
 
@@ -98,13 +108,13 @@ public class MockFriendLocationSimulator {
         // 30s: Stop at a red light
         actionHandler.postDelayed(() -> setStopped(true), 30000);
 
-        // 35s: Slow down to 1m/s (~3 km/h)
+        // 35s: Slow down
         actionHandler.postDelayed(() -> {
             setStopped(false);
-            setSpeed(1.0f);
+            setSpeed(7.0f);
         }, 35000);
 
-         */
+
     }
 
     private void updateMockLocation() {
