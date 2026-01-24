@@ -55,7 +55,7 @@ public class CaptureService extends Service
     static boolean GPS_SERVICE_STARTED = false;
     private static final int _30_SECONDS = 1000 * 30;
     static final int GPS_UPDATE_FREQ_MS = 1000;
-    static final int JITTER_LOC_DELTA_MS = 400;
+    static final int JITTER_LOC_DELTA_MS = 300;
     static final int GPS_UPDATE_FREQ_MS_MIN = 1000 - JITTER_LOC_DELTA_MS;
     static final int GPS_UPDATE_FREQ_MS_MAX = 1000 + JITTER_LOC_DELTA_MS;
     Notification notification_gps = null;
