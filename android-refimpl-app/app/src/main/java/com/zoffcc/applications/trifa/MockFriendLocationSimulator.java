@@ -17,8 +17,8 @@ public class MockFriendLocationSimulator {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Handler actionHandler = new Handler(Looper.getMainLooper());
 
-    private double currentLat = 48.2085;
-    private double currentLng = 16.3730;
+    private double currentLat = 48.20182007532241;
+    private double currentLng = 16.34695813573697;
     private float currentSpeedMs = 10.0f; // Start at ~36 km/h
     private float internalBearing = 0.0f;
     private boolean isStopped = false;
