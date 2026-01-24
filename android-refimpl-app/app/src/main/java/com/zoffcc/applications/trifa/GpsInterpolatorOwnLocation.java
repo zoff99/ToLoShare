@@ -8,6 +8,7 @@ import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MA
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
@@ -66,12 +67,15 @@ public class GpsInterpolatorOwnLocation
         long currentTime = System.currentTimeMillis();
 
         // Calculate time elapsed since last GPS fix
-        long timeDelta = currentTime - lastUpdateTime;
         // Log.i(TAG, "timeDelta=" + timeDelta + " isFirstFix=" + isFirstFix);
+        long timeDelta = currentTime - lastUpdateTime;
+        if (timeDelta < 1)
+        {
+            timeDelta = 1;
+        }
 
-        if ((!PREF__gps_smooth_own) || (isFirstFix) ||
-            (timeDelta < GPS_UPDATE_FREQ_MS_MIN) ||
-            (timeDelta > GPS_UPDATE_FREQ_MS_MAX) || (steps < 1) || (steps > 30)) {
+        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (steps < 1) || (steps > 30))
+        {
             lastLat = location.getLatitude();
             lastLon = location.getLongitude();
             if (lastHasBearing != location.hasBearing())
@@ -91,6 +95,11 @@ public class GpsInterpolatorOwnLocation
             return;
         }
 
+        if (timeDelta > GPS_UPDATE_FREQ_MS_MAX)
+        {
+            timeDelta = 1000;
+        }
+
         if (lastHasBearing != location.hasBearing())
         {
             lastBearing = location.getBearing();
@@ -98,6 +107,9 @@ public class GpsInterpolatorOwnLocation
 
         // Update state for next fix
         lastUpdateTime = currentTime;
+        double lastLat_copy = lastLat;
+        double lastLon_copy = lastLon;
+        double lastBearing_copy = lastBearing;
 
         // Determine sleep time per step (total delta / number of steps)
         long sleepTimePerStep = timeDelta / steps;
@@ -106,23 +118,29 @@ public class GpsInterpolatorOwnLocation
             double fraction = (double) i / steps;
 
             // Interpolate Coordinates
-            double interpolatedLat = lastLat + (location.getLatitude() - lastLat) * fraction;
-            double interpolatedLon = lastLon + (location.getLongitude() - lastLon) * fraction;
+            double interpolatedLat = lastLat_copy + (location.getLatitude() - lastLat_copy) * fraction;
+            double interpolatedLon = lastLon_copy + (location.getLongitude() - lastLon_copy) * fraction;
 
             // Interpolate Bearing (Shortest path)
             double interpolatedBearing;
             if (lastHasBearing != location.hasBearing())
             {
-                interpolatedBearing = lastBearing;
+                interpolatedBearing = lastBearing_copy;
             }
             else if (location.hasBearing())
             {
-                interpolatedBearing = interpolateBearing(lastBearing, location.getBearing(), fraction);
+                interpolatedBearing = interpolateBearing(lastBearing_copy, location.getBearing(), fraction);
             }
             else
             {
-                interpolatedBearing = lastBearing;
+                interpolatedBearing = lastBearing_copy;
             }
+
+            // Update state for next fix
+            lastLat = location.getLatitude();
+            lastLon = location.getLongitude();
+            lastBearing = location.getBearing();
+            lastHasBearing = location.hasBearing();
 
             // Sleep to create smooth visual motion
             try {
@@ -139,11 +157,6 @@ public class GpsInterpolatorOwnLocation
                 break;
             }
         }
-
-        lastLat = location.getLatitude();
-        lastLon = location.getLongitude();
-        lastBearing = location.getBearing();
-        lastHasBearing = location.hasBearing();
         // Log.i(TAG, "** DONE **");
     }
 
