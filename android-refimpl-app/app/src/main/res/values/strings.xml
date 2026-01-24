@@ -171,6 +171,10 @@
     <string name="pref_title_start_on_boot">start on boot</string>
     <string name="pref_description_start_on_boot">start the application after boot.\nGoogle does not allow this anymore starting with Android 10</string>
 
+    <string name="pref_title_keep_screen_on_when_map">keep screen with map</string>
+    <string name="pref_description_keep_screen_on_when_map">keep the screen turned on, and prevent the phone from locking, when the map is displayed</string>
+
+
     <string name="pref_title_use_incognito_keyboard2">incognito Keyboard</string>
     <string name="pref_description_use_incognito_keyboard2">turn on to tell keyboard not to learn from your entered words</string>
 

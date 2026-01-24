@@ -528,6 +528,7 @@ public class MainActivity extends BaseProtectedActivity
     static double PREF__map_last_lat = 48.2085f;
     static double PREF__map_last_lon = 16.3730f;
 
+    static boolean PREF__keep_screen_on_when_map = false;
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_dead_reconing_own = false; // keep "false", this it not really working properly!!
     static boolean PREF__gps_smooth_friends = false;
@@ -2198,7 +2199,10 @@ public class MainActivity extends BaseProtectedActivity
         }
         else
         {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            if (PREF__keep_screen_on_when_map)
+            {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
             map.onResume();
             Log.i(TAG, "OOO:x:1");
             // enable_mylocation_overlay();
@@ -2223,6 +2227,7 @@ public class MainActivity extends BaseProtectedActivity
         switch_own_gps_smoothing.setChecked(PREF__gps_smooth_own);
         switch_friend_gps_smoothing.setChecked(PREF__gps_smooth_friends);
 
+        PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
 
         switch_own_gps_smoothing.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
@@ -2260,7 +2265,10 @@ public class MainActivity extends BaseProtectedActivity
                     waiting_container.setVisibility(View.GONE);
                     main_gallery_container.setVisibility(View.VISIBLE);
                     main_gallery_container.bringToFront();
-                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    if (PREF__keep_screen_on_when_map)
+                    {
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    }
                     map.onResume();
                     Log.i(TAG, "OOO:x:2");
                     Log.i(TAG, "remove_map_overlays:006");
@@ -4168,7 +4176,10 @@ public class MainActivity extends BaseProtectedActivity
         global_showing_mainview = true;
         if (!PREF__normal_main_view)
         {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            if (PREF__keep_screen_on_when_map)
+            {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
             map.onResume();
 
             try
@@ -4318,6 +4329,8 @@ public class MainActivity extends BaseProtectedActivity
         PREF__window_security = settings.getBoolean("window_security", true);
         PREF__use_native_audio_play = settings.getBoolean("X_use_native_audio_play", true);
         PREF__tox_set_do_not_sync_av = settings.getBoolean("X_tox_set_do_not_sync_av", false);
+
+        PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
 
         PREF__map_follow_mode = settings.getInt("map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
         set_follow_button_ui();

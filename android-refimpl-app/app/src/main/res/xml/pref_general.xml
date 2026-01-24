@@ -17,6 +17,12 @@
 
         <SwitchPreference
             android:defaultValue="false"
+            android:key="keep_screen_on_when_map"
+            android:summary="@string/pref_description_keep_screen_on_when_map"
+            android:title="@string/pref_title_keep_screen_on_when_map" />
+
+        <SwitchPreference
+            android:defaultValue="false"
             android:key="use_push_service"
             android:summary="@string/pref_description_use_push_service"
             android:title="@string/pref_title_use_push_service" />
