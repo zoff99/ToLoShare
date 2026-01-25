@@ -278,7 +278,7 @@ dependencies {
         transitive = true
     }
     //
-    implementation 'com.github.zoff99:pkgs_zoffccAndroidJDBC:1.0.20'
+    implementation 'com.github.zoff99:pkgs_zoffccAndroidJDBC:1.0.21'
     //
     implementation 'org.osmdroid:osmdroid-android:6.1.20'
     implementation 'com.github.MKergall:osmbonuspack:6.9.0'
