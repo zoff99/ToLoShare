@@ -6295,7 +6295,6 @@ public class MainActivity extends BaseProtectedActivity
                                             }
                                         }
                                         else if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) && (f_pubkey_pseudo_num_1.equals(f_pubkey)))
-
                                         {
                                             String final_f_pubkey = f_pubkey;
                                             Runnable myRunnable = new Runnable()
