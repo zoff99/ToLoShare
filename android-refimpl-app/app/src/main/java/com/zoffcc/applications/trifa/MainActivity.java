@@ -253,6 +253,7 @@ import static com.zoffcc.applications.trifa.TrifaToxService.manually_logged_out;
 import static com.zoffcc.applications.trifa.TrifaToxService.orma;
 import static com.zoffcc.applications.trifa.TrifaToxService.vfs;
 import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_CAR;
+import static org.osmdroid.bonuspack.routing.Road.STATUS_OK;
 
 /*
 
@@ -834,27 +835,14 @@ public class MainActivity extends BaseProtectedActivity
             @Override
             public void onClick(View view)
             {
+                clear_all_routes();
                 try
                 {
                     routing_executor.execute(() -> {
                         try
                         {
                             String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
-                            if (f_pubkey != null)
-                            {
-                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                ArrayList<GeoPoint> waypoints = new ArrayList<>();
-                                GeoPoint startPoint = new GeoPoint(currentBestLocation.getLatitude(),
-                                                                   currentBestLocation.getLongitude());
-                                GeoPoint endPoint = new GeoPoint(re.remoteBestLocation.getLatitude(),
-                                                                 re.remoteBestLocation.getLongitude());
-                                waypoints.add(startPoint);
-                                waypoints.add(endPoint);
-                                Road road = roadManager.getRoad(waypoints);
-                                Polyline roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
-                                map.getOverlays().add(roadOverlay);
-                                map.invalidate();
-                            }
+                            get_route(f_pubkey);
                         }
                         catch(Exception e)
                         {
@@ -900,27 +888,14 @@ public class MainActivity extends BaseProtectedActivity
             @Override
             public void onClick(View view)
             {
+                clear_all_routes();
                 try
                 {
                     routing_executor.execute(() -> {
                         try
                         {
                             String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(1);
-                            if (f_pubkey != null)
-                            {
-                                CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                ArrayList<GeoPoint> waypoints = new ArrayList<>();
-                                GeoPoint startPoint = new GeoPoint(currentBestLocation.getLatitude(),
-                                                                   currentBestLocation.getLongitude());
-                                GeoPoint endPoint = new GeoPoint(re.remoteBestLocation.getLatitude(),
-                                                                 re.remoteBestLocation.getLongitude());
-                                waypoints.add(startPoint);
-                                waypoints.add(endPoint);
-                                Road road = roadManager.getRoad(waypoints);
-                                Polyline roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
-                                map.getOverlays().add(roadOverlay);
-                                map.invalidate();
-                            }
+                            get_route(f_pubkey);
                         }
                         catch(Exception e)
                         {
@@ -951,37 +926,7 @@ public class MainActivity extends BaseProtectedActivity
                 {
                 }
 
-                try
-                {
-                    routing_executor.execute(() -> {
-                        try
-                        {
-                            try
-                            {
-                                for (Overlay ov : map.getOverlays())
-                                {
-                                    Log.i(TAG, "OVXXXX:44:" + ov + " " + ov.getClass());
-                                    if (ov.getClass().getName().equals("org.osmdroid.views.overlay.Polyline"))
-                                    {
-                                        Log.i(TAG, "OVXXXX:44:remove");
-                                        map.getOverlays().remove(ov);
-                                    }
-                                }
-                            }
-                            catch(Exception e)
-                            {
-                            }
-                            map.invalidate();
-                        }
-                        catch(Exception e)
-                        {
-                        }
-                    });
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                }
+                clear_all_routes();
             }
         });
 
@@ -2315,6 +2260,63 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**// }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
+    }
+
+    private static void get_route(String f_pubkey)
+    {
+        if (f_pubkey != null)
+        {
+            CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+            ArrayList<GeoPoint> waypoints = new ArrayList<>();
+            GeoPoint startPoint = new GeoPoint(currentBestLocation.getLatitude(),
+                                               currentBestLocation.getLongitude());
+            GeoPoint endPoint = new GeoPoint(re.remoteBestLocation.getLatitude(),
+                                             re.remoteBestLocation.getLongitude());
+            waypoints.add(startPoint);
+            waypoints.add(endPoint);
+            Road road = roadManager.getRoad(waypoints);
+            if (road.mStatus == STATUS_OK)
+            {
+                Polyline roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
+                map.getOverlays().add(roadOverlay);
+            }
+            map.invalidate();
+        }
+    }
+
+    private static void clear_all_routes()
+    {
+        try
+        {
+            routing_executor.execute(() -> {
+                try
+                {
+                    try
+                    {
+                        for (Overlay ov : map.getOverlays())
+                        {
+                            Log.i(TAG, "OVXXXX:44:" + ov + " " + ov.getClass());
+                            if (ov.getClass().getName().equals("org.osmdroid.views.overlay.Polyline"))
+                            {
+                                Log.i(TAG, "OVXXXX:44:remove");
+                                map.getOverlays().remove(ov);
+                            }
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                    map.invalidate();
+                }
+                catch(Exception e)
+                {
+                }
+            });
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private static void enable_mylocation_overlay()
