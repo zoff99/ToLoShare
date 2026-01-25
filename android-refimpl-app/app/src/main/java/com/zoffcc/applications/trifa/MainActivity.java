@@ -2195,6 +2195,7 @@ public class MainActivity extends BaseProtectedActivity
             }
             remove_map_overlays();
             map.onPause();
+            friend_locations.onPause();
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
         else
@@ -2204,6 +2205,7 @@ public class MainActivity extends BaseProtectedActivity
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             }
             map.onResume();
+            friend_locations.onResume();
             Log.i(TAG, "OOO:x:1");
             // enable_mylocation_overlay();
             Log.i(TAG, "remove_map_overlays:005");
@@ -2270,6 +2272,7 @@ public class MainActivity extends BaseProtectedActivity
                         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     }
                     map.onResume();
+                    friend_locations.onResume();
                     Log.i(TAG, "OOO:x:2");
                     Log.i(TAG, "remove_map_overlays:006");
                     remove_map_overlays();
@@ -2281,6 +2284,7 @@ public class MainActivity extends BaseProtectedActivity
                     Log.i(TAG, "remove_map_overlays:006b");
                     remove_map_overlays();
                     map.onPause();
+                    friend_locations.onPause();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 }
             }
@@ -4151,6 +4155,7 @@ public class MainActivity extends BaseProtectedActivity
 
         // mLocationOverlay.disableMyLocation();
         map.onPause();
+        friend_locations.onPause();
 
         super.onPause();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -4181,6 +4186,7 @@ public class MainActivity extends BaseProtectedActivity
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             }
             map.onResume();
+            friend_locations.onResume();
 
             try
             {
@@ -6252,11 +6258,16 @@ public class MainActivity extends BaseProtectedActivity
 
                                         try
                                         {
-                                            CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                            if (f_pubkey != null)
+                                            if (friend_locations.isRunning)
                                             {
-                                                re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing, old_has_bearing,
-                                                                     acc, SMOOTH_POS_STEPS_FRIENDS, f_pubkey);
+                                                CaptureService.remote_location_entry re = remote_location_data.get(
+                                                        f_pubkey);
+                                                if (f_pubkey != null)
+                                                {
+                                                    re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
+                                                                         old_has_bearing, acc, SMOOTH_POS_STEPS_FRIENDS,
+                                                                         f_pubkey);
+                                                }
                                             }
                                         }
                                         catch (Exception e)
@@ -6325,9 +6336,13 @@ public class MainActivity extends BaseProtectedActivity
                                             }
                                         }
 
-                                        CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                        re.has_bearing = has_bearing;
-                                        re.remote_location_last_ts_millis = current_ts_millis;
+                                        if (friend_locations.isRunning)
+                                        {
+                                            CaptureService.remote_location_entry re = remote_location_data.get(
+                                                    f_pubkey);
+                                            re.has_bearing = has_bearing;
+                                            re.remote_location_last_ts_millis = current_ts_millis;
+                                        }
                                     }
                                 }
                             }

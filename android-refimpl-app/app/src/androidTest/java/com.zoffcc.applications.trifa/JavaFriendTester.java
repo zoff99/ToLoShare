@@ -248,6 +248,7 @@ public class JavaFriendTester
                     // the above does not trigger the "setOnCheckedChangeListener" for some reason
 
                     map.onResume();
+                    friend_locations.onResume();
                     main_gallery_container.bringToFront();
 
                     waiting_container.setVisibility(View.GONE);
