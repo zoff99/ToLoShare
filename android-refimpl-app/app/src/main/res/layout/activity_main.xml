@@ -353,13 +353,15 @@
                         android:orientation="horizontal" >
 
                         <TextView
-                            android:id="@+id/dummy999"
+                            android:id="@+id/debug_text_info"
                             android:layout_width="0dp"
                             android:layout_weight="10"
                             android:layout_height="wrap_content"
                             android:paddingLeft="5dp"
                             android:paddingRight="5dp"
-                            android:text=""
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:text="elrtel tmlrtkler toerot jioertioj iotje"
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
 
