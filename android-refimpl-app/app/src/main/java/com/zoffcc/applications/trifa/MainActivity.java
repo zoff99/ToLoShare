@@ -140,13 +140,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -178,6 +182,7 @@ import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_animate;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
+import static com.zoffcc.applications.trifa.GpsInterpolator.tasks_counter_inc_dec;
 import static com.zoffcc.applications.trifa.HelperFriend.get_friend_pubkey_sorted_by_pubkey_num;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
@@ -296,7 +301,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean DEBUG_THREAD_STARTED = false;
     static boolean GEO_TIME_THREAD_STARTED = false;
     static final int SMOOTH_POS_STEPS_OWN = 20;
-    static final int SMOOTH_POS_STEPS_FRIENDS = 20;
+    static final int SMOOTH_POS_STEPS_FRIENDS = 40;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -355,7 +360,7 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
     //**MOCK**// private MockLocationSimulator simulator;
-    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 1;
+    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 3;
     //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
 
     static int AudioMode_old;
@@ -593,52 +598,30 @@ public class MainActivity extends BaseProtectedActivity
             new ThreadPoolExecutor.DiscardPolicy() // Drop new work if busy
     );
 
-    private static final ExecutorService executor_friend_location_task = Executors.newSingleThreadExecutor();
+    static int tasks_counter = 0;
 
-    // Map to keep track of pubkey to list of its current Futures (backlog)
-    private static final Map<String, List<Future<?>>> pubkeyBacklogMap = new ConcurrentHashMap<>();
-
-    public static synchronized void runTaskFriendLocationIncoming(String pubkey, Runnable task) {
-        try {
-            // Initialize list if absent
-            pubkeyBacklogMap.putIfAbsent(pubkey, Collections.synchronizedList(new ArrayList<>()));
-
-            List<Future<?>> backlog = pubkeyBacklogMap.get(pubkey);
-            // Clean up completed or canceled tasks
-            backlog.removeIf(future -> future.isDone() || future.isCancelled());
-
-            // Declare newFuture outside to be accessible inside lambda
-            final Future<?>[] newFutureHolder = new Future<?>[1];
-
-            // Submit new task
-            Future<?> newFuture = executor_friend_location_task.submit(() -> {
-                try {
-                    task.run();
-                } finally {
-                    // Remove this task from backlog when done
-                    backlog.remove(newFutureHolder[0]);
-                    // Update UI after task removal
-                    update_backlog_ui();
-                }
-            });
-            newFutureHolder[0] = newFuture; // assign to the holder
-            backlog.add(newFuture);
-
-            // Update UI after adding new task
-            update_backlog_ui();
-        } catch (Exception e) {
-            // Handle exception if needed
-            e.printStackTrace();
-        }
+    @FunctionalInterface
+    public interface LongRunnable {
+        void run(long value);
     }
 
-    private static void update_backlog_ui()
+    private static final ExecutorService executor_friend_location_task = Executors.newSingleThreadExecutor();
+
+    public static synchronized void runTaskFriendLocationIncoming(LongRunnable task, long value)
     {
-        int count = 0;
-        for (List<Future<?>> list : pubkeyBacklogMap.values()) {
-            count += list.size();
+        try
+        {
+            executor_friend_location_task.submit(() -> task.run(value));
         }
-        set_debug_loc_info("("+count+")");
+        catch(RejectedExecutionException e2)
+        {
+            return;
+        }
+        catch(Exception e)
+        {
+            return;
+        }
+        tasks_counter_inc_dec(true);
     }
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
@@ -6209,7 +6192,7 @@ public class MainActivity extends BaseProtectedActivity
                         {
                         }
 
-                        final Runnable process_incoming_gps_location = () -> {
+                        final LongRunnable process_incoming_gps_location = (delta_value) -> {
                             try
                             {
                                 String[] separated = geo_data_raw.split(":");
@@ -6327,11 +6310,17 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 CaptureService.remote_location_entry re = remote_location_data.get(
                                                         f_pubkey);
-                                                if (f_pubkey != null)
+                                                if ((f_pubkey != null) && (is_following_friend(f_pubkey)))
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
                                                                          old_has_bearing, acc, SMOOTH_POS_STEPS_FRIENDS,
-                                                                         f_pubkey);
+                                                                         f_pubkey, delta_value);
+                                                }
+                                                else
+                                                {
+                                                    re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
+                                                                         old_has_bearing, acc, 1,
+                                                                         f_pubkey, delta_value);
                                                 }
                                             }
                                         }
@@ -6416,15 +6405,16 @@ public class MainActivity extends BaseProtectedActivity
                                 // e.printStackTrace();
                             }
                         };
-                        if (PREF__gps_smooth_friends)
+
+                        if ((PREF__gps_smooth_friends) && (is_following_friend(f_pubkey_top)))
                         {
-                            runTaskFriendLocationIncoming(f_pubkey_top, process_incoming_gps_location);
+                            runTaskFriendLocationIncoming(process_incoming_gps_location, System.currentTimeMillis());
                         }
                         else
                         {
                             // HINT: if we don't use smooth driving we just kick out the location update quickly
                             //       in the background
-                            new Thread(process_incoming_gps_location).start();
+                            new Thread(() -> process_incoming_gps_location.run(0)).start();
                         }
                     }
                 }
@@ -6480,6 +6470,34 @@ public class MainActivity extends BaseProtectedActivity
                         drawable_res_id)).getBitmap(),
                 Color.parseColor(color));
         directed_ol.setDirectionArrow(location_arrow_2);
+    }
+
+    static boolean is_following_friend(String f_pubkey)
+    {
+        if (f_pubkey == null)
+        {
+            return false;
+        }
+        String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
+        String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+        if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
+        {
+            if ((f_pubkey_pseudo_num_0 != null) &&
+                (f_pubkey != null) &&
+                (f_pubkey_pseudo_num_0.equals(f_pubkey)))
+            {
+                return true;
+            }
+        }
+        else if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_1.value)
+        {
+            if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) &&
+                (f_pubkey_pseudo_num_1.equals(f_pubkey)))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NonNull

@@ -7,12 +7,13 @@ import android.util.Log;
 import org.osmdroid.util.GeoPoint;
 
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MAX;
-import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
+import static com.zoffcc.applications.trifa.MainActivity.is_following_friend;
+import static com.zoffcc.applications.trifa.MainActivity.set_debug_loc_info;
+import static com.zoffcc.applications.trifa.MainActivity.tasks_counter;
 
 /** @noinspection CommentedOutCode*/
 public class GpsInterpolator
@@ -85,21 +86,27 @@ public class GpsInterpolator
      */
     public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing,
                             boolean old_has_bearing,
-                            float acc, int steps, String f_pubkey) {
+                            float acc, int steps, String f_pubkey, long update_time_millis) {
 
         long currentTime = System.currentTimeMillis();
 
-        // Calculate time elapsed since last GPS fix
-        long timeDelta = currentTime - lastUpdateTime;
+        long correction = currentTime - update_time_millis;
+        if (correction < 1)
+        {
+            correction = 0;
+        }
+        long timeDelta = (currentTime - lastUpdateTime) - correction;
         if (timeDelta < 1)
         {
             timeDelta = 1;
         }
 
-        // Log.i(TAG, "onGpsUpdate: timeDelta=" + timeDelta);
+        lastUpdateTime = currentTime;
+
+        // Log.i(TAG, "onGpsUpdate: timeDelta=" + timeDelta + " correction=" + correction);
         double newBearing;
 
-        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (steps < 1) || (steps > 30))
+        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (steps < 1) || (steps > 60))
         {
             lastLat = newLat;
             lastLon = newLon;
@@ -116,9 +123,13 @@ public class GpsInterpolator
                 newBearing = lastBearing;
             }
             lastBearing = newBearing;
-            lastUpdateTime = currentTime;
             isFirstFix = false;
             push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey);
+            if (is_following_friend(f_pubkey))
+            {
+                tasks_counter_inc_dec(false);
+            }
+            // Log.i(TAG, "onGpsUpdate: return 1");
             return;
         }
 
@@ -136,14 +147,12 @@ public class GpsInterpolator
             newBearing = lastBearing;
         }
 
-        lastUpdateTime = currentTime;
         double lastLat_copy = lastLat;
         double lastLon_copy = lastLon;
         double lastBearing_copy = lastBearing;
 
         // Determine sleep time per step (total delta / number of steps)
         long sleepTimePerStep = timeDelta / steps;
-
         for (int i = 1; i <= steps; i++) {
             double fraction = (double) i / steps;
 
@@ -181,9 +190,29 @@ public class GpsInterpolator
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
+                Log.i(TAG, "currentThread_interrupt");
                 break;
             }
         }
+        if (is_following_friend(f_pubkey))
+        {
+            tasks_counter_inc_dec(false);
+        }
+        // Log.i(TAG, "onGpsUpdate: return 99");
+    }
+
+    synchronized public static void tasks_counter_inc_dec(boolean inc)
+    {
+        if (inc)
+        {
+            tasks_counter++;
+        }
+        else
+        {
+            tasks_counter--;
+        }
+        // Log.i(TAG, "tasks_counter="+tasks_counter);
+        set_debug_loc_info("("+tasks_counter+")");
     }
 
     private double interpolateBearing(double start, double end, double fraction) {
