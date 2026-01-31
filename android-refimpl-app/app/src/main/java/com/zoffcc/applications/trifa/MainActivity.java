@@ -141,6 +141,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -591,14 +592,23 @@ public class MainActivity extends BaseProtectedActivity
 
     private static final ExecutorService executor_friend_location_task = Executors.newSingleThreadExecutor();
 
-    public static void runTaskFriendLocationIncoming(Runnable task)
-    {
-        try
-        {
-            executor_friend_location_task.execute(task);
-        }
-        catch(Exception e)
-        {
+    // Map to keep track of pubkey to its current Future
+    private static final Map<String, Future<?>> pubkeyTaskMap = new HashMap<>();
+
+    public static synchronized void runTaskFriendLocationIncoming(String pubkey, Runnable task) {
+        try {
+            // Check if there's an existing task for this pubkey
+            Future<?> previousFuture = pubkeyTaskMap.get(pubkey);
+            if (previousFuture != null && !previousFuture.isDone()) {
+                previousFuture.cancel(true); // Cancel previous task for this pubkey
+            }
+
+            // Submit the new task
+            Future<?> newFuture = executor_friend_location_task.submit(task);
+            // Store the new Future in the map
+            pubkeyTaskMap.put(pubkey, newFuture);
+        } catch (Exception e) {
+            // Handle exception if needed
         }
     }
 
@@ -6159,6 +6169,15 @@ public class MainActivity extends BaseProtectedActivity
 
                         // example data: TzGeo00:BEGINGEO:<lat>>:<lon>:0.0:22.03:124.1:ENDGEO
 
+                        String f_pubkey_top = null;
+                        try
+                        {
+                            f_pubkey_top = tox_friend_get_public_key__wrapper(friend_number);
+                        }
+                        catch(Exception e)
+                        {
+                        }
+
                         final Runnable process_incoming_gps_location = () -> {
                             try
                             {
@@ -6368,7 +6387,7 @@ public class MainActivity extends BaseProtectedActivity
                         };
                         if (PREF__gps_smooth_friends)
                         {
-                            runTaskFriendLocationIncoming(process_incoming_gps_location);
+                            runTaskFriendLocationIncoming(f_pubkey_top, process_incoming_gps_location);
                         }
                         else
                         {
