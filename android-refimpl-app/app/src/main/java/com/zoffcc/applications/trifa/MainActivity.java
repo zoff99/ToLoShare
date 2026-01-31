@@ -139,6 +139,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -309,6 +310,7 @@ public class MainActivity extends BaseProtectedActivity
     static Semaphore semaphore_videoout_bitmap = new Semaphore(1);
     static Semaphore semaphore_tox_savedata = new Semaphore(1);
     static int global_online_friends = 0;
+    static int global_incoming_loc_data_backlog = 0;
     Handler main_handler = null;
     static Handler main_handler_s = null;
     static Context context_s = null;
@@ -325,6 +327,7 @@ public class MainActivity extends BaseProtectedActivity
     static TextView debug_text_2 = null;
     static TextView debug_text_3 = null;
     static TextView debug_text_info = null;
+    static TextView debug_loc_info = null;
     static ImageButton btn_follow_self = null;
     static ImageButton btn_follow_friend_0 = null;
     static ImageButton btn_follow_friend_1 = null;
@@ -592,24 +595,50 @@ public class MainActivity extends BaseProtectedActivity
 
     private static final ExecutorService executor_friend_location_task = Executors.newSingleThreadExecutor();
 
-    // Map to keep track of pubkey to its current Future
-    private static final Map<String, Future<?>> pubkeyTaskMap = new HashMap<>();
+    // Map to keep track of pubkey to list of its current Futures (backlog)
+    private static final Map<String, List<Future<?>>> pubkeyBacklogMap = new ConcurrentHashMap<>();
 
     public static synchronized void runTaskFriendLocationIncoming(String pubkey, Runnable task) {
         try {
-            // Check if there's an existing task for this pubkey
-            Future<?> previousFuture = pubkeyTaskMap.get(pubkey);
-            if (previousFuture != null && !previousFuture.isDone()) {
-                previousFuture.cancel(true); // Cancel previous task for this pubkey
-            }
+            // Initialize list if absent
+            pubkeyBacklogMap.putIfAbsent(pubkey, Collections.synchronizedList(new ArrayList<>()));
 
-            // Submit the new task
-            Future<?> newFuture = executor_friend_location_task.submit(task);
-            // Store the new Future in the map
-            pubkeyTaskMap.put(pubkey, newFuture);
+            List<Future<?>> backlog = pubkeyBacklogMap.get(pubkey);
+            // Clean up completed or canceled tasks
+            backlog.removeIf(future -> future.isDone() || future.isCancelled());
+
+            // Declare newFuture outside to be accessible inside lambda
+            final Future<?>[] newFutureHolder = new Future<?>[1];
+
+            // Submit new task
+            Future<?> newFuture = executor_friend_location_task.submit(() -> {
+                try {
+                    task.run();
+                } finally {
+                    // Remove this task from backlog when done
+                    backlog.remove(newFutureHolder[0]);
+                    // Update UI after task removal
+                    update_backlog_ui();
+                }
+            });
+            newFutureHolder[0] = newFuture; // assign to the holder
+            backlog.add(newFuture);
+
+            // Update UI after adding new task
+            update_backlog_ui();
         } catch (Exception e) {
             // Handle exception if needed
+            e.printStackTrace();
         }
+    }
+
+    private static void update_backlog_ui()
+    {
+        int count = 0;
+        for (List<Future<?>> list : pubkeyBacklogMap.values()) {
+            count += list.size();
+        }
+        set_debug_loc_info("("+count+")");
     }
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
@@ -786,8 +815,10 @@ public class MainActivity extends BaseProtectedActivity
         debug_text_2 = this.findViewById(R.id.debug_text_2);
         debug_text_3 = this.findViewById(R.id.debug_text_3);
         debug_text_info = this.findViewById(R.id.debug_text_info);
+        debug_loc_info = this.findViewById(R.id.debug_loc_info);
 
         debug_text_info.setText("");
+        debug_loc_info.setText("("+global_incoming_loc_data_backlog+")");
 
         btn_follow_self = this.findViewById(R.id.btn_follow_self);
         btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
@@ -7371,6 +7402,30 @@ public class MainActivity extends BaseProtectedActivity
                 try
                 {
                     debug_text_3.setText(t);
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+    }
+
+    synchronized static void set_debug_loc_info(final String t)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    debug_loc_info.setText(t);
                 }
                 catch (Exception e)
                 {

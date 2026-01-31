@@ -365,6 +365,19 @@
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
 
+                        <TextView
+                            android:id="@+id/debug_loc_info"
+                            android:layout_width="0dp"
+                            android:layout_weight="10"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:paddingRight="5dp"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:text="(1)"
+                            android:visibility="visible"
+                            tools:ignore="HardcodedText" />
+
                         <com.zoffcc.applications.trifa.TriangleTextView
                             android:id="@+id/online_count"
                             android:layout_width="25dp"
