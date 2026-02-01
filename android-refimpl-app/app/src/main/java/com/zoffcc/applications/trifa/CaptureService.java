@@ -53,7 +53,8 @@ public class CaptureService extends Service
     final static String LOC_PROVIDER_NAME_FUSEDDR = "fused-dr";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int _30_SECONDS = 1000 * 30;
+    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 5;
+    private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;
     static final int GPS_UPDATE_FREQ_MS_MIN = 1000 - JITTER_LOC_DELTA_MS;
@@ -503,16 +504,16 @@ public class CaptureService extends Service
 
         // Check whether the new location fix is newer or older
         long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > (_30_SECONDS);
-        boolean isSignificantlyOlder = timeDelta < -(_30_SECONDS);
+        boolean isSignificantlyNewer = timeDelta > (LOCATION_TOO_OLD_SECONDS);
+        boolean isSignificantlyOlder = timeDelta < -(LOCATION_TOO_OLD_SECONDS);
         boolean isNewer = timeDelta > 0;
 
-        // If it's been more than two minutes since the current location, use the new location
+        // If it's been more than xx seconds since the current location, use the new location
         // because the user has likely moved
         if (isSignificantlyNewer)
         {
             return true;
-            // If the new location is more than two minutes older, it must be worse
+            // If the new location is more than xx seconds older, it must be worse
         }
         else if (isSignificantlyOlder)
         {
@@ -523,7 +524,7 @@ public class CaptureService extends Service
         int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
         boolean isLessAccurate = accuracyDelta > 0;
         boolean isMoreAccurate = accuracyDelta < 0;
-        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+        boolean isSignificantlyLessAccurate = accuracyDelta > LOCATION_ACCURACY_DELTA_METERS;
 
         // Check if the old and new location are from the same provider
         boolean isFromSameProvider = isSameProvider(location.getProvider(),
