@@ -801,7 +801,9 @@ public class MainActivity extends BaseProtectedActivity
         debug_loc_info = this.findViewById(R.id.debug_loc_info);
 
         debug_text_info.setText("");
-        debug_loc_info.setText("("+global_incoming_loc_data_backlog+")");
+        // debug_loc_info.setText("("+global_incoming_loc_data_backlog+")");
+        debug_loc_info.setText("");
+        debug_loc_info.setVisibility(View.GONE);
 
         btn_follow_self = this.findViewById(R.id.btn_follow_self);
         btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
@@ -7443,7 +7445,7 @@ public class MainActivity extends BaseProtectedActivity
             {
                 try
                 {
-                    debug_loc_info.setText(t);
+                    // debug_loc_info.setText(t);
                 }
                 catch (Exception e)
                 {
