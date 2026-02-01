@@ -11,9 +11,6 @@ import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.follow_friend_on_map;
-import static com.zoffcc.applications.trifa.MainActivity.is_following_friend;
-import static com.zoffcc.applications.trifa.MainActivity.set_debug_loc_info;
-import static com.zoffcc.applications.trifa.MainActivity.tasks_counter;
 
 /** @noinspection CommentedOutCode*/
 public class GpsInterpolator
@@ -125,10 +122,6 @@ public class GpsInterpolator
             lastBearing = newBearing;
             isFirstFix = false;
             push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey);
-            if (is_following_friend(f_pubkey))
-            {
-                tasks_counter_inc_dec(false);
-            }
             // Log.i(TAG, "onGpsUpdate: return 1");
             return;
         }
@@ -194,25 +187,7 @@ public class GpsInterpolator
                 break;
             }
         }
-        if (is_following_friend(f_pubkey))
-        {
-            tasks_counter_inc_dec(false);
-        }
         // Log.i(TAG, "onGpsUpdate: return 99");
-    }
-
-    synchronized public static void tasks_counter_inc_dec(boolean inc)
-    {
-        if (inc)
-        {
-            tasks_counter++;
-        }
-        else
-        {
-            tasks_counter--;
-        }
-        // Log.i(TAG, "tasks_counter="+tasks_counter);
-        set_debug_loc_info("("+tasks_counter+")");
     }
 
     private double interpolateBearing(double start, double end, double fraction) {

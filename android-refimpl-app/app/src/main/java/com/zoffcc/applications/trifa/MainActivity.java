@@ -182,7 +182,6 @@ import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_animate;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
-import static com.zoffcc.applications.trifa.GpsInterpolator.tasks_counter_inc_dec;
 import static com.zoffcc.applications.trifa.HelperFriend.get_friend_pubkey_sorted_by_pubkey_num;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
@@ -332,7 +331,6 @@ public class MainActivity extends BaseProtectedActivity
     static TextView debug_text_2 = null;
     static TextView debug_text_3 = null;
     static TextView debug_text_info = null;
-    static TextView debug_loc_info = null;
     static ImageButton btn_follow_self = null;
     static ImageButton btn_follow_friend_0 = null;
     static ImageButton btn_follow_friend_1 = null;
@@ -621,7 +619,6 @@ public class MainActivity extends BaseProtectedActivity
         {
             return;
         }
-        tasks_counter_inc_dec(true);
     }
 
     // 1 worker thread, 0 queue capacity, silently drop if busy
@@ -798,12 +795,8 @@ public class MainActivity extends BaseProtectedActivity
         debug_text_2 = this.findViewById(R.id.debug_text_2);
         debug_text_3 = this.findViewById(R.id.debug_text_3);
         debug_text_info = this.findViewById(R.id.debug_text_info);
-        debug_loc_info = this.findViewById(R.id.debug_loc_info);
 
         debug_text_info.setText("");
-        // debug_loc_info.setText("("+global_incoming_loc_data_backlog+")");
-        debug_loc_info.setText("");
-        debug_loc_info.setVisibility(View.GONE);
 
         btn_follow_self = this.findViewById(R.id.btn_follow_self);
         btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
@@ -7422,30 +7415,6 @@ public class MainActivity extends BaseProtectedActivity
                 try
                 {
                     debug_text_3.setText(t);
-                }
-                catch (Exception e)
-                {
-                    Log.i(TAG, "EE.b:" + e.getMessage());
-                }
-            }
-        };
-
-        if (main_handler_s != null)
-        {
-            main_handler_s.post(myRunnable);
-        }
-    }
-
-    synchronized static void set_debug_loc_info(final String t)
-    {
-        Runnable myRunnable = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    // debug_loc_info.setText(t);
                 }
                 catch (Exception e)
                 {
