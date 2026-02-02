@@ -50,6 +50,16 @@
             app:showText="false"
             tools:ignore="HardcodedText" />
 
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/button_travel_mode"
+            android:layout_width="55dp"
+            android:layout_margin="9dp"
+            android:padding="2dp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/outline_directions_car_24"
+            android:scaleType="fitCenter"
+            app:iconGravity="textStart" />
+
         <Spinner
             android:id="@+id/spinner_own_status"
             android:layout_width="wrap_content"

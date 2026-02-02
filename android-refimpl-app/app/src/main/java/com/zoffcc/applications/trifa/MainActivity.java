@@ -86,6 +86,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.button.MaterialButton;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.iconics.IconicsDrawable;
@@ -155,6 +156,7 @@ import java.util.function.Consumer;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -259,6 +261,7 @@ import static com.zoffcc.applications.trifa.TrifaToxService.manually_logged_out;
 import static com.zoffcc.applications.trifa.TrifaToxService.orma;
 import static com.zoffcc.applications.trifa.TrifaToxService.vfs;
 import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_CAR;
+import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_FOOT;
 import static org.osmdroid.bonuspack.routing.Road.STATUS_OK;
 
 /*
@@ -340,6 +343,8 @@ public class MainActivity extends BaseProtectedActivity
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
     static ArrayList<String> main_gallery_images = null;
+
+    private AppCompatImageButton button_travel_mode;
 
     static MapView map = null;
     static TriangleTextView out_count_view = null;
@@ -541,6 +546,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_dead_reconing_own = false; // keep "false", this it not really working properly!!
     static boolean PREF__gps_smooth_friends = false;
+    static ROUTE_TYPE PREF__route_type = ROUTE_TYPE.ROUTE_TYPE_BY_CAR;
 
     final static String push_instance_name = "com.zoffcc.applications.push_toloshare";
 
@@ -805,6 +811,24 @@ public class MainActivity extends BaseProtectedActivity
         btn_route_to_friend_1 = this.findViewById(R.id.btn_route_to_friend_1);
         btn_follow_stop = this.findViewById(R.id.btn_follow_stop);
 
+        button_travel_mode = findViewById(R.id.button_travel_mode);
+
+        // Initialize with car icon from Material Icons
+        button_travel_mode.setImageResource(R.drawable.outline_directions_car_24);
+        PREF__route_type = ROUTE_TYPE.ROUTE_TYPE_BY_CAR;
+
+        button_travel_mode.setOnClickListener(v -> {
+            if (PREF__route_type == ROUTE_TYPE.ROUTE_TYPE_BY_CAR) {
+                // Switch to walking icon
+                button_travel_mode.setImageResource(R.drawable.outline_elderly_24);
+                PREF__route_type = ROUTE_TYPE.ROUTE_TYPE_BY_FOOT;
+            } else {
+                // Switch back to car icon
+                button_travel_mode.setImageResource(R.drawable.outline_directions_car_24);
+                PREF__route_type = ROUTE_TYPE.ROUTE_TYPE_BY_CAR;
+            }
+        });
+
         btn_follow_self.setOnClickListener(new View.OnClickListener()
         {
             @SuppressLint("ApplySharedPref")
@@ -865,7 +889,7 @@ public class MainActivity extends BaseProtectedActivity
                         try
                         {
                             String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
-                            get_route(f_pubkey);
+                            get_route(f_pubkey, PREF__route_type);
                         }
                         catch(Exception e)
                         {
@@ -918,7 +942,7 @@ public class MainActivity extends BaseProtectedActivity
                         try
                         {
                             String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(1);
-                            get_route(f_pubkey);
+                            get_route(f_pubkey, PREF__route_type);
                         }
                         catch(Exception e)
                         {
@@ -2285,10 +2309,18 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
 
-    private static void get_route(String f_pubkey)
+    private static void get_route(String f_pubkey, ROUTE_TYPE route_type)
     {
         if (f_pubkey != null)
         {
+            if (route_type == ROUTE_TYPE.ROUTE_TYPE_BY_CAR)
+            {
+                ((OSRMRoadManager) roadManager).setMean(MEAN_BY_CAR);
+            }
+            else
+            {
+                ((OSRMRoadManager) roadManager).setMean(MEAN_BY_FOOT);
+            }
             CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
             ArrayList<GeoPoint> waypoints = new ArrayList<>();
             GeoPoint startPoint = new GeoPoint(currentBestLocation.getLatitude(),
@@ -2300,7 +2332,15 @@ public class MainActivity extends BaseProtectedActivity
             Road road = roadManager.getRoad(waypoints);
             if (road.mStatus == STATUS_OK)
             {
-                Polyline roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
+                Polyline roadOverlay = null;
+                if (route_type == ROUTE_TYPE.ROUTE_TYPE_BY_CAR)
+                {
+                    roadOverlay = RoadManager.buildRoadOverlay(road, Color.BLUE, dp_to_px(6));
+                }
+                else
+                {
+                    roadOverlay = RoadManager.buildRoadOverlay(road, Color.CYAN, dp_to_px(6));
+                }
                 map.getOverlays().add(roadOverlay);
                 try
                 {
