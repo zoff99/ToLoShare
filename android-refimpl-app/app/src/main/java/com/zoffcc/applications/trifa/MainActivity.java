@@ -330,6 +330,7 @@ public class MainActivity extends BaseProtectedActivity
     static SwitchCompat switch_own_gps_smoothing = null;
     static ViewGroup waiting_container = null;
     static ViewGroup main_gallery_container = null;
+    static TextView found_loc_providers_text = null;
     static TextView debug_text = null;
     static TextView debug_text_2 = null;
     static TextView debug_text_3 = null;
@@ -800,9 +801,13 @@ public class MainActivity extends BaseProtectedActivity
         debug_text = this.findViewById(R.id.debug_text);
         debug_text_2 = this.findViewById(R.id.debug_text_2);
         debug_text_3 = this.findViewById(R.id.debug_text_3);
-        debug_text_info = this.findViewById(R.id.debug_text_info);
 
+        debug_text_info = this.findViewById(R.id.debug_text_info);
         debug_text_info.setText("");
+
+        found_loc_providers_text = this.findViewById(R.id.found_loc_providers_text);
+        found_loc_providers_text.setText("");
+
 
         btn_follow_self = this.findViewById(R.id.btn_follow_self);
         btn_follow_friend_0 = this.findViewById(R.id.btn_follow_friend_0);
@@ -7431,6 +7436,30 @@ public class MainActivity extends BaseProtectedActivity
                 try
                 {
                     debug_text_2.setText(t);
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
+        }
+    }
+
+    synchronized static void set_found_loc_providers_text(final String t)
+    {
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    found_loc_providers_text.setText(t);
                 }
                 catch (Exception e)
                 {

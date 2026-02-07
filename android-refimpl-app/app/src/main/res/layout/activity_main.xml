@@ -228,18 +228,39 @@
                         android:background="@drawable/border_background"
                         android:orientation="horizontal" >
 
+                        <LinearLayout
+                            android:layout_marginTop="2dp"
+                            android:layout_weight="10"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical" >
+
                         <TextView
                             android:id="@+id/debug_text"
-                            android:layout_width="0dp"
-                            android:layout_weight="10"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="5dp"
                             android:paddingRight="5dp"
+                            android:layout_weight="5"
                             android:text="..."
                             android:textColor="@color/md_black_1000"
                             android:textSize="10sp"
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
+
+                        <TextView
+                            android:id="@+id/found_loc_providers_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:paddingRight="5dp"
+                            android:layout_weight="1"
+                            android:text="..."
+                            android:textColor="@color/md_black_1000"
+                            android:textSize="10sp"
+                            android:visibility="visible"
+                            tools:ignore="HardcodedText" />
+                        </LinearLayout>
 
                         <ImageButton
                             android:id="@+id/btn_follow_self"

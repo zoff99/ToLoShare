@@ -18,6 +18,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
 import java.util.HashMap;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,6 +42,7 @@ import static com.zoffcc.applications.trifa.MainActivity.map_is_northed;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
+import static com.zoffcc.applications.trifa.MainActivity.set_found_loc_providers_text;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -51,6 +53,8 @@ public class CaptureService extends Service
 
     static final String INVALID_BEARING = "FFF";
     final static String LOC_PROVIDER_NAME_FUSEDDR = "fused-dr";
+
+    static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
     private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 5;
@@ -235,6 +239,7 @@ public class CaptureService extends Service
                 Log.i(TAG1, "onProviderEnabled: " + provider);
                 try
                 {
+                    /*
                     if (provider.equals(LocationManager.GPS_PROVIDER))
                     {
                         Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
@@ -248,6 +253,7 @@ public class CaptureService extends Service
                             }
                         }
                     }
+                     */
                 }
                 catch(Exception ignored)
                 {
@@ -261,6 +267,27 @@ public class CaptureService extends Service
             }
         };
 
+
+        found_location_providers = "";
+        try {
+            List<String> providers = locationManager.getProviders(false);
+            for (String provider : providers) {
+                locationManager.requestLocationUpdates(provider, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+                if (found_location_providers.isEmpty()) {
+                    found_location_providers = provider;
+                } else {
+                    found_location_providers += ", " + provider;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            set_found_loc_providers_text(found_location_providers);
+        } catch (Exception ignored) {
+        }
+
+        /*
         try
         {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
@@ -276,6 +303,23 @@ public class CaptureService extends Service
         catch(Exception ignored)
         {
         }
+
+        try
+        {
+            locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+        }
+        catch(Exception ignored)
+        {
+        }
+
+        try
+        {
+            locationManager.requestLocationUpdates("fused", GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+        }
+        catch(Exception ignored)
+        {
+        }
+         */
 
         if (PREF__gps_dead_reconing_own)
         {
@@ -481,7 +525,7 @@ public class CaptureService extends Service
         // Log.i(TAG, "raw:" + temp_string);
         // Log.i(TAG, "rawlen:" + temp_string.length());
 
-        byte[] data_bin = temp_string.getBytes(); // TODO: use specific characterset
+        byte[] data_bin = temp_string.getBytes();
         return data_bin;
     }
 
