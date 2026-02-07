@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -16,6 +15,8 @@ public class TriangleTextView extends View
     private Paint textPaint;
     private final Path trianglePath = new Path();
 
+    private final PubKeyManager pkm = new PubKeyManager();
+
     public enum Direction { UP, DOWN, LEFT, RIGHT, CIRCLE }
 
     private int triangleSizeDp = 6;
@@ -23,7 +24,6 @@ public class TriangleTextView extends View
     private float textSizeSp = 18f;
     private int textBottomOffsetDp = 8;
 
-    private int currentCount = 0;
     private int triangleColor = Color.RED;
     private Direction currentDirection = Direction.UP;
 
@@ -32,8 +32,22 @@ public class TriangleTextView extends View
         init();
     }
 
-    public void updateCount(int newCount) {
-        this.currentCount = newCount;
+    public int getCount() {
+        return this.pkm.getKeyCount();
+    }
+
+    public void addKey(String key) {
+        this.pkm.addKey(key);
+        invalidate();
+    }
+
+    public void removeKey(String key) {
+        this.pkm.removeKey(key);
+        invalidate();
+    }
+
+    public void removeAll() {
+        this.pkm.removeAll();
         invalidate();
     }
 
@@ -87,7 +101,7 @@ public class TriangleTextView extends View
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if ((currentCount == 0) && (currentDirection != Direction.CIRCLE))
+        if ((pkm.getKeyCount() == 0) && (currentDirection != Direction.CIRCLE))
         {
             canvas.drawColor(Color.TRANSPARENT);
             return;
@@ -144,7 +158,7 @@ public class TriangleTextView extends View
         }
 
         // Draw Text at bottom with DP-based margin
-        canvas.drawText("" + currentCount, centerX, viewHeight - bottomOffsetPx, textPaint);
+        canvas.drawText("" + pkm.getKeyCount(), centerX, viewHeight - bottomOffsetPx, textPaint);
     }
 }
 

@@ -316,7 +316,6 @@ public class MainActivity extends BaseProtectedActivity
     // static Thread ToxServiceThread = null;
     static Semaphore semaphore_videoout_bitmap = new Semaphore(1);
     static Semaphore semaphore_tox_savedata = new Semaphore(1);
-    static int global_online_friends = 0;
     static int global_incoming_loc_data_backlog = 0;
     Handler main_handler = null;
     static Handler main_handler_s = null;
@@ -720,13 +719,13 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "M:STARTUP:setContentView end");
 
         out_count_view = findViewById(R.id.out_count);
-        out_count_view.updateCount(0);
+        out_count_view.removeAll();
         in_count_view = findViewById(R.id.in_count);
-        in_count_view.updateCount(0);
+        in_count_view.removeAll();
         in_count_view.setTriangleColor(Color.BLUE);
         in_count_view.setDirection(TriangleTextView.Direction.DOWN);
         online_count = findViewById(R.id.online_count);
-        online_count.updateCount(0);
+        online_count.removeAll();
         online_count.setTriangleColor(Color.GRAY);
         online_count.setDirection(TriangleTextView.Direction.CIRCLE);
 
@@ -5767,33 +5766,6 @@ public class MainActivity extends BaseProtectedActivity
             catch(Exception ignored)
             {
             }
-            global_online_friends = 0;
-            try
-            {
-                Runnable myRunnable = new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            online_count.updateCount(global_online_friends);
-                            online_count.setTriangleColor(Color.GRAY);
-                        }
-                        catch (Exception e)
-                        {
-                        }
-                    }
-                };
-                if (main_handler_s != null)
-                {
-                    main_handler_s.post(myRunnable);
-                }
-            }
-            catch(Exception e)
-            {
-                e.printStackTrace();
-            }
         }
 
         if (bootstrapping)
@@ -5938,7 +5910,6 @@ public class MainActivity extends BaseProtectedActivity
                     catch(Exception ignored)
                     {
                     }
-                    global_online_friends++;
                     try
                     {
                         Runnable myRunnable = new Runnable()
@@ -5948,7 +5919,7 @@ public class MainActivity extends BaseProtectedActivity
                             {
                                 try
                                 {
-                                    online_count.updateCount(global_online_friends);
+                                    online_count.addKey(f.tox_public_key_string);
                                     online_count.setTriangleColor(Color.GREEN);
                                 }
                                 catch (Exception e)
@@ -5975,11 +5946,6 @@ public class MainActivity extends BaseProtectedActivity
                     catch(Exception ignored)
                     {
                     }
-                    global_online_friends--;
-                    if (global_online_friends < 0)
-                    {
-                        global_online_friends = 0;
-                    }
                     try
                     {
                         Runnable myRunnable = new Runnable()
@@ -5989,8 +5955,8 @@ public class MainActivity extends BaseProtectedActivity
                             {
                                 try
                                 {
-                                    online_count.updateCount(global_online_friends);
-                                    if (global_online_friends > 0)
+                                    online_count.removeKey(f.tox_public_key_string);
+                                    if (online_count.getCount() > 0)
                                     {
                                         online_count.setTriangleColor(Color.GREEN);
                                     }

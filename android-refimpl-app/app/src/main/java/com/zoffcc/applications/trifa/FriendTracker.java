@@ -120,7 +120,10 @@ public class FriendTracker {
                 mainHandler.post(() -> {
                     try
                     {
-                        in_count_view.updateCount(friendsMap_in.size());
+                        in_count_view.removeAll();
+                        for (String key : friendsMap_in.keySet()) {
+                            in_count_view.addKey(key);
+                        }
                     }
                     catch (Exception ignored)
                     {
@@ -143,7 +146,10 @@ public class FriendTracker {
                 mainHandler.post(() -> {
                     try
                     {
-                        out_count_view.updateCount(friendsMap_out.size());
+                        out_count_view.removeAll();
+                        for (String key : friendsMap_out.keySet()) {
+                            out_count_view.addKey(key);
+                        }
                     }
                     catch (Exception ignored)
                     {
