@@ -29,7 +29,6 @@ import androidx.core.location.LocationListenerCompat;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_dead_reconing_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
@@ -69,7 +68,6 @@ public class CaptureService extends Service
     String channelId_gps = "chl_svc1";
     LocationManager locationManager = null;
     LocationListenerCompat mLocationListener = null;
-    public static LocationFusionManager fusion_m = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
     final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
@@ -340,55 +338,13 @@ public class CaptureService extends Service
         {
         }
          */
-
-        if (PREF__gps_dead_reconing_own)
-        {
-            try
-            {
-                fusion_m = new LocationFusionManager(this);
-            }
-            catch(Exception e)
-            {
-            }
-
-            try
-            {
-                if (PREF__gps_smooth_own)
-                {
-                    fusion_m.startSensorFusion();
-                }
-            }
-            catch (Exception e)
-            {
-            }
-        }
     }
 
     static void broadcastFusedLocation(double currentLat, double currentLng, float currentMovementBearing)
     {
         try
         {
-            if ((PREF__gps_dead_reconing_own) && (PREF__gps_smooth_own) && (currentBestLocation != null))
-            {
-                long now = System.currentTimeMillis();
-                long delta = (now - last_position_timestamp_ms) / 1000;
-                long delta_real = (now - last_real_position_timestamp_ms) / 1000;
-                if (delta_real < USE_FUSED_FOR_MAX_SECONDS)
-                {
-                    currentBestLocation.setLatitude(currentLat);
-                    currentBestLocation.setLongitude(currentLng);
-                    currentBestLocation.setBearing(currentMovementBearing);
-                    currentBestLocation.setProvider(LOC_PROVIDER_NAME_FUSEDDR);
-                    mLocationOverlay.onLocationChanged_injection(currentBestLocation, null);
-                    if (last_position_timestamp_ms != 0)
-                    {
-                        if (delta >= UPDATE_FROM_FUSED_AFTER_GPS_STALE_SECONDS)
-                        {
-                            update_gps_position(currentBestLocation, true);
-                        }
-                    }
-                }
-            }
+
         }
         catch(Exception e)
         {
