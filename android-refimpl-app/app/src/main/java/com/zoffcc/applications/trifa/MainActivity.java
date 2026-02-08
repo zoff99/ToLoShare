@@ -2455,6 +2455,8 @@ public class MainActivity extends BaseProtectedActivity
         mLocationOverlay.setDirectionIcon(location_arrow_2);
         Log.i(TAG, "OOOOOOO:new:122:" + mIMyLocationProvider + " " + mLocationOverlay);
         mLocationOverlay.enableMyLocation();
+        boolean is_loc_enabled = mLocationOverlay.isMyLocationEnabled();
+        Log.i(TAG, "OOOOOOO:new:123:is_loc_enabled=" + is_loc_enabled);
     }
 
     void remove_map_overlays()

@@ -241,6 +241,17 @@ public class CaptureService extends Service
             public void onProviderEnabled(@NonNull String provider)
             {
                 Log.i(TAG1, "onProviderEnabled: " + provider + " currentBestLocation=" + currentBestLocation);
+
+                try
+                {
+                    mLocationOverlay.enableMyLocation();
+                    boolean is_loc_enabled = mLocationOverlay.isMyLocationEnabled();
+                    Log.i(TAG, "OOOOOOO:new:123:is_loc_enabled=" + is_loc_enabled);
+                }
+                catch(Exception e)
+                {
+                }
+
                 try
                 {
                     if (currentBestLocation == null)
