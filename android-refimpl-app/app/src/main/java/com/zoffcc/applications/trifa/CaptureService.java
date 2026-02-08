@@ -240,24 +240,25 @@ public class CaptureService extends Service
             @Override
             public void onProviderEnabled(@NonNull String provider)
             {
-                Log.i(TAG1, "onProviderEnabled: " + provider);
+                Log.i(TAG1, "onProviderEnabled: " + provider + " currentBestLocation=" + currentBestLocation);
                 try
                 {
-                    /*
-                    if (provider.equals(LocationManager.GPS_PROVIDER))
+                    if (currentBestLocation == null)
                     {
-                        Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
-                        if (lastKnownLocation != null)
+                        try
                         {
-                            Log.i(TAG1, "onProviderEnabled: provider = " + provider +
-                                        " lastKnownLocation = " + lastKnownLocation);
-                            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                            Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                            if (lastKnownLocation != null)
                             {
-                                set_map_center_to_animate(lastKnownLocation);
+                                Log.i(TAG1, "onProviderEnabled: provider = " + provider + " lastKnownLocation = " + lastKnownLocation);
+                                update_location_function(lastKnownLocation);
                             }
                         }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
                     }
-                     */
                 }
                 catch(Exception ignored)
                 {
@@ -268,6 +269,12 @@ public class CaptureService extends Service
             public void onProviderDisabled(@NonNull String provider)
             {
                 Log.i(TAG1, "onProviderDisabled: " + provider);
+                try
+                {
+                }
+                catch(Exception ignored)
+                {
+                }
             }
         };
 
@@ -277,6 +284,7 @@ public class CaptureService extends Service
             List<String> providers = locationManager.getProviders(false);
             for (String provider : providers) {
                 locationManager.requestLocationUpdates(provider, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+                Log.i(TAG, "onProviderEnabled:requestLocationUpdates: provider = " + provider);
                 if (found_location_providers.isEmpty()) {
                     found_location_providers = provider;
                 } else {
@@ -539,6 +547,12 @@ public class CaptureService extends Service
      */
     protected boolean isBetterLocation(Location location)
     {
+        if (location == null)
+        {
+            // A "null" location is always bad
+            return false;
+        }
+
         if (currentBestLocation == null)
         {
             // A new location is always better than no location
