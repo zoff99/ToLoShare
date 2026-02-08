@@ -304,40 +304,6 @@ public class CaptureService extends Service
             set_found_loc_providers_text(found_location_providers);
         } catch (Exception ignored) {
         }
-
-        /*
-        try
-        {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-        }
-        catch(Exception ignored)
-        {
-        }
-
-        try
-        {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-        }
-        catch(Exception ignored)
-        {
-        }
-
-        try
-        {
-            locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-        }
-        catch(Exception ignored)
-        {
-        }
-
-        try
-        {
-            locationManager.requestLocationUpdates("fused", GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-        }
-        catch(Exception ignored)
-        {
-        }
-         */
     }
 
     private static void update_gps_position(@NonNull Location location, boolean update_map)
