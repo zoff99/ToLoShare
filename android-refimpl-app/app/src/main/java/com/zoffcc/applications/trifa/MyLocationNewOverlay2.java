@@ -31,12 +31,6 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
     }
 
     // HINT: function to inject location into the "MyLocationNewOverlay" of osmdroid lib
-    public void onLocationChanged_injection(final Location location, IMyLocationProvider source) {
-        Log.i(TAG, "L00:onLocationChanged_injection:0:00000000000000000:" + source + " " + location);
-        super.onLocationChanged(location, source);
-    }
-
-    // HINT: function to inject location into the "MyLocationNewOverlay" of osmdroid lib
     public void onLocationChanged_real(final Location location, IMyLocationProvider source) {
         Log.i(TAG, "L00:onLocationChanged_real:1:XXXXXXXXXXXXXXXXX");
         super.onLocationChanged(location, source);
