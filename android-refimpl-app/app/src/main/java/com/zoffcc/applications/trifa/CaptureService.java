@@ -295,7 +295,7 @@ public class CaptureService extends Service
             List<String> providers = locationManager.getProviders(false);
             for (String provider : providers) {
                 locationManager.requestLocationUpdates(provider, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-                Log.i(TAG, "onProviderEnabled:requestLocationUpdates: provider = " + provider);
+                Log.i(TAG, "startLocationTracking:requestLocationUpdates: provider = " + provider);
                 if (found_location_providers.isEmpty()) {
                     found_location_providers = provider;
                 } else {
@@ -307,7 +307,7 @@ public class CaptureService extends Service
                     Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
                     if (lastKnownLocation != null)
                     {
-                        Log.i(TAG, "onProviderEnabled: provider = " + provider + " lastKnownLocation = " +
+                        Log.i(TAG, "startLocationTracking: provider = " + provider + " lastKnownLocation = " +
                                    lastKnownLocation);
                         update_location_function(lastKnownLocation);
                     }
