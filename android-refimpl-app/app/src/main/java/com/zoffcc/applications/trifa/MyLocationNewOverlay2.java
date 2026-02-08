@@ -7,11 +7,6 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
-import static com.zoffcc.applications.trifa.MainActivity.SMOOTH_POS_STEPS_OWN;
-import static com.zoffcc.applications.trifa.MainActivity.gps_int_own;
-import static com.zoffcc.applications.trifa.MainActivity.runTaskOwnLocation;
-
 public class MyLocationNewOverlay2 extends MyLocationNewOverlay
 {
     /** @noinspection unused*/
