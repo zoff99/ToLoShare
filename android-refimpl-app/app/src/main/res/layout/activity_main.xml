@@ -229,37 +229,40 @@
                         android:orientation="horizontal" >
 
                         <LinearLayout
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="0dp"
+                            android:layout_marginBottom="0dp"
                             android:layout_weight="10"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:orientation="vertical" >
 
-                        <TextView
-                            android:id="@+id/debug_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingLeft="5dp"
-                            android:paddingRight="5dp"
-                            android:layout_weight="5"
-                            android:text="..."
-                            android:textColor="@color/md_black_1000"
-                            android:textSize="10sp"
-                            android:visibility="visible"
-                            tools:ignore="HardcodedText" />
+                            <TextView
+                                android:id="@+id/debug_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="5dp"
+                                android:paddingRight="5dp"
+                                android:paddingBottom="0dp"
+                                android:layout_weight="3"
+                                android:text="provider: gps\naccuracy: 100m\nlast: now"
+                                android:textColor="@color/md_black_1000"
+                                android:textSize="10sp"
+                                android:visibility="visible"
+                                tools:ignore="HardcodedText" />
 
-                        <TextView
-                            android:id="@+id/found_loc_providers_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingLeft="5dp"
-                            android:paddingRight="5dp"
-                            android:layout_weight="2"
-                            android:text="..."
-                            android:textColor="@color/md_black_1000"
-                            android:textSize="10sp"
-                            android:visibility="visible"
-                            tools:ignore="HardcodedText" />
+                            <TextView
+                                android:id="@+id/found_loc_providers_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingTop="0dp"
+                                android:paddingLeft="5dp"
+                                android:paddingRight="5dp"
+                                android:layout_weight="2"
+                                android:text="passive, network, gps"
+                                android:textColor="@color/md_black_1000"
+                                android:textSize="9sp"
+                                android:visibility="visible"
+                                tools:ignore="HardcodedText" />
                         </LinearLayout>
 
                         <ImageButton
@@ -268,6 +271,7 @@
                             android:layout_height="50dp"
                             android:cropToPadding="true"
                             android:padding="0dp"
+                            android:layout_gravity="center_vertical"
                             android:layout_marginRight="6dp"
                             android:alpha="0.5"
                             android:tooltipText="follow own position on map"
@@ -375,24 +379,24 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_weight="5"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginBottom="2dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="2dp"
+                        android:layout_weight="5"
                         android:background="@drawable/border_background"
-                        android:orientation="horizontal" >
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/debug_text_info"
                             android:layout_width="0dp"
-                            android:layout_weight="10"
                             android:layout_height="wrap_content"
+                            android:layout_weight="10"
                             android:paddingLeft="5dp"
                             android:paddingRight="5dp"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
                             android:text="elrtel tmlrtkler toerot jioertioj iotje"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
 
@@ -400,38 +404,38 @@
                             android:id="@+id/online_count"
                             android:layout_width="25dp"
                             android:layout_height="50dp"
-                            android:padding="0dp"
                             android:layout_marginRight="0dp"
+                            android:padding="0dp"
                             android:scaleType="fitCenter" />
 
                         <com.zoffcc.applications.trifa.TriangleTextView
                             android:id="@+id/out_count"
                             android:layout_width="25dp"
                             android:layout_height="50dp"
-                            android:padding="0dp"
                             android:layout_marginRight="0dp"
+                            android:padding="0dp"
                             android:scaleType="fitCenter" />
 
                         <com.zoffcc.applications.trifa.TriangleTextView
                             android:id="@+id/in_count"
                             android:layout_width="25dp"
                             android:layout_height="50dp"
-                            android:padding="0dp"
                             android:layout_marginRight="6dp"
+                            android:padding="0dp"
                             android:scaleType="fitCenter" />
 
                         <ImageButton
                             android:id="@+id/btn_follow_stop"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
-                            android:cropToPadding="true"
-                            android:padding="0dp"
                             android:layout_marginRight="6dp"
                             android:alpha="0.5"
-                            android:tooltipText="unpin map, do not follow anyone and clear all routes"
                             android:background="@drawable/transparent"
+                            android:cropToPadding="true"
+                            android:padding="0dp"
                             android:scaleType="centerInside"
-                            android:src="@drawable/outline_cancel_24" />
+                            android:src="@drawable/outline_cancel_24"
+                            android:tooltipText="unpin map, do not follow anyone and clear all routes" />
 
                     </LinearLayout>
 
