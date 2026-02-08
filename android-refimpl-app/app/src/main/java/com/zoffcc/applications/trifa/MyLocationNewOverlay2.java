@@ -15,19 +15,19 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
     public MyLocationNewOverlay2(IMyLocationProvider myLocationProvider, MapView mapView)
     {
         super(myLocationProvider, mapView);
-        Log.i(TAG, "L00:MyLocationNewOverlay2:create:" + myLocationProvider);
+        // Log.i(TAG, "L00:MyLocationNewOverlay2:create:" + myLocationProvider);
     }
 
     // HINT: this is the callback from the osmdroid lib's "MyLocationNewOverlay" location provider
     //       which we ignore and use our own location from "CaptureService"
     @Override
     public void onLocationChanged(final Location location, IMyLocationProvider source) {
-        Log.i(TAG, "L00:onLocationChanged:0:00000000000000000:IGNORE_IGNORE:" + source + " " + location);
+        // Log.i(TAG, "L00:onLocationChanged:0:00000000000000000:IGNORE_IGNORE:" + source + " " + location);
     }
 
     // HINT: function to inject location into the "MyLocationNewOverlay" of osmdroid lib
     public void onLocationChanged_real(final Location location, IMyLocationProvider source) {
-        Log.i(TAG, "L00:onLocationChanged_real:1:XXXXXXXXXXXXXXXXX");
+        // Log.i(TAG, "L00:onLocationChanged_real:1:XXXXXXXXXXXXXXXXX");
         super.onLocationChanged(location, source);
     }
 }
