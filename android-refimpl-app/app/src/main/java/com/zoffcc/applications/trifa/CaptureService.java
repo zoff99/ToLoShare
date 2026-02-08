@@ -340,18 +340,6 @@ public class CaptureService extends Service
          */
     }
 
-    static void broadcastFusedLocation(double currentLat, double currentLng, float currentMovementBearing)
-    {
-        try
-        {
-
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     private static void update_gps_position(@NonNull Location location, boolean update_map)
     {
         try
