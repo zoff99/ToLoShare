@@ -77,10 +77,6 @@ public class CaptureService extends Service
     final static String GEO_COORD_PROTO_VERSION_1 = "01"; // must be exactly 2 char wide
 
     static Location currentBestLocation = null;
-    static long last_position_timestamp_ms = 0;
-    static long last_real_position_timestamp_ms = 0;
-    final static long UPDATE_FROM_FUSED_AFTER_GPS_STALE_SECONDS = 2;
-    final static long USE_FUSED_FOR_MAX_SECONDS = 15;
 
     static HashMap<String, remote_location_entry> remote_location_data = new HashMap<>();
     public static class remote_location_entry {
@@ -212,7 +208,6 @@ public class CaptureService extends Service
 
         try
         {
-            last_real_position_timestamp_ms = System.currentTimeMillis();
             update_gps_position(currentBestLocation, false);
         }
         catch (Exception e)
@@ -359,8 +354,6 @@ public class CaptureService extends Service
 
     private static void update_gps_position(@NonNull Location location, boolean update_map)
     {
-        last_position_timestamp_ms = System.currentTimeMillis();
-
         try
         {
             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
