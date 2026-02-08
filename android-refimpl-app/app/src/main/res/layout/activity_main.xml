@@ -228,12 +228,12 @@
                         android:background="@drawable/border_background"
                         android:orientation="horizontal" >
 
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_marginTop="0dp"
                             android:layout_marginBottom="0dp"
                             android:layout_weight="10"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:orientation="vertical" >
 
                             <TextView
@@ -242,11 +242,10 @@
                                 android:layout_height="wrap_content"
                                 android:paddingLeft="5dp"
                                 android:paddingRight="5dp"
-                                android:paddingBottom="0dp"
-                                android:layout_weight="5"
-                                android:text="provider: gps\naccuracy: 100m\nlast: now"
+                                android:text="...."
                                 android:textColor="@color/md_black_1000"
                                 android:textSize="10sp"
+                                android:layout_alignParentTop="true"
                                 android:visibility="visible"
                                 tools:ignore="HardcodedText" />
 
@@ -257,18 +256,18 @@
                                 android:paddingTop="0dp"
                                 android:paddingLeft="5dp"
                                 android:paddingRight="5dp"
-                                android:layout_weight="1"
                                 android:text="passive, network, gps"
                                 android:textColor="@color/md_black_1000"
                                 android:textSize="9sp"
+                                android:layout_alignParentBottom="true"
                                 android:visibility="visible"
                                 tools:ignore="HardcodedText" />
-                        </LinearLayout>
+                        </RelativeLayout>
 
                         <ImageButton
                             android:id="@+id/btn_follow_self"
                             android:layout_width="50dp"
-                            android:layout_height="50dp"
+                            android:layout_height="60dp"
                             android:cropToPadding="true"
                             android:padding="0dp"
                             android:layout_gravity="center_vertical"
