@@ -413,6 +413,22 @@ public class CaptureService extends Service
         {
         }
 
+        send_location_update_to_all_friends(location);
+
+        try
+        {
+            own_location_last_ts_millis = System.currentTimeMillis();
+            own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
+                               (Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
+            set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    static void send_location_update_to_all_friends(@NonNull Location location)
+    {
         try
         {
             final byte[] data_bin = getGeoMsg(location);
@@ -446,16 +462,45 @@ public class CaptureService extends Service
         {
             e.printStackTrace();
         }
+    }
 
+    static void send_location_update_to_friend(@NonNull Location location, @NonNull String fpubkey)
+    {
         try
         {
-            own_location_last_ts_millis = System.currentTimeMillis();
-            own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
-                               (Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
-            set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
+            final byte[] data_bin = getGeoMsg(location);
+            int data_bin_len = data_bin.length;
+            data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
+
+            long[] friends = MainActivity.tox_self_get_friend_list();
+            for (int fc = 0; fc < friends.length; fc++)
+            {
+                //noinspection unused
+                final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
+                // Log.i(TAG, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+
+                if (res == 1)
+                {
+                    try
+                    {
+                        String f_pubkey = tox_friend_get_public_key__wrapper(fc);
+                        if ((f_pubkey != null) && (f_pubkey.length() > 10))
+                        {
+                            if (f_pubkey.equals(fpubkey))
+                            {
+                                f_tracker.ping_outgoing(f_pubkey);
+                            }
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
+            }
         }
         catch(Exception e)
         {
+            e.printStackTrace();
         }
     }
 

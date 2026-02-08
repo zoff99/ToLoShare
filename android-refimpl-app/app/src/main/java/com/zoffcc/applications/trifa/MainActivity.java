@@ -180,6 +180,8 @@ import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.fusion_m;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
+import static com.zoffcc.applications.trifa.CaptureService.send_location_update_to_all_friends;
+import static com.zoffcc.applications.trifa.CaptureService.send_location_update_to_friend;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_animate;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
@@ -5931,6 +5933,23 @@ public class MainActivity extends BaseProtectedActivity
                         {
                             main_handler_s.post(myRunnable);
                         }
+
+                        final Thread t = new Thread()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    send_location_update_to_friend(currentBestLocation, f.tox_public_key_string);
+                                }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                        };
+                        t.start();
                     }
                     catch(Exception e)
                     {
