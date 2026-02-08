@@ -5,28 +5,20 @@ import android.util.Log;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import static com.zoffcc.applications.trifa.MainActivity.SMOOTH_POS_STEPS_OWN;
 import static com.zoffcc.applications.trifa.MainActivity.gps_int_own;
 import static com.zoffcc.applications.trifa.MainActivity.runTaskOwnLocation;
 
-public class MyLocationNewOverlay2 extends MyLocationNewOverlay
+public class MyLocationNewOverlay2 extends MyLocationNewOverlayTweak
 {
     /** @noinspection unused*/
     final static String TAG = "MyLocNewOverlay2";
 
-    public MyLocationNewOverlay2(IMyLocationProvider myLocationProvider, MapView mapView)
+    public MyLocationNewOverlay2(MapView mapView)
     {
-        super(myLocationProvider, mapView);
+        super(mapView);
         // Log.i(TAG, "L00:MyLocationNewOverlay2:create:" + myLocationProvider);
-    }
-
-    // HINT: this is the callback from the osmdroid lib's "MyLocationNewOverlay" location provider
-    //       which we ignore and use our own location from "CaptureService"
-    @Override
-    public void onLocationChanged(final Location location, IMyLocationProvider source) {
-        // Log.i(TAG, "L00:onLocationChanged:0:00000000000000000:IGNORE_IGNORE:" + source + " " + location);
     }
 
     // HINT: function to inject location into the "GpsInterpolatorOwnLocation" (which will inject it into "onLocationChanged_real")
@@ -51,6 +43,6 @@ public class MyLocationNewOverlay2 extends MyLocationNewOverlay
     // HINT: function to inject location into the "MyLocationNewOverlay" of osmdroid lib
     public void onLocationChanged_real(final Location location, IMyLocationProvider source) {
         // Log.i(TAG, "L00:onLocationChanged_real:1:XXXXXXXXXXXXXXXXX");
-        super.onLocationChanged(location, source);
+        super.onLocationChanged(location);
     }
 }

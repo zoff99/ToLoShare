@@ -358,7 +358,7 @@ public class MainActivity extends BaseProtectedActivity
     static Handler handler = new Handler(Looper.getMainLooper());
     static boolean map_is_northed = true;
     static MyLocationNewOverlay2 mLocationOverlay = null;
-    static IMyLocationProvider mIMyLocationProvider = null;
+    // static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
     static FriendTracker f_tracker = null;
@@ -2315,7 +2315,8 @@ public class MainActivity extends BaseProtectedActivity
         try
         {
             // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
-            mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, mIMyLocationProvider);
+            // mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, mIMyLocationProvider);
+            mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, null);
         }
         catch(Exception e)
         {
@@ -2417,7 +2418,7 @@ public class MainActivity extends BaseProtectedActivity
         }
         try
         {
-            mIMyLocationProvider.stopLocationProvider();
+            //mIMyLocationProvider.stopLocationProvider();
         }
         catch(Exception e)
         {
@@ -2430,20 +2431,10 @@ public class MainActivity extends BaseProtectedActivity
         {
         }
         mLocationOverlay = null;
-        mIMyLocationProvider = null;
-        //if (mIMyLocationProvider == null)
-        {
-            mIMyLocationProvider = new GpsMyLocationProvider(context_s);
-            // HINT: basically we don't use the location updates from osmdroid
-            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinDistance(100);
-            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinTime(GPS_UPDATE_FREQ_MS * 1000);
-            Log.i(TAG, "OOOOOOO:new:1:a: " + mIMyLocationProvider);
-        }
-
         //if (mLocationOverlay == null)
         {
-            Log.i(TAG, "OOOOOOO:new:1:b: " + mIMyLocationProvider);
-            mLocationOverlay = new MyLocationNewOverlay2(mIMyLocationProvider, map);
+            // mLocationOverlay = new MyLocationNewOverlay2(mIMyLocationProvider, map);
+            mLocationOverlay = new MyLocationNewOverlay2(map);
             Log.i(TAG, "OOOOOOO:new:1:b");
         }
 
@@ -2453,7 +2444,6 @@ public class MainActivity extends BaseProtectedActivity
                         R.drawable.round_navigation_color_48)).getBitmap(),
                 Color.parseColor("#3142f0"));
         mLocationOverlay.setDirectionIcon(location_arrow_2);
-        Log.i(TAG, "OOOOOOO:new:122:" + mIMyLocationProvider + " " + mLocationOverlay);
         mLocationOverlay.enableMyLocation();
         boolean is_loc_enabled = mLocationOverlay.isMyLocationEnabled();
         Log.i(TAG, "OOOOOOO:new:123:is_loc_enabled=" + is_loc_enabled);
@@ -2463,7 +2453,7 @@ public class MainActivity extends BaseProtectedActivity
     {
         try
         {
-            mIMyLocationProvider.stopLocationProvider();
+            //mIMyLocationProvider.stopLocationProvider();
         }
         catch(Exception e)
         {

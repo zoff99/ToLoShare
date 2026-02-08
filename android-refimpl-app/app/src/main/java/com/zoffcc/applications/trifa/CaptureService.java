@@ -35,7 +35,6 @@ import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
 import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
 import static com.zoffcc.applications.trifa.MainActivity.lat_lon_zoom_first_save;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
-import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.map;

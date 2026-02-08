@@ -11,7 +11,6 @@ import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_pro
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_friends;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
-import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
 
 /** @noinspection FieldCanBeLocal, CommentedOutCode */
 public class GpsInterpolatorOwnLocation
@@ -46,7 +45,7 @@ public class GpsInterpolatorOwnLocation
             {
                 interpolated_location.removeBearing();
             }
-            myLocationNewOverlay2.onLocationChanged_real(interpolated_location, mIMyLocationProvider);
+            myLocationNewOverlay2.onLocationChanged_real(interpolated_location, null);
             if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
             {
                 set_map_center_to_proxy_uithread(interpolated_location);
