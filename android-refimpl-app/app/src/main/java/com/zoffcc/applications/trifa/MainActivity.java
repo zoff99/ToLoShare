@@ -2203,6 +2203,7 @@ public class MainActivity extends BaseProtectedActivity
             remove_map_overlays();
             Log.i(TAG, "add_map_overlays:005");
             add_map_overlays();
+            inject_own_location();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2259,6 +2260,7 @@ public class MainActivity extends BaseProtectedActivity
                     remove_map_overlays();
                     Log.i(TAG, "add_map_overlays:006");
                     add_map_overlays();
+                    inject_own_location();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -2296,6 +2298,19 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**// }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
+    }
+
+    static void inject_own_location()
+    {
+        try
+        {
+            // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
+            mLocationOverlay.onLocationChanged_real(currentBestLocation, mIMyLocationProvider);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private static void get_route(String f_pubkey, ROUTE_TYPE route_type)
@@ -4278,6 +4293,7 @@ public class MainActivity extends BaseProtectedActivity
             }
             Log.i(TAG, "add_map_overlays:002");
             add_map_overlays();
+            inject_own_location();
         }
         else
         {

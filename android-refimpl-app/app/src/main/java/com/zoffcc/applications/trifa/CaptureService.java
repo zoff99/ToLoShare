@@ -32,6 +32,7 @@ import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
+import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
 import static com.zoffcc.applications.trifa.MainActivity.lat_lon_zoom_first_save;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
@@ -207,15 +208,7 @@ public class CaptureService extends Service
             e.printStackTrace();
         }
 
-        try
-        {
-            // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
-            mLocationOverlay.onLocationChanged_real(currentBestLocation, mIMyLocationProvider);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
+        inject_own_location();
 
         try
         {
