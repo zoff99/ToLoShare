@@ -2434,8 +2434,9 @@ public class MainActivity extends BaseProtectedActivity
         //if (mIMyLocationProvider == null)
         {
             mIMyLocationProvider = new GpsMyLocationProvider(context_s);
-            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinDistance(0);
-            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinTime(GPS_UPDATE_FREQ_MS);
+            // HINT: basically we don't use the location updates from osmdroid
+            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinDistance(100);
+            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinTime(GPS_UPDATE_FREQ_MS * 1000);
             Log.i(TAG, "OOOOOOO:new:1:a: " + mIMyLocationProvider);
         }
 
