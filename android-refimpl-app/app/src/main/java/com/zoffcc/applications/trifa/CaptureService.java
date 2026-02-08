@@ -189,6 +189,33 @@ public class CaptureService extends Service
         AppSessionManager.getInstance().lockApp();
     }
 
+    void update_location_function(@NonNull Location location)
+    {
+        try
+        {
+            if (!isBetterLocation(location))
+            {
+                // HINT: ignore this location update
+                Log.i(TAG, "onLocationChanged: " + "ignore this location update");
+                return;
+            }
+            currentBestLocation = new Location(location);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            last_real_position_timestamp_ms = System.currentTimeMillis();
+            update_gps_position(currentBestLocation, false);
+        }
+        catch (Exception e)
+        {
+        }
+    }
+
     @SuppressLint("MissingPermission")
     public void startLocationTracking()
     {
@@ -202,29 +229,7 @@ public class CaptureService extends Service
             {
                 // Log.i(TAG1, "onLocationChanged: " + location);
 
-                try
-                {
-                    if (!isBetterLocation(location))
-                    {
-                        // HINT: ignore this location update
-                        Log.i(TAG1, "onLocationChanged: " + "ignore this location update");
-                        return;
-                    }
-                    currentBestLocation = new Location(location);
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-                try
-                {
-                    last_real_position_timestamp_ms = System.currentTimeMillis();
-                    update_gps_position(currentBestLocation, false);
-                }
-                catch (Exception e)
-                {
-                }
+                update_location_function(location);
             }
 
             @Override
@@ -277,6 +282,20 @@ public class CaptureService extends Service
                     found_location_providers = provider;
                 } else {
                     found_location_providers += ", " + provider;
+                }
+
+                try
+                {
+                    Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                    if (lastKnownLocation != null)
+                    {
+                        Log.i(TAG, "onProviderEnabled: provider = " + provider + " lastKnownLocation = " +
+                                   lastKnownLocation);
+                        update_location_function(lastKnownLocation);
+                    }
+                }
+                catch(Exception ignored)
+                {
                 }
             }
         } catch (Exception ignored) {
