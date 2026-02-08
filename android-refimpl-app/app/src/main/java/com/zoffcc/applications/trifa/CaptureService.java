@@ -32,7 +32,9 @@ import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
+import static com.zoffcc.applications.trifa.MainActivity.lat_lon_zoom_first_save;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
+import static com.zoffcc.applications.trifa.MainActivity.mIMyLocationProvider;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.map;
@@ -199,6 +201,16 @@ public class CaptureService extends Service
                 return;
             }
             currentBestLocation = new Location(location);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
+            mLocationOverlay.onLocationChanged_real(currentBestLocation, mIMyLocationProvider);
         }
         catch(Exception e)
         {

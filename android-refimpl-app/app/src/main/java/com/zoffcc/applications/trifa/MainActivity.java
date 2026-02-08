@@ -50,6 +50,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -171,6 +172,7 @@ import permissions.dispatcher.RuntimePermissions;
 
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
+import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS;
 import static com.zoffcc.applications.trifa.CaptureService.INVALID_BEARING;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
@@ -2407,6 +2409,8 @@ public class MainActivity extends BaseProtectedActivity
         //if (mIMyLocationProvider == null)
         {
             mIMyLocationProvider = new GpsMyLocationProvider(context_s);
+            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinDistance(0);
+            ((GpsMyLocationProvider)mIMyLocationProvider).setLocationUpdateMinTime(GPS_UPDATE_FREQ_MS);
             Log.i(TAG, "OOOOOOO:new:1:a: " + mIMyLocationProvider);
         }
 
