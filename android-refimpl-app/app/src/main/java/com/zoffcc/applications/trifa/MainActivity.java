@@ -2315,7 +2315,7 @@ public class MainActivity extends BaseProtectedActivity
         try
         {
             // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
-            mLocationOverlay.onLocationChanged_real(currentBestLocation, mIMyLocationProvider);
+            mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, mIMyLocationProvider);
         }
         catch(Exception e)
         {
