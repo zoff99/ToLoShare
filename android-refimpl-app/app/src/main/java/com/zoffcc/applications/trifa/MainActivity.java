@@ -6494,10 +6494,18 @@ public class MainActivity extends BaseProtectedActivity
         {
             return false;
         }
+
         String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
         String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
         if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
         {
+            //**MOCK**//
+            //**MOCK**// if (f_pubkey.equals("AAAAAAAAAAAA0BB0BB0BB0") || (f_pubkey.equals("-1")))
+            //**MOCK**// {
+            //**MOCK**//     return true;
+            //**MOCK**// }
+            //**MOCK**//
+
             if ((f_pubkey_pseudo_num_0 != null) &&
                 (f_pubkey != null) &&
                 (f_pubkey_pseudo_num_0.equals(f_pubkey)))
@@ -6523,6 +6531,14 @@ public class MainActivity extends BaseProtectedActivity
         String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
         if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
         {
+            //**MOCK**//
+            //**MOCK**// if (f_pubkey.equals("AAAAAAAAAAAA0BB0BB0BB0") || (f_pubkey.equals("-1")))
+            //**MOCK**// {
+            //**MOCK**//     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+            //**MOCK**//     set_map_center_to_proxy_uithread(re.remoteBestLocation);
+            //**MOCK**// }
+            //**MOCK**//
+
             if ((f_pubkey_pseudo_num_0 != null) &&
                 (f_pubkey != null) &&
                 (f_pubkey_pseudo_num_0.equals(f_pubkey)))
