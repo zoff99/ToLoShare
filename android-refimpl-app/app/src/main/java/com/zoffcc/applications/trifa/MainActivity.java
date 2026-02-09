@@ -2204,7 +2204,7 @@ public class MainActivity extends BaseProtectedActivity
             Log.i(TAG, "add_map_overlays:005");
             add_map_overlays();
             inject_own_location();
-            move_map_to_own_location();
+            //**//move_map_to_own_location();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2262,7 +2262,7 @@ public class MainActivity extends BaseProtectedActivity
                     Log.i(TAG, "add_map_overlays:006");
                     add_map_overlays();
                     inject_own_location();
-                    move_map_to_own_location();
+                    //**//move_map_to_own_location();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -4297,7 +4297,7 @@ public class MainActivity extends BaseProtectedActivity
             Log.i(TAG, "add_map_overlays:002");
             add_map_overlays();
             inject_own_location();
-            move_map_to_own_location();
+            //**//move_map_to_own_location();
         }
         else
         {
