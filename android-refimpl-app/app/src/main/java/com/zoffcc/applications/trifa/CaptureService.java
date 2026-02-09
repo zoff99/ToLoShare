@@ -26,6 +26,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
+import static android.location.LocationManager.FUSED_PROVIDER;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
@@ -58,7 +59,7 @@ public class CaptureService extends Service
     static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 20;
+    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 10;
     private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;
@@ -240,6 +241,12 @@ public class CaptureService extends Service
             @Override
             public void onProviderEnabled(@NonNull String provider)
             {
+                if (provider.equals(FUSED_PROVIDER))
+                {
+                    // Log.i(TAG, "isBetterLocation:ignoring FUSED provider!!");
+                    return;
+                }
+
                 Log.i(TAG1, "onProviderEnabled: " + provider + " currentBestLocation=" + currentBestLocation);
 
                 try
@@ -294,26 +301,36 @@ public class CaptureService extends Service
         try {
             List<String> providers = locationManager.getProviders(false);
             for (String provider : providers) {
-                locationManager.requestLocationUpdates(provider, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-                Log.i(TAG, "startLocationTracking:requestLocationUpdates: provider = " + provider);
-                if (found_location_providers.isEmpty()) {
-                    found_location_providers = provider;
-                } else {
-                    found_location_providers += ", " + provider;
-                }
-
-                try
+                if (provider.equals(FUSED_PROVIDER))
                 {
-                    Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
-                    if (lastKnownLocation != null)
+                    Log.i(TAG, "startLocationTracking:ignoring FUSED provider!!");
+                }
+                else
+                {
+                    locationManager.requestLocationUpdates(provider, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+                    Log.i(TAG, "startLocationTracking:requestLocationUpdates: provider = " + provider);
+                    if (found_location_providers.isEmpty())
                     {
-                        Log.i(TAG, "startLocationTracking: provider = " + provider + " lastKnownLocation = " +
-                                   lastKnownLocation);
-                        update_location_function(lastKnownLocation);
+                        found_location_providers = provider;
                     }
-                }
-                catch(Exception ignored)
-                {
+                    else
+                    {
+                        found_location_providers += ", " + provider;
+                    }
+
+                    try
+                    {
+                        Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                        if (lastKnownLocation != null)
+                        {
+                            Log.i(TAG, "startLocationTracking: provider = " + provider + " lastKnownLocation = " +
+                                       lastKnownLocation);
+                            update_location_function(lastKnownLocation);
+                        }
+                    }
+                    catch(Exception ignored)
+                    {
+                    }
                 }
             }
         } catch (Exception ignored) {
@@ -570,18 +587,57 @@ public class CaptureService extends Service
             return true;
         }
 
+        String new_provider_nonnull = "unknown";
+        String old_provider_nonnull = "unknown";
+        try
+        {
+            if (location.getProvider() != null)
+            {
+                new_provider_nonnull = location.getProvider();
+            }
+            if (currentBestLocation.getProvider() != null)
+            {
+                old_provider_nonnull = currentBestLocation.getProvider();
+            }
+        }
+        catch(Exception ignored)
+        {
+        }
+
+        if (new_provider_nonnull.equals(FUSED_PROVIDER))
+        {
+            // Log.i(TAG, "isBetterLocation:ignoring FUSED provider!!");
+            return false;
+        }
+
+        // HINT: GPS provider always wins
+        if (new_provider_nonnull.equals(LocationManager.GPS_PROVIDER))
+        {
+           return true;
+        }
+
+        boolean switch_aways_from_gps = false;
+        if (!new_provider_nonnull.equals(LocationManager.GPS_PROVIDER) &&
+            (old_provider_nonnull.equals(LocationManager.GPS_PROVIDER)))
+        {
+            switch_aways_from_gps = true;
+        }
+        boolean both_non_gps = false;
+        if (!new_provider_nonnull.equals(LocationManager.GPS_PROVIDER) &&
+            (!old_provider_nonnull.equals(LocationManager.GPS_PROVIDER)))
+        {
+            both_non_gps = true;
+        }
+
         // Check whether the new location fix is newer or older
         long timeDelta = location.getTime() - currentBestLocation.getTime();
         boolean isSignificantlyNewer = timeDelta > (LOCATION_TOO_OLD_SECONDS);
         boolean isSignificantlyOlder = timeDelta < -(LOCATION_TOO_OLD_SECONDS);
         boolean isNewer = timeDelta > 0;
 
-        // If it's been more than xx seconds since the current location, use the new location
-        // because the user has likely moved
         if (isSignificantlyNewer)
         {
             return true;
-            // If the new location is more than xx seconds older, it must be worse
         }
         else if (isSignificantlyOlder)
         {
@@ -598,26 +654,19 @@ public class CaptureService extends Service
         boolean isFromSameProvider = isSameProvider(location.getProvider(),
                                                     currentBestLocation.getProvider());
 
-        try
-        {
-            if (location.getProvider().equals(LocationManager.GPS_PROVIDER))
-            {
-                if (isNewer)
-                {
-                    return true;
-                }
-            }
-        }
-        catch(Exception e)
-        {
-        }
 
         // Determine location quality using a combination of timeliness and accuracy
-        if (isNewer && !isLessAccurate)
+        if (both_non_gps)
         {
-            return true;
+            if (isMoreAccurate)
+            {
+                return true;
+            }
+            else if (isNewer && !isLessAccurate)
+            {
+                return true;
+            }
         }
-
 /*
         if (isMoreAccurate)
         {
