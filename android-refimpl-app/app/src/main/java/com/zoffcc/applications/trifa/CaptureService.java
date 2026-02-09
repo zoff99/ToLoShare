@@ -193,10 +193,11 @@ public class CaptureService extends Service
             if (!isBetterLocation(location))
             {
                 // HINT: ignore this location update
-                Log.i(TAG, "onLocationChanged: " + "ignore this location update");
+                // Log.i(TAG, "update_location_function: " + "ignore this location update");
                 return;
             }
             currentBestLocation = new Location(location);
+            // Log.i(TAG, "update_location_function: currentBestLocation update -> " + location);
         }
         catch(Exception e)
         {

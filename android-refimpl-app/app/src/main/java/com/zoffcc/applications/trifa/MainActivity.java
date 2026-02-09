@@ -2312,15 +2312,18 @@ public class MainActivity extends BaseProtectedActivity
 
     static void inject_own_location()
     {
-        try
+        if (mLocationOverlay.isMyLocationEnabled())
         {
-            // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
-            // mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, mIMyLocationProvider);
-            mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, null);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
+            try
+            {
+                // HINT: inject our captured location into custom "MyLocationNewOverlay2" class
+                // mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, mIMyLocationProvider);
+                mLocationOverlay.onLocationChanged_interpolater(currentBestLocation, null);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 

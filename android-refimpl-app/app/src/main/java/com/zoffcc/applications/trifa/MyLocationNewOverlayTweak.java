@@ -400,15 +400,16 @@ public class MyLocationNewOverlayTweak extends Overlay implements IOverlayMenuPr
     }
 
     public void onLocationChanged(final Location location) {
-
-        if (location != null && mHandler!=null) {
-            // These location updates can come in from different threads
-            mHandler.postAtTime(new Runnable() {
-                @Override
-                public void run() {
-                    setLocation(location);
-                }
-            }, mHandlerToken, 0);
+        if (isMyLocationEnabled()) {
+            if (location != null && mHandler != null) {
+                // These location updates can come in from different threads
+                mHandler.postAtTime(new Runnable() {
+                    @Override
+                    public void run() {
+                        setLocation(location);
+                    }
+                }, mHandlerToken, 0);
+            }
         }
     }
 
