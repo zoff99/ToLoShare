@@ -58,7 +58,7 @@ public class CaptureService extends Service
     static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 5;
+    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 20;
     private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;
@@ -598,7 +598,27 @@ public class CaptureService extends Service
         boolean isFromSameProvider = isSameProvider(location.getProvider(),
                                                     currentBestLocation.getProvider());
 
+        try
+        {
+            if (location.getProvider().equals(LocationManager.GPS_PROVIDER))
+            {
+                if (isNewer)
+                {
+                    return true;
+                }
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
         // Determine location quality using a combination of timeliness and accuracy
+        if (isNewer && !isLessAccurate)
+        {
+            return true;
+        }
+
+/*
         if (isMoreAccurate)
         {
             return true;
@@ -611,6 +631,7 @@ public class CaptureService extends Service
         {
             return true;
         }
+*/
         return false;
     }
 
