@@ -17,6 +17,7 @@ import android.util.Log;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -299,7 +300,8 @@ public class CaptureService extends Service
 
         found_location_providers = "";
         try {
-            List<String> providers = locationManager.getProviders(false);
+            // List<String> providers = locationManager.getProviders(false);
+            List<String> providers = Arrays.asList(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER);
             for (String provider : providers) {
                 if (provider.equals(FUSED_PROVIDER))
                 {
