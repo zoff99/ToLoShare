@@ -228,8 +228,7 @@ public class CaptureService extends Service
             @Override
             public void onLocationChanged(@NonNull Location location)
             {
-                // Log.i(TAG1, "onLocationChanged: " + location);
-
+                Log.i(TAG1, "onLocationChanged: " + location);
                 update_location_function(location);
             }
 
@@ -297,42 +296,17 @@ public class CaptureService extends Service
             }
         };
 
-
         found_location_providers = "";
         try {
-            // List<String> providers = locationManager.getProviders(false);
-            List<String> providers = Arrays.asList(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER);
+            List<String> providers = locationManager.getProviders(false);
             for (String provider : providers) {
-                if (provider.equals(FUSED_PROVIDER))
+                if (found_location_providers.isEmpty())
                 {
-                    Log.i(TAG, "startLocationTracking:ignoring FUSED provider!!");
+                    found_location_providers = provider;
                 }
                 else
                 {
-                    locationManager.requestLocationUpdates(provider, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
-                    Log.i(TAG, "startLocationTracking:requestLocationUpdates: provider = " + provider);
-                    if (found_location_providers.isEmpty())
-                    {
-                        found_location_providers = provider;
-                    }
-                    else
-                    {
-                        found_location_providers += ", " + provider;
-                    }
-
-                    try
-                    {
-                        Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
-                        if (lastKnownLocation != null)
-                        {
-                            Log.i(TAG, "startLocationTracking: provider = " + provider + " lastKnownLocation = " +
-                                       lastKnownLocation);
-                            update_location_function(lastKnownLocation);
-                        }
-                    }
-                    catch(Exception ignored)
-                    {
-                    }
+                    found_location_providers += ", " + provider;
                 }
             }
         } catch (Exception ignored) {
@@ -341,6 +315,22 @@ public class CaptureService extends Service
         try {
             set_found_loc_providers_text(found_location_providers);
         } catch (Exception ignored) {
+        }
+
+        try
+        {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+        }
+        catch(Exception ignored)
+        {
+        }
+
+        try
+        {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+        }
+        catch(Exception ignored)
+        {
         }
     }
 
