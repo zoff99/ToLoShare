@@ -615,21 +615,21 @@ public class CaptureService extends Service
             return true;
         }
 
-        // If current best location is from GPS, do not switch unless new location is significantly better
-        if ("gps".equalsIgnoreCase(old_provider_nonnull)) {
-            // Only switch if new location is significantly better
-            if (isMoreAccurate(new_location, current_best_location)) {
-                return true;
-            }
-            // Avoid switching away from GPS unless new location is much better
-            return false;
-        }
-
         // If new location is newer by a certain threshold, consider switching
         long timeDelta = new_location.getTime() -
                          (current_best_location != null ? current_best_location.getTime() : 0);
         boolean isSignificantlyNewer = timeDelta > (LOCATION_TOO_OLD_MS);
         boolean isSignificantlyOlder = timeDelta < -(LOCATION_TOO_OLD_MS);
+
+        // If current best location is from GPS, do not switch unless new location is significantly newer
+        if ("gps".equalsIgnoreCase(old_provider_nonnull)) {
+            // Only switch if new location is significantly newer
+            if (isSignificantlyNewer) {
+                return true;
+            }
+            // Avoid switching away from GPS unless new location is much better
+            return false;
+        }
 
         if (isSignificantlyNewer) {
             return true;
