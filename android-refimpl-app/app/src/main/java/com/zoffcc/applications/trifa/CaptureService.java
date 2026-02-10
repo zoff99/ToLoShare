@@ -225,7 +225,7 @@ public class CaptureService extends Service
             @Override
             public void onLocationChanged(@NonNull Location location)
             {
-                Log.i(TAG1, "onLocationChanged: " + location);
+                // Log.i(TAG1, "onLocationChanged: " + location);
                 update_location_function(location);
             }
 
