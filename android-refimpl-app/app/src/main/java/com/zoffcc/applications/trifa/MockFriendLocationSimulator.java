@@ -9,7 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
-import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg;
+import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg_proto_v1;
 import static com.zoffcc.applications.trifa.MainActivity.android_tox_callback_friend_lossless_packet_cb_method;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -150,7 +150,7 @@ public class MockFriendLocationSimulator {
         }
 
         // set friends location here -----------------
-        final byte[] data_bin = getGeoMsg(mockLocation);
+        final byte[] data_bin = getGeoMsg_proto_v1(mockLocation, System.currentTimeMillis());
         int data_bin_len = data_bin.length;
         data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
         android_tox_callback_friend_lossless_packet_cb_method(this.friendnumber, data_bin, data_bin_len);

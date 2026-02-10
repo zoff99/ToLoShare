@@ -6212,16 +6212,53 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 String[] separated = geo_data_raw.split(":");
-                                if (separated[0].equals("TzGeo00"))
+                                if ((separated[0].equals("TzGeo00")) || (separated[0].equals("TzGeo01")))
                                 {
+                                    int proto_version = 0;
+                                    if (separated[0].equals("TzGeo01"))
+                                    {
+                                        proto_version = 1;
+                                    }
+
                                     if (separated[1].equals("BEGINGEO"))
                                     {
                                         long current_ts_millis = System.currentTimeMillis();
 
-                                        float lat = Float.parseFloat(separated[2]);
-                                        float lon = Float.parseFloat(separated[3]);
-                                        // float alt = Float.parseFloat(separated[4]); // not used
-                                        float acc = Float.parseFloat(separated[5]);
+                                        float lat;
+                                        float lon;
+                                        float alt;
+                                        float acc;
+                                        long loc_timestamp;
+                                        String loc_provider = "unknown";
+
+                                        if (proto_version == 0)
+                                        {
+                                            lat = Float.parseFloat(separated[2]);
+                                            lon = Float.parseFloat(separated[3]);
+                                            alt = Float.parseFloat(separated[4]); // not used
+                                            acc = Float.parseFloat(separated[5]);
+                                        }
+                                        else if (proto_version == 1)
+                                        {
+                                            lat = Float.parseFloat(separated[2]);
+                                            lon = Float.parseFloat(separated[3]);
+                                            alt = Float.parseFloat(separated[4]); // not used
+                                            acc = Float.parseFloat(separated[5]);
+                                            loc_timestamp = Long.parseLong(separated[6]);
+                                            try
+                                            {
+                                                loc_provider = separated[7];
+                                            }
+                                            catch(Exception e)
+                                            {
+                                                loc_provider = "???";
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // HINT: unknown protcol version detected
+                                            return;
+                                        }
                                         float bearing = 0;
                                         boolean has_bearing = true;
                                         boolean old_has_bearing = false;
@@ -6348,6 +6385,8 @@ public class MainActivity extends BaseProtectedActivity
                                         if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey != null) && (f_pubkey_pseudo_num_0.equals(f_pubkey)))
                                         {
                                             String final_f_pubkey = f_pubkey;
+                                            String finalLoc_provider = loc_provider;
+                                            int finalProto_version = proto_version;
                                             Runnable myRunnable = new Runnable()
                                             {
                                                 @Override
@@ -6359,7 +6398,9 @@ public class MainActivity extends BaseProtectedActivity
                                                                 final_f_pubkey);
                                                         re.remote_location_last_ts_millis = current_ts_millis;
                                                         re.remote_location_txt =
-                                                                "name: " + re.friend_name + "\n" + "accur: " + (int) (Math.round(acc * 10f) / 10) + " m\n";
+                                                                "name: " + re.friend_name + "\n" +
+                                                                "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
+                                                                finalLoc_provider + " / " + finalProto_version +")\n";
                                                         set_debug_text_2(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                     }
@@ -6378,6 +6419,8 @@ public class MainActivity extends BaseProtectedActivity
                                         else if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) && (f_pubkey_pseudo_num_1.equals(f_pubkey)))
                                         {
                                             String final_f_pubkey = f_pubkey;
+                                            String finalLoc_provider1 = loc_provider;
+                                            int finalProto_version1 = proto_version;
                                             Runnable myRunnable = new Runnable()
                                             {
                                                 @Override
@@ -6389,7 +6432,9 @@ public class MainActivity extends BaseProtectedActivity
                                                                 final_f_pubkey);
                                                         re.remote_location_last_ts_millis = current_ts_millis;
                                                         re.remote_location_txt =
-                                                                "name: " + re.friend_name + "\n" + "accur: " + (int) (Math.round(acc * 10f) / 10) + " m\n";
+                                                                "name: " + re.friend_name + "\n" +
+                                                                "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
+                                                                finalLoc_provider1 + " / " + finalProto_version1 + ")\n";
                                                         set_debug_text_3(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                     }

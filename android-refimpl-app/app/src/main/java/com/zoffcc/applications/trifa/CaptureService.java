@@ -60,7 +60,7 @@ public class CaptureService extends Service
     static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 10;
+    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 30;
     private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;
@@ -368,7 +368,7 @@ public class CaptureService extends Service
     {
         try
         {
-            final byte[] data_bin = getGeoMsg(location);
+            final byte[] data_bin = getGeoMsg_proto_v1(location, own_location_last_ts_millis);
             int data_bin_len = data_bin.length;
             data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -405,8 +405,7 @@ public class CaptureService extends Service
     {
         try
         {
-            // final byte[] data_bin = getGeoMsg_proto_v1(location, own_location_last_ts_millis);
-            final byte[] data_bin = getGeoMsg(location);
+            final byte[] data_bin = getGeoMsg_proto_v1(location, own_location_last_ts_millis);
             int data_bin_len = data_bin.length;
             data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -540,6 +539,18 @@ public class CaptureService extends Service
             bearing = INVALID_BEARING;
         }
 
+        String provider = "unknown";
+        try
+        {
+            if (location.getProvider() != null)
+            {
+                provider = location.getProvider();
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
         String temp_string = "X" + // the pkt ID will be added here later. needs to be exactly 1 char!
                              GEO_COORD_PROTO_MAGIC +
                              GEO_COORD_PROTO_VERSION_1  + ":BEGINGEO:" +
@@ -548,6 +559,7 @@ public class CaptureService extends Service
                              location.getAltitude() + ":" +
                              location.getAccuracy() + ":" +
                              timestamp + ":" +
+                             provider + ":" +
                              bearing + ":ENDGEO";
         // Log.i(TAG, "raw:" + temp_string);
         // Log.i(TAG, "rawlen:" + temp_string.length());
