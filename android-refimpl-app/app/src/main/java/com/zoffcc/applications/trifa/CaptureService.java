@@ -17,7 +17,6 @@ import android.util.Log;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,11 +30,9 @@ import static android.location.LocationManager.FUSED_PROVIDER;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__gps_smooth_own;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
 import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
-import static com.zoffcc.applications.trifa.MainActivity.lat_lon_zoom_first_save;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
@@ -60,7 +57,7 @@ public class CaptureService extends Service
     static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int LOCATION_TOO_OLD_SECONDS = 1000 * 30;
+    private static final int LOCATION_TOO_OLD_MS = 1000 * 30;
     private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;
@@ -192,7 +189,7 @@ public class CaptureService extends Service
     {
         try
         {
-            if (!isBetterLocation(location))
+            if (!isBetterLocation(location, currentBestLocation))
             {
                 // HINT: ignore this location update
                 // Log.i(TAG, "update_location_function: " + "ignore this location update");
@@ -575,126 +572,121 @@ public class CaptureService extends Service
     }
 
     /** Determines whether one Location reading is better than the current Location fix
-     * @param location  The new Location that you want to evaluate
+     * @param new_location  The new Location that you want to evaluate
+     * @param current_best_location  The current Location to compare against
      */
-    protected boolean isBetterLocation(Location location)
-    {
-        if (location == null)
-        {
+    protected boolean isBetterLocation(Location new_location, Location current_best_location) {
+        if (new_location == null) {
             // A "null" location is always bad
             return false;
         }
 
-        if (currentBestLocation == null)
-        {
-            // A new location is always better than no location
+        String new_provider_nonnull = "unknown";
+        String old_provider_nonnull = "unknown";
+
+        try {
+            if (new_location.getProvider() != null) {
+                new_provider_nonnull = new_location.getProvider();
+            }
+            if (current_best_location != null && current_best_location.getProvider() != null) {
+                old_provider_nonnull = current_best_location.getProvider();
+            }
+        } catch (Exception ignored) {
+            // Ignore any exceptions
+        }
+
+        // Always prefer GPS provider if new location is from GPS
+        if ("gps".equalsIgnoreCase(new_provider_nonnull)) {
             return true;
         }
 
-        String new_provider_nonnull = "unknown";
-        String old_provider_nonnull = "unknown";
+        // If current best location is from GPS, do not switch unless new location is significantly better
+        if ("gps".equalsIgnoreCase(old_provider_nonnull)) {
+            // Only switch if new location is significantly better
+            if (isMoreAccurate(new_location, current_best_location)) {
+                return true;
+            }
+            // Avoid switching away from GPS unless new location is much better
+            return false;
+        }
+
+        // If new location is newer by a certain threshold, consider switching
+        long timeDelta = new_location.getTime() -
+                         (current_best_location != null ? current_best_location.getTime() : 0);
+        boolean isSignificantlyNewer = timeDelta > (LOCATION_TOO_OLD_MS);
+        boolean isSignificantlyOlder = timeDelta < -(LOCATION_TOO_OLD_MS);
+
+        if (isSignificantlyNewer) {
+            return true;
+        } else if (isSignificantlyOlder) {
+            return false;
+        }
+
+        if (current_best_location == null) {
+            return true;
+        }
+
+        boolean isMoreAccurate = isMoreAccurate(new_location, current_best_location);
+        boolean isSameAccurate = isSameAccurate(new_location, current_best_location);
+
+        // Prefer more accurate location
+        if (isMoreAccurate) {
+            return true;
+        } else if (isSameAccurate && isSameProvider(new_provider_nonnull, old_provider_nonnull)) {
+            // If accuracy is same and provider is same, accept the new location
+            return true;
+        }
+
+        return false;
+    }
+
+    // Helper method to compare accuracy
+    private boolean isMoreAccurate(Location location1, Location location2) {
         try
         {
-            if (location.getProvider() != null)
+            if (location2 == null)
             {
-                new_provider_nonnull = location.getProvider();
+                return true;
             }
-            if (currentBestLocation.getProvider() != null)
-            {
-                old_provider_nonnull = currentBestLocation.getProvider();
-            }
+            return location1.getAccuracy() < location2.getAccuracy();
         }
         catch(Exception ignored)
         {
         }
+        return true;
+    }
 
-        if (new_provider_nonnull.equals(FUSED_PROVIDER))
+    private boolean isSameAccurate(Location location1, Location location2) {
+        try
         {
-            // Log.i(TAG, "isBetterLocation:ignoring FUSED provider!!");
-            return false;
-        }
-
-        // HINT: GPS provider always wins
-        if (new_provider_nonnull.equals(LocationManager.GPS_PROVIDER))
-        {
-           return true;
-        }
-
-        boolean switch_aways_from_gps = false;
-        if (!new_provider_nonnull.equals(LocationManager.GPS_PROVIDER) &&
-            (old_provider_nonnull.equals(LocationManager.GPS_PROVIDER)))
-        {
-            switch_aways_from_gps = true;
-        }
-        boolean both_non_gps = false;
-        if (!new_provider_nonnull.equals(LocationManager.GPS_PROVIDER) &&
-            (!old_provider_nonnull.equals(LocationManager.GPS_PROVIDER)))
-        {
-            both_non_gps = true;
-        }
-
-        // Check whether the new location fix is newer or older
-        long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > (LOCATION_TOO_OLD_SECONDS);
-        boolean isSignificantlyOlder = timeDelta < -(LOCATION_TOO_OLD_SECONDS);
-        boolean isNewer = timeDelta > 0;
-
-        if (isSignificantlyNewer)
-        {
-            return true;
-        }
-        else if (isSignificantlyOlder)
-        {
-            return false;
-        }
-
-        // Check whether the new location fix is more or less accurate
-        int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
-        boolean isLessAccurate = accuracyDelta > 0;
-        boolean isMoreAccurate = accuracyDelta < 0;
-        boolean isSignificantlyLessAccurate = accuracyDelta > LOCATION_ACCURACY_DELTA_METERS;
-
-        // Check if the old and new location are from the same provider
-        boolean isFromSameProvider = isSameProvider(location.getProvider(),
-                                                    currentBestLocation.getProvider());
-
-
-        // Determine location quality using a combination of timeliness and accuracy
-        if (both_non_gps)
-        {
-            if (isMoreAccurate)
+            if (location2 == null)
             {
-                return true;
+                return false;
             }
-            else if (isNewer && !isLessAccurate)
-            {
-                return true;
-            }
+            return location1.getAccuracy() == location2.getAccuracy();
         }
-/*
-        if (isMoreAccurate)
+        catch(Exception ignored)
         {
-            return true;
         }
-        else if (isNewer && !isLessAccurate)
-        {
-            return true;
-        }
-        else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider)
-        {
-            return true;
-        }
-*/
         return false;
     }
 
-    /** Checks whether two providers are the same */
-    private boolean isSameProvider(String provider1, String provider2)
-    {
-        if (provider1 == null) {
-            return provider2 == null;
+
+
+    // Helper method to compare provider names
+    private boolean isSameProvider(String provider1, String provider2) {
+        try
+        {
+            if (provider1 == null)
+            {
+                return false;
+            }
+            return provider1.equalsIgnoreCase(provider2);
         }
-        return provider1.equals(provider2);
+        catch(Exception ignored)
+        {
+        }
+        return false;
     }
 
 }
