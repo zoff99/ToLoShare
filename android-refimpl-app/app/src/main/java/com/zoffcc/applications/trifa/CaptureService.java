@@ -329,6 +329,21 @@ public class CaptureService extends Service
         catch(Exception ignored)
         {
         }
+
+        try {
+            if (currentBestLocation == null)
+            {
+                Location lastPassiveLocation = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                if (lastPassiveLocation != null)
+                {
+                    Log.i(TAG, "One-shot passive provider location: " + lastPassiveLocation);
+                    lastPassiveLocation.setProvider(LocationManager.PASSIVE_PROVIDER);
+                    update_location_function(lastPassiveLocation);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void update_gps_position(@NonNull Location location, boolean update_map)
