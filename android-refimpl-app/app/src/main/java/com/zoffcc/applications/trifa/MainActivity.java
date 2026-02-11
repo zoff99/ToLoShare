@@ -6230,6 +6230,7 @@ public class MainActivity extends BaseProtectedActivity
                                         float acc;
                                         long loc_timestamp;
                                         String loc_provider = "unknown";
+                                        int bearing_index;
 
                                         if (proto_version == 0)
                                         {
@@ -6237,6 +6238,7 @@ public class MainActivity extends BaseProtectedActivity
                                             lon = Float.parseFloat(separated[3]);
                                             alt = Float.parseFloat(separated[4]); // not used
                                             acc = Float.parseFloat(separated[5]);
+                                            bearing_index = 6;
                                         }
                                         else if (proto_version == 1)
                                         {
@@ -6253,6 +6255,7 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 loc_provider = "???";
                                             }
+                                            bearing_index = 8;
                                         }
                                         else
                                         {
@@ -6264,10 +6267,10 @@ public class MainActivity extends BaseProtectedActivity
                                         boolean old_has_bearing = false;
                                         try
                                         {
-                                            if (!separated[6].equals(INVALID_BEARING))
+                                            if (!separated[bearing_index].equals(INVALID_BEARING))
                                             {
                                                 has_bearing = true;
-                                                bearing = Float.parseFloat(separated[6]);
+                                                bearing = Float.parseFloat(separated[bearing_index]);
                                             }
                                             else
                                             {
