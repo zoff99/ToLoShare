@@ -22,7 +22,8 @@ public class TriangleTextView extends View
     private int triangleSizeDp = 6;
     private int topPaddingDp = 8;
     private float textSizeSp = 18f;
-    private int textBottomOffsetDp = 8;
+    /** @noinspection FieldCanBeLocal*/
+    private final int textBottomOffsetDp = 8;
 
     private int triangleColor = Color.RED;
     private Direction currentDirection = Direction.UP;

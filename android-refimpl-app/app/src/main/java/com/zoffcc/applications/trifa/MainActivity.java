@@ -50,7 +50,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -87,7 +86,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.button.MaterialButton;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.iconics.IconicsDrawable;
@@ -107,7 +105,6 @@ import com.zoffcc.applications.sorm.FriendList;
 import com.zoffcc.applications.sorm.Message;
 import com.zoffcc.applications.sorm.OrmaDatabase;
 
-import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
@@ -118,11 +115,7 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
-import org.osmdroid.views.overlay.compass.CompassOverlay;
-import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.io.File;
@@ -141,18 +134,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -172,7 +160,6 @@ import permissions.dispatcher.RuntimePermissions;
 
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
-import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS;
 import static com.zoffcc.applications.trifa.CaptureService.INVALID_BEARING;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
@@ -181,9 +168,7 @@ import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_F
 import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
-import static com.zoffcc.applications.trifa.CaptureService.send_location_update_to_all_friends;
 import static com.zoffcc.applications.trifa.CaptureService.send_location_update_to_friend;
-import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_animate;
 import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_proxy_uithread;
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
@@ -204,7 +189,6 @@ import static com.zoffcc.applications.trifa.HelperGeneric.draw_main_top_icon;
 import static com.zoffcc.applications.trifa.HelperGeneric.get_battery_percent;
 import static com.zoffcc.applications.trifa.HelperGeneric.initializeScreenshotSecurity;
 import static com.zoffcc.applications.trifa.HelperGeneric.is_nightmode_active;
-import static com.zoffcc.applications.trifa.HelperGeneric.px2dp;
 import static com.zoffcc.applications.trifa.HelperGeneric.update_savedata_file_wrapper_throttled_last_trigger_ts;
 import static com.zoffcc.applications.trifa.HelperMsgNotification.change_msg_notification;
 import static com.zoffcc.applications.trifa.HelperRelay.get_own_relay_connection_status_real;
@@ -2205,6 +2189,7 @@ public class MainActivity extends BaseProtectedActivity
             add_map_overlays();
             inject_own_location();
             //**//move_map_to_own_location();
+            update_online_count_indicator_update_all();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2263,6 +2248,7 @@ public class MainActivity extends BaseProtectedActivity
                     add_map_overlays();
                     inject_own_location();
                     //**//move_map_to_own_location();
+                    update_online_count_indicator_update_all();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -4955,6 +4941,7 @@ public class MainActivity extends BaseProtectedActivity
             e.printStackTrace();
         }
 
+        update_online_count_indicator_update_all();
 
         if (!PREF__normal_main_view)
         {
@@ -5799,6 +5786,8 @@ public class MainActivity extends BaseProtectedActivity
         tox_notification_change_wrapper(a_TOX_CONNECTION, "");
         // -- notification ------------------
         // -- notification ------------------
+
+        update_online_count_indicator_update_all();
     }
 
     static void android_tox_callback_friend_name_cb_method(long friend_number, String friend_name, long length)
@@ -5903,28 +5892,10 @@ public class MainActivity extends BaseProtectedActivity
                     catch(Exception ignored)
                     {
                     }
+
+                    update_online_count_indicator_add(f);
                     try
                     {
-                        Runnable myRunnable = new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                try
-                                {
-                                    online_count.addKey(f.tox_public_key_string);
-                                    online_count.setTriangleColor(Color.GREEN);
-                                }
-                                catch (Exception e)
-                                {
-                                }
-                            }
-                        };
-                        if (main_handler_s != null)
-                        {
-                            main_handler_s.post(myRunnable);
-                        }
-
                         final Thread t = new Thread()
                         {
                             @Override
@@ -5956,39 +5927,7 @@ public class MainActivity extends BaseProtectedActivity
                     catch(Exception ignored)
                     {
                     }
-                    try
-                    {
-                        Runnable myRunnable = new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                try
-                                {
-                                    online_count.removeKey(f.tox_public_key_string);
-                                    if (online_count.getCount() > 0)
-                                    {
-                                        online_count.setTriangleColor(Color.GREEN);
-                                    }
-                                    else
-                                    {
-                                        online_count.setTriangleColor(Color.GRAY);
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                }
-                            }
-                        };
-                        if (main_handler_s != null)
-                        {
-                            main_handler_s.post(myRunnable);
-                        }
-                    }
-                    catch(Exception e)
-                    {
-                        e.printStackTrace();
-                    }
+                    update_online_count_indicator_remove(f);
                 }
             }
 
@@ -6096,6 +6035,174 @@ public class MainActivity extends BaseProtectedActivity
                 {
                 }
             }
+        }
+    }
+
+    private static void update_online_count_indicator_update_all()
+    {
+        Log.i(TAG, "update_online_count_indicator_update_all: enter");
+        try
+        {
+            List<FriendList> fl = orma.selectFromFriendList().toList();
+            int count_online_friends = 0;
+            for (FriendList f : fl)
+            {
+                int f_conn = tox_friend_get_connection_status(
+                        tox_friend_by_public_key__wrapper(f.tox_public_key_string));
+                if (f_conn != TOX_CONNECTION_NONE.value)
+                {
+                    count_online_friends++;
+                }
+            }
+
+            if (count_online_friends < 1)
+            {
+                Runnable myRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            online_count.removeAll();
+                            online_count.setTriangleColor(Color.GRAY);
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
+                };
+                if (main_handler_s != null)
+                {
+                    main_handler_s.post(myRunnable);
+                }
+            }
+            else
+            {
+                Runnable myRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            online_count.removeAll();
+                            online_count.setTriangleColor(Color.GREEN);
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
+                };
+                if (main_handler_s != null)
+                {
+                    main_handler_s.post(myRunnable);
+                }
+
+                count_online_friends = 0;
+                for (FriendList f : fl)
+                {
+                    int f_conn = tox_friend_get_connection_status(
+                            tox_friend_by_public_key__wrapper(f.tox_public_key_string));
+                    if (f_conn != TOX_CONNECTION_NONE.value)
+                    {
+                        // HINT: friend is online
+                        update_online_count_indicator_add(f);
+                        count_online_friends++;
+                    }
+                }
+                Log.i(TAG, "update_online_count_indicator_update_all: count_online_friends=" + count_online_friends);
+                if (count_online_friends < 1)
+                {
+                    // to be absolutely sure check again here and set the indicator color
+                    Runnable myRunnable2 = new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            try
+                            {
+                                online_count.setTriangleColor(Color.GRAY);
+                            }
+                            catch (Exception e)
+                            {
+                            }
+                        }
+                    };
+                    if (main_handler_s != null)
+                    {
+                        main_handler_s.post(myRunnable2);
+                    }
+                }
+            }
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    private static void update_online_count_indicator_remove(FriendList f)
+    {
+        try
+        {
+            Runnable myRunnable = new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        online_count.removeKey(f.tox_public_key_string);
+                        if (online_count.getCount() > 0)
+                        {
+                            online_count.setTriangleColor(Color.GREEN);
+                        }
+                        else
+                        {
+                            online_count.setTriangleColor(Color.GRAY);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+            };
+            if (main_handler_s != null)
+            {
+                main_handler_s.post(myRunnable);
+            }
+        }
+        catch (Exception e)
+        {
+        }
+    }
+
+    private static void update_online_count_indicator_add(FriendList f)
+    {
+        try
+        {
+            Runnable myRunnable = new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        online_count.addKey(f.tox_public_key_string);
+                        online_count.setTriangleColor(Color.GREEN);
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+            };
+            if (main_handler_s != null)
+            {
+                main_handler_s.post(myRunnable);
+            }
+        }
+        catch (Exception e)
+        {
         }
     }
 
