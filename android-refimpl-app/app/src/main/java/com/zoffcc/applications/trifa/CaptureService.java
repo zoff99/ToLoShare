@@ -57,7 +57,7 @@ public class CaptureService extends Service
     static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int LOCATION_TOO_OLD_MS = 1000 * 30;
+    private static final int LOCATION_TOO_OLD_MS = 1000 * 10;
     private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;
@@ -627,7 +627,7 @@ public class CaptureService extends Service
             if (isSignificantlyNewer) {
                 return true;
             }
-            // Avoid switching away from GPS unless new location is much better
+            // Avoid switching away from GPS unless new location is much newer
             return false;
         }
 
