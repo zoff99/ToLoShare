@@ -161,6 +161,7 @@ import permissions.dispatcher.RuntimePermissions;
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
 import static com.zoffcc.applications.trifa.CaptureService.INVALID_BEARING;
+import static com.zoffcc.applications.trifa.CaptureService.INVALID_SPEED;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
@@ -6319,13 +6320,18 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 String[] separated = geo_data_raw.split(":");
-                                if ((separated[0].equals("TzGeo00")) || (separated[0].equals("TzGeo01")))
+                                if ((separated[0].equals("TzGeo00")) || (separated[0].equals("TzGeo01"))  || (separated[0].equals("TzGeo02")))
                                 {
                                     int proto_version = 0;
                                     if (separated[0].equals("TzGeo01"))
                                     {
                                         proto_version = 1;
                                     }
+                                    else if (separated[0].equals("TzGeo02"))
+                                    {
+                                        proto_version = 2;
+                                    }
+
 
                                     if (separated[1].equals("BEGINGEO"))
                                     {
@@ -6338,6 +6344,7 @@ public class MainActivity extends BaseProtectedActivity
                                         long loc_timestamp;
                                         String loc_provider = "unknown";
                                         int bearing_index;
+                                        float speed_meters_per_second = 0.0f;
 
                                         if (proto_version == 0)
                                         {
@@ -6363,6 +6370,30 @@ public class MainActivity extends BaseProtectedActivity
                                                 loc_provider = "???";
                                             }
                                             bearing_index = 8;
+                                        }
+                                        else if (proto_version == 2)
+                                        {
+                                            lat = Float.parseFloat(separated[2]);
+                                            lon = Float.parseFloat(separated[3]);
+                                            alt = Float.parseFloat(separated[4]); // not used
+                                            acc = Float.parseFloat(separated[5]);
+                                            loc_timestamp = Long.parseLong(separated[6]);
+                                            try
+                                            {
+                                                loc_provider = separated[7];
+                                            }
+                                            catch(Exception e)
+                                            {
+                                                loc_provider = "???";
+                                            }
+                                            bearing_index = 8;
+                                            try
+                                            {
+                                                speed_meters_per_second = Float.parseFloat(separated[9]);
+                                            }
+                                            catch(Exception e)
+                                            {
+                                            }
                                         }
                                         else
                                         {
@@ -6497,6 +6528,7 @@ public class MainActivity extends BaseProtectedActivity
                                             String final_f_pubkey = f_pubkey;
                                             String finalLoc_provider = loc_provider;
                                             int finalProto_version = proto_version;
+                                            String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
                                             Runnable myRunnable = new Runnable()
                                             {
                                                 @Override
@@ -6510,7 +6542,7 @@ public class MainActivity extends BaseProtectedActivity
                                                         re.remote_location_txt =
                                                                 "name: " + re.friend_name + "\n" +
                                                                 "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
-                                                                finalLoc_provider + " / " + finalProto_version +")\n";
+                                                                finalLoc_provider + " / " + finalProto_version +") "+finalSpeed_kmh+"\n";
                                                         set_debug_text_2(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                     }
@@ -6531,6 +6563,7 @@ public class MainActivity extends BaseProtectedActivity
                                             String final_f_pubkey = f_pubkey;
                                             String finalLoc_provider1 = loc_provider;
                                             int finalProto_version1 = proto_version;
+                                            String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
                                             Runnable myRunnable = new Runnable()
                                             {
                                                 @Override
@@ -6544,7 +6577,7 @@ public class MainActivity extends BaseProtectedActivity
                                                         re.remote_location_txt =
                                                                 "name: " + re.friend_name + "\n" +
                                                                 "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
-                                                                finalLoc_provider1 + " / " + finalProto_version1 + ")\n";
+                                                                finalLoc_provider1 + " / " + finalProto_version1 + ") "+finalSpeed_kmh+"\n";
                                                         set_debug_text_3(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                     }

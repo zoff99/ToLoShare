@@ -52,6 +52,7 @@ public class CaptureService extends Service
     final static String TAG = "CaptureService";
 
     static final String INVALID_BEARING = "FFF";
+    static final String INVALID_SPEED = "0.0";
     final static String LOC_PROVIDER_NAME_FUSEDDR = "fused-dr";
 
     static String found_location_providers = "";
@@ -73,6 +74,7 @@ public class CaptureService extends Service
     final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
     final static String GEO_COORD_PROTO_VERSION_1 = "01"; // must be exactly 2 char wide
+    final static String GEO_COORD_PROTO_VERSION_2 = "02"; // must be exactly 2 char wide
 
     static Location currentBestLocation = null;
 
@@ -380,7 +382,7 @@ public class CaptureService extends Service
     {
         try
         {
-            final byte[] data_bin = getGeoMsg_proto_v1(location, own_location_last_ts_millis);
+            final byte[] data_bin = getGeoMsg_proto_v2(location, own_location_last_ts_millis);
             int data_bin_len = data_bin.length;
             data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -417,7 +419,7 @@ public class CaptureService extends Service
     {
         try
         {
-            final byte[] data_bin = getGeoMsg_proto_v1(location, own_location_last_ts_millis);
+            final byte[] data_bin = getGeoMsg_proto_v2(location, own_location_last_ts_millis);
             int data_bin_len = data_bin.length;
             data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -550,7 +552,7 @@ public class CaptureService extends Service
         {
             bearing = INVALID_BEARING;
         }
-
+        
         String provider = "unknown";
         try
         {
@@ -573,6 +575,57 @@ public class CaptureService extends Service
                              timestamp + ":" +
                              provider + ":" +
                              bearing + ":ENDGEO";
+        // Log.i(TAG, "raw:" + temp_string);
+        // Log.i(TAG, "rawlen:" + temp_string.length());
+
+        byte[] data_bin = temp_string.getBytes();
+        return data_bin;
+    }
+
+    /** @noinspection UnnecessaryLocalVariable*/
+    static byte[] getGeoMsg_proto_v2(Location location, long timestamp)
+    {
+        String bearing = "" + location.getBearing();
+        if (!location.hasBearing())
+        {
+            bearing = INVALID_BEARING;
+        }
+
+        String provider = "unknown";
+        try
+        {
+            if (location.getProvider() != null)
+            {
+                provider = location.getProvider();
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
+        String speed = INVALID_SPEED;
+        try
+        {
+            if (location.hasSpeed())
+            {
+                speed = "" + location.getSpeed();
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
+        String temp_string = "X" + // the pkt ID will be added here later. needs to be exactly 1 char!
+                             GEO_COORD_PROTO_MAGIC +
+                             GEO_COORD_PROTO_VERSION_2  + ":BEGINGEO:" +
+                             location.getLatitude() + ":" +
+                             location.getLongitude() + ":" +
+                             location.getAltitude() + ":" +
+                             location.getAccuracy() + ":" +
+                             timestamp + ":" +
+                             provider + ":" +
+                             bearing + ":" +
+                             speed + ":ENDGEO";
         // Log.i(TAG, "raw:" + temp_string);
         // Log.i(TAG, "rawlen:" + temp_string.length());
 
