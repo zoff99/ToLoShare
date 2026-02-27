@@ -379,8 +379,17 @@ public class CaptureService extends Service
         try
         {
             own_location_last_ts_millis = System.currentTimeMillis();
-            own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
-                               (Math.round(location.getAccuracy() * 10f) / 10) + " m\n";
+            if (location.hasSpeed() && (location.getSpeed() > 0))
+            {
+                own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
+                                   (Math.round(location.getAccuracy() * 10f) / 10) + " m" + " " +
+                                   (Math.round(location.getSpeed() * 3.6f * 10f) / 10) + " km/h" + "\n";
+            }
+            else
+            {
+                own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
+                                   (Math.round(location.getAccuracy() * 10f) / 10) + " m" + "\n";
+            }
             set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
         }
         catch(Exception e)
