@@ -6531,7 +6531,16 @@ public class MainActivity extends BaseProtectedActivity
                                         if ((f_pubkey_pseudo_num_0 != null) && (f_pubkey != null) && (f_pubkey_pseudo_num_0.equals(f_pubkey)))
                                         {
                                             String final_f_pubkey = f_pubkey;
-                                            String finalLoc_provider = loc_provider;
+                                            String finalLoc_provider;
+                                            if (loc_provider == null) {
+                                                finalLoc_provider = "???";
+                                            } else {
+                                                finalLoc_provider = loc_provider;
+                                            }
+                                            if (finalLoc_provider.length() > 4) {
+                                                finalLoc_provider = finalLoc_provider.substring(0, 4);
+                                            }
+                                            final String finalLoc_provider_ = finalLoc_provider;
                                             int finalProto_version = proto_version;
                                             String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
                                             float finalSpeed_meters_per_second = speed_meters_per_second;
@@ -6548,7 +6557,7 @@ public class MainActivity extends BaseProtectedActivity
                                                         re.remote_location_txt =
                                                                 "name: " + re.friend_name + "\n" +
                                                                 "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
-                                                                finalLoc_provider + " / " + finalProto_version +") "+finalSpeed_kmh+"\n";
+                                                                finalLoc_provider_ + " / " + finalProto_version +") "+finalSpeed_kmh+"\n";
                                                         set_debug_text_2(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                         select_speed_icon(finalSpeed_meters_per_second, 0);
@@ -6568,7 +6577,16 @@ public class MainActivity extends BaseProtectedActivity
                                         else if ((f_pubkey_pseudo_num_1 != null) && (f_pubkey != null) && (f_pubkey_pseudo_num_1.equals(f_pubkey)))
                                         {
                                             String final_f_pubkey = f_pubkey;
-                                            String finalLoc_provider1 = loc_provider;
+                                            String finalLoc_provider1;
+                                            if (loc_provider == null) {
+                                                finalLoc_provider1 = "???";
+                                            } else {
+                                                finalLoc_provider1 = loc_provider;
+                                            }
+                                            if (finalLoc_provider1.length() > 4) {
+                                                finalLoc_provider1 = finalLoc_provider1.substring(0, 4);
+                                            }
+                                            final String finalLoc_provider1_ = finalLoc_provider1;
                                             int finalProto_version1 = proto_version;
                                             String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
                                             float finalSpeed_meters_per_second1 = speed_meters_per_second;
@@ -6585,7 +6603,7 @@ public class MainActivity extends BaseProtectedActivity
                                                         re.remote_location_txt =
                                                                 "name: " + re.friend_name + "\n" +
                                                                 "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
-                                                                finalLoc_provider1 + " / " + finalProto_version1 + ") "+finalSpeed_kmh+"\n";
+                                                                finalLoc_provider1_ + " / " + finalProto_version1 + ") "+finalSpeed_kmh+"\n";
                                                         set_debug_text_3(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                         select_speed_icon(finalSpeed_meters_per_second1, 1);
