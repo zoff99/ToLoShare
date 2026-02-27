@@ -6644,21 +6644,40 @@ public class MainActivity extends BaseProtectedActivity
     {
         try
         {
-            final float stillThreshold = 0.5f; // m/s
-            final float walkingThreshold = 2.0f; // m/s
+            /*
+             *
+             *  Still: < 1.8 km/h (0.5 m/s)
+             *  Walking: 1.8 – 7.2 km/h (0.5 – 2.0 m/s)
+             *  Running: 7.2 – 16.2 km/h (2.0 – 4.5 m/s)
+             *  Driving: 16.2 – 80 km/h (4.5 – 22.22 m/s)
+             *  High Speed: > 80 km/h (> 22.22 m/s)
+             *
+             */
+            final float stillThreshold = 0.5f;
+            final float walkingThreshold = 2.0f;
+            final float runningThreshold = 4.5f;
+            final float highwayThreshold = 22.22f;
 
-            int icon = R.drawable.stading_still_icon;
+            int icon;
             if (speed_in_meters_per_second < stillThreshold)
             {
                 icon = R.drawable.stading_still_icon;
             }
-            else if (speed_in_meters_per_second >= stillThreshold && speed_in_meters_per_second <= walkingThreshold)
+            else if (speed_in_meters_per_second <= walkingThreshold)
             {
                 icon = R.drawable.outline_directions_walk_24;
             }
-            else
+            else if (speed_in_meters_per_second <= runningThreshold)
+            {
+                icon = R.drawable.directions_run_24dp;
+            }
+            else if (speed_in_meters_per_second <= highwayThreshold)
             {
                 icon = R.drawable.outline_directions_car_24;
+            }
+            else
+            {
+                icon = R.drawable.speed_24dp;
             }
 
             if (num == 0)
