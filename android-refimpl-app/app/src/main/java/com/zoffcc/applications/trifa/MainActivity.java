@@ -329,6 +329,7 @@ public class MainActivity extends BaseProtectedActivity
     static ImageButton btn_route_to_friend_1 = null;
     static ImageButton icon_speed_0 = null;
     static ImageButton icon_speed_1 = null;
+    static TextView self_speed_indicator = null;
     static ImageButton btn_follow_stop = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
@@ -805,6 +806,7 @@ public class MainActivity extends BaseProtectedActivity
         btn_follow_stop = this.findViewById(R.id.btn_follow_stop);
         icon_speed_0 = this.findViewById(R.id.icon_speed_0);
         icon_speed_1 = this.findViewById(R.id.icon_speed_1);
+        self_speed_indicator = this.findViewById(R.id.self_speed_indicator);
 
         button_travel_mode = findViewById(R.id.button_travel_mode);
 
@@ -6637,6 +6639,41 @@ public class MainActivity extends BaseProtectedActivity
         }
         catch(Exception e)
         {
+        }
+    }
+
+    static void set_self_speed(final float speed_in_meters_per_second)
+    {
+        @SuppressLint("DefaultLocale")
+        final String finalSpeed_kmh = String.format("%.0f", speed_in_meters_per_second * 3.6f);
+        Runnable myRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if (speed_in_meters_per_second > 0)
+                    {
+                        self_speed_indicator.setText(finalSpeed_kmh);
+                        self_speed_indicator.setVisibility(View.VISIBLE);
+                    }
+                    else
+                    {
+                        self_speed_indicator.setText("");
+                        self_speed_indicator.setVisibility(View.INVISIBLE);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.i(TAG, "EE.b:" + e.getMessage());
+                }
+            }
+        };
+
+        if (main_handler_s != null)
+        {
+            main_handler_s.post(myRunnable);
         }
     }
 

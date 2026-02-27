@@ -264,6 +264,24 @@
                                 tools:ignore="HardcodedText" />
                         </RelativeLayout>
 
+                        <TextView
+                            android:id="@+id/self_speed_indicator"
+                            android:layout_gravity="center"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:padding="0dp"
+                            android:layout_marginRight="6dp"
+                            android:alpha="1.0"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:text="130"
+                            android:textColor="#000000"
+                            android:textSize="17sp"
+                            android:visibility="invisible"
+                            android:background="@drawable/circle_background"
+                            tools:ignore="HardcodedText" />
+
+
                         <ImageButton
                             android:id="@+id/btn_follow_self"
                             android:layout_width="50dp"

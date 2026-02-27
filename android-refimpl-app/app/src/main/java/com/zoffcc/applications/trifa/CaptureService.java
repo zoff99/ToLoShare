@@ -43,6 +43,7 @@ import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_mi
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.set_found_loc_providers_text;
+import static com.zoffcc.applications.trifa.MainActivity.set_self_speed;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -213,6 +214,15 @@ public class CaptureService extends Service
         }
         catch (Exception e)
         {
+        }
+
+        if (currentBestLocation.hasSpeed())
+        {
+            set_self_speed(currentBestLocation.getSpeed());
+        }
+        else
+        {
+            set_self_speed(0.0f);
         }
     }
 
