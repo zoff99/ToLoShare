@@ -327,6 +327,8 @@ public class MainActivity extends BaseProtectedActivity
     static ImageButton btn_follow_friend_1 = null;
     static ImageButton btn_route_to_friend_0 = null;
     static ImageButton btn_route_to_friend_1 = null;
+    static ImageButton icon_speed_0 = null;
+    static ImageButton icon_speed_1 = null;
     static ImageButton btn_follow_stop = null;
     static int main_gallery_lastScrollPosition = 0;
     static GridLayoutManager main_gallery_manager = null;
@@ -801,6 +803,8 @@ public class MainActivity extends BaseProtectedActivity
         btn_route_to_friend_0 = this.findViewById(R.id.btn_route_to_friend_0);
         btn_route_to_friend_1 = this.findViewById(R.id.btn_route_to_friend_1);
         btn_follow_stop = this.findViewById(R.id.btn_follow_stop);
+        icon_speed_0 = this.findViewById(R.id.icon_speed_0);
+        icon_speed_1 = this.findViewById(R.id.icon_speed_1);
 
         button_travel_mode = findViewById(R.id.button_travel_mode);
 
@@ -6480,7 +6484,6 @@ public class MainActivity extends BaseProtectedActivity
                                                     select_location_icon(old_has_bearing, has_bearing, f_pubkey,
                                                                          f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1,
                                                                          true, directed_ol);
-
                                                     remote_ol.remote_location_overlay = directed_ol;
                                                     remote_location_overlays.put(f_pubkey, remote_ol);
                                                     map.getOverlays().add(directed_ol);
@@ -6529,6 +6532,7 @@ public class MainActivity extends BaseProtectedActivity
                                             String finalLoc_provider = loc_provider;
                                             int finalProto_version = proto_version;
                                             String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
+                                            float finalSpeed_meters_per_second = speed_meters_per_second;
                                             Runnable myRunnable = new Runnable()
                                             {
                                                 @Override
@@ -6545,6 +6549,7 @@ public class MainActivity extends BaseProtectedActivity
                                                                 finalLoc_provider + " / " + finalProto_version +") "+finalSpeed_kmh+"\n";
                                                         set_debug_text_2(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
+                                                        select_speed_icon(finalSpeed_meters_per_second, 0);
                                                     }
                                                     catch (Exception e)
                                                     {
@@ -6564,6 +6569,7 @@ public class MainActivity extends BaseProtectedActivity
                                             String finalLoc_provider1 = loc_provider;
                                             int finalProto_version1 = proto_version;
                                             String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
+                                            float finalSpeed_meters_per_second1 = speed_meters_per_second;
                                             Runnable myRunnable = new Runnable()
                                             {
                                                 @Override
@@ -6580,6 +6586,7 @@ public class MainActivity extends BaseProtectedActivity
                                                                 finalLoc_provider1 + " / " + finalProto_version1 + ") "+finalSpeed_kmh+"\n";
                                                         set_debug_text_3(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
+                                                        select_speed_icon(finalSpeed_meters_per_second1, 1);
                                                     }
                                                     catch (Exception e)
                                                     {
@@ -6626,6 +6633,41 @@ public class MainActivity extends BaseProtectedActivity
                 {
                     e.printStackTrace();
                 }
+            }
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    private static void select_speed_icon(float speed_in_meters_per_second, int num)
+    {
+        try
+        {
+            final float stillThreshold = 0.5f; // m/s
+            final float walkingThreshold = 2.0f; // m/s
+
+            int icon = R.drawable.stading_still_icon;
+            if (speed_in_meters_per_second < stillThreshold)
+            {
+                icon = R.drawable.stading_still_icon;
+            }
+            else if (speed_in_meters_per_second >= stillThreshold && speed_in_meters_per_second <= walkingThreshold)
+            {
+                icon = R.drawable.outline_directions_walk_24;
+            }
+            else
+            {
+                icon = R.drawable.outline_directions_car_24;
+            }
+
+            if (num == 0)
+            {
+                icon_speed_0.setImageResource(icon);
+            }
+            else
+            {
+                icon_speed_1.setImageResource(icon);
             }
         }
         catch(Exception e)

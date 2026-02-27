@@ -301,6 +301,19 @@
                             tools:ignore="HardcodedText" />
 
                         <ImageButton
+                            android:id="@+id/icon_speed_0"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:cropToPadding="true"
+                            android:padding="0dp"
+                            android:layout_marginRight="1dp"
+                            android:layout_gravity="center"
+                            android:alpha="0.5"
+                            android:background="@drawable/transparent"
+                            android:scaleType="fitCenter"
+                            android:src="@null" />
+
+                        <ImageButton
                             android:id="@+id/btn_route_to_friend_0"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
@@ -348,6 +361,19 @@
                             android:textSize="10sp"
                             android:visibility="visible"
                             tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/icon_speed_1"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:cropToPadding="true"
+                            android:padding="0dp"
+                            android:layout_marginRight="1dp"
+                            android:layout_gravity="center"
+                            android:alpha="0.5"
+                            android:background="@drawable/transparent"
+                            android:scaleType="fitCenter"
+                            android:src="@null" />
 
                         <ImageButton
                             android:id="@+id/btn_route_to_friend_1"
