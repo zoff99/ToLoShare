@@ -4348,6 +4348,19 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 set_debug_text(location_info_text(own_location_last_ts_millis, own_location_txt));
+
+                                final long current_ts_millis = System.currentTimeMillis();
+                                if (own_location_last_ts_millis > 0)
+                                {
+                                    long diff = new Date(current_ts_millis).getTime() -
+                                                new Date(own_location_last_ts_millis).getTime();
+                                    long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
+                                    if (seconds > 10)
+                                    {
+                                        // remove own speed sign, if location is too old
+                                        set_self_speed(0.0f);
+                                    }
+                                }
                             }
                             catch (Exception e)
                             {
