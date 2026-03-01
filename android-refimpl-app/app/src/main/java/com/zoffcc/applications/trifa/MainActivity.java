@@ -4322,6 +4322,18 @@ public class MainActivity extends BaseProtectedActivity
                                     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                                     set_debug_text_2(location_info_text(re.remote_location_last_ts_millis,
                                                                         re.remote_location_txt));
+                                    final long current_ts_millis = System.currentTimeMillis();
+                                    if (re.remote_location_last_ts_millis > 0)
+                                    {
+                                        long diff = new Date(current_ts_millis).getTime() -
+                                                    new Date(re.remote_location_last_ts_millis).getTime();
+                                        long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
+                                        if (seconds > 30)
+                                        {
+                                            // remove own friends speed icon, if location is too old
+                                            change_friend_speed_icon(0, 0, true);
+                                        }
+                                    }
                                 }
                             }
                             catch (Exception e)
@@ -4338,6 +4350,18 @@ public class MainActivity extends BaseProtectedActivity
                                     CaptureService.remote_location_entry re1 = remote_location_data.get(f_pubkey_1);
                                     set_debug_text_3(location_info_text(re1.remote_location_last_ts_millis,
                                                                         re1.remote_location_txt));
+                                    final long current_ts_millis = System.currentTimeMillis();
+                                    if (re1.remote_location_last_ts_millis > 0)
+                                    {
+                                        long diff = new Date(current_ts_millis).getTime() -
+                                                    new Date(re1.remote_location_last_ts_millis).getTime();
+                                        long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
+                                        if (seconds > 30)
+                                        {
+                                            // remove own friends speed icon, if location is too old
+                                            change_friend_speed_icon(0, 1, true);
+                                        }
+                                    }
                                 }
                             }
                             catch (Exception e)
@@ -6748,13 +6772,58 @@ public class MainActivity extends BaseProtectedActivity
                 icon = R.drawable.speed_24dp;
             }
 
-            if (num == 0)
+            change_friend_speed_icon(icon, num, false);
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    static void change_friend_speed_icon(int icon, int num, boolean clear)
+    {
+        try
+        {
+            Runnable myRunnable = new Runnable()
             {
-                icon_speed_0.setImageResource(icon);
-            }
-            else
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        if (num == 0)
+                        {
+                            if (clear)
+                            {
+                                icon_speed_0.setVisibility(View.INVISIBLE);
+                            }
+                            else
+                            {
+                                icon_speed_0.setImageResource(icon);
+                                icon_speed_0.setVisibility(View.VISIBLE);
+                            }
+                        }
+                        else
+                        {
+                            if (clear)
+                            {
+                                icon_speed_1.setVisibility(View.INVISIBLE);
+                            }
+                            else
+                            {
+                                icon_speed_1.setImageResource(icon);
+                                icon_speed_1.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            if (main_handler_s != null)
             {
-                icon_speed_1.setImageResource(icon);
+                main_handler_s.post(myRunnable);
             }
         }
         catch(Exception e)
