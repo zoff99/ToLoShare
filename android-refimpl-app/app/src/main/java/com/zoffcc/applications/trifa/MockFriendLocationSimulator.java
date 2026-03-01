@@ -3,13 +3,11 @@ package com.zoffcc.applications.trifa;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
-import android.location.provider.ProviderProperties;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
-import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg_proto_v1;
 import static com.zoffcc.applications.trifa.CaptureService.getGeoMsg_proto_v2;
 import static com.zoffcc.applications.trifa.MainActivity.android_tox_callback_friend_lossless_packet_cb_method;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
