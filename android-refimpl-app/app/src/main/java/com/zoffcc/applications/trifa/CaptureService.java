@@ -379,7 +379,7 @@ public class CaptureService extends Service
         try
         {
             own_location_last_ts_millis = System.currentTimeMillis();
-            if (location.hasSpeed() && (location.getSpeed() > 0))
+            if (location.hasSpeed() && (location.getSpeed() >= 1.0f))
             {
                 own_location_txt = "provider: " + location.getProvider() + "\n" + "accur: " +
                                    (Math.round(location.getAccuracy() * 10f) / 10) + " m" + " " +
