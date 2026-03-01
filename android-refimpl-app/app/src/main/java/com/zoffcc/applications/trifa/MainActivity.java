@@ -6671,7 +6671,7 @@ public class MainActivity extends BaseProtectedActivity
             {
                 try
                 {
-                    if (speed_in_meters_per_second > 0)
+                    if (speed_in_meters_per_second >= 1.0f)
                     {
                         self_speed_indicator.setText(finalSpeed_kmh);
                         self_speed_indicator.setVisibility(View.VISIBLE);
