@@ -111,9 +111,31 @@ public class FriendTracker {
         }
     }
 
+    public void repaint_all()
+    {
+        try
+        {
+            do_paint_in(0, true);
+            do_paint_out(0, true);
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
     private void do_paint_in(int old_size)
     {
-        if (old_size != friendsMap_in.size())
+        do_paint_in(old_size, false);
+    }
+
+    private void do_paint_out(int old_size)
+    {
+        do_paint_out(old_size, false);
+    }
+
+    private void do_paint_in(int old_size, boolean force)
+    {
+        if ((force) || (old_size != friendsMap_in.size()))
         {
             try
             {
@@ -137,9 +159,9 @@ public class FriendTracker {
         }
     }
 
-    private void do_paint_out(int old_size)
+    private void do_paint_out(int old_size, boolean force)
     {
-        if (old_size != friendsMap_out.size())
+        if ((force) || (old_size != friendsMap_out.size()))
         {
             try
             {
