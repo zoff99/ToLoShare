@@ -2502,18 +2502,14 @@ public class MainActivity extends BaseProtectedActivity
                                 CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
                                 DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
                                 directed_ol.setShowAccuracy(true);
-                                remote_ol.remote_location_overlay.setLocation(
-                                        new GeoPoint(re.remoteBestLocation.getLatitude(),
-                                                     re.remoteBestLocation.getLongitude()));
-                                remote_ol.remote_location_overlay.setAccuracy(
-                                        Math.round(re.remoteBestLocation.getAccuracy()));
-                                remote_ol.remote_location_overlay.setBearing(
-                                        (float) re.remoteBestLocation.getBearing());
                                 remote_ol.remote_location_overlay = directed_ol;
-
+                                GeoPoint geop = new GeoPoint(re.remoteBestLocation.getLatitude(),
+                                                             re.remoteBestLocation.getLongitude());
+                                remote_ol.remote_location_overlay.setLocation(geop);
+                                remote_ol.remote_location_overlay.setAccuracy(Math.round(re.remoteBestLocation.getAccuracy()));
+                                remote_ol.remote_location_overlay.setBearing((float) re.remoteBestLocation.getBearing());
                                 select_location_icon(re.has_bearing, re.has_bearing, friend.tox_public_key_string,
                                                      f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1, true, directed_ol);
-
                                 remote_location_overlays.put(friend.tox_public_key_string, remote_ol);
                                 map.getOverlays().add(directed_ol);
                             }
