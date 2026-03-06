@@ -730,10 +730,23 @@ public class MainActivity extends BaseProtectedActivity
         roadManager = new OSRMRoadManager(this, BuildConfig.APPLICATION_ID);
         ((OSRMRoadManager)roadManager).setMean(MEAN_BY_CAR);
 
+        try
+        {
+            if (f_tracker == null)
+            {
+                f_tracker = new FriendTracker();
+            }
+        }
+        catch(Exception e)
+        {
+        }
+
         Log.i(TAG, "remove_map_overlays:001");
         remove_map_overlays();
         Log.i(TAG, "add_map_overlays:001");
         add_map_overlays();
+        friend_locations_reinit();
+        f_tracker.repaint_all();
 
         try
         {
@@ -758,17 +771,6 @@ public class MainActivity extends BaseProtectedActivity
         catch(Exception e)
         {
             // if it was saved as integer before
-        }
-
-        try
-        {
-            if (f_tracker == null)
-            {
-                f_tracker = new FriendTracker();
-            }
-        }
-        catch(Exception e)
-        {
         }
 
         mapController = map.getController();
@@ -2197,6 +2199,8 @@ public class MainActivity extends BaseProtectedActivity
             inject_own_location();
             //**//move_map_to_own_location();
             update_online_count_indicator_update_all();
+            friend_locations_reinit();
+            f_tracker.repaint_all();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2256,6 +2260,8 @@ public class MainActivity extends BaseProtectedActivity
                     inject_own_location();
                     //**//move_map_to_own_location();
                     update_online_count_indicator_update_all();
+                    friend_locations_reinit();
+                    f_tracker.repaint_all();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -2469,6 +2475,55 @@ public class MainActivity extends BaseProtectedActivity
                 Log.i(TAG, "OVXXXX:1:" + ov);
             }
             map.getOverlays().clear();
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    void friend_locations_reinit()
+    {
+        try
+        {
+            List<FriendList> flist = orma.selectFromFriendList().toList();
+            if ((flist != null) && (flist.size() > 0))
+            {
+                String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
+                String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+                for (FriendList friend : flist)
+                {
+                    CaptureService.remote_location_entry re = remote_location_data.get(friend.tox_public_key_string);
+                    if (re != null)
+                    {
+                        if (!remote_location_overlays.containsKey(friend.tox_public_key_string))
+                        {
+                            try
+                            {
+                                CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
+                                DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
+                                directed_ol.setShowAccuracy(true);
+                                remote_ol.remote_location_overlay.setLocation(
+                                        new GeoPoint(re.remoteBestLocation.getLatitude(),
+                                                     re.remoteBestLocation.getLongitude()));
+                                remote_ol.remote_location_overlay.setAccuracy(
+                                        Math.round(re.remoteBestLocation.getAccuracy()));
+                                remote_ol.remote_location_overlay.setBearing(
+                                        (float) re.remoteBestLocation.getBearing());
+                                remote_ol.remote_location_overlay = directed_ol;
+
+                                select_location_icon(re.has_bearing, re.has_bearing, friend.tox_public_key_string,
+                                                     f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1, true, directed_ol);
+
+                                remote_location_overlays.put(friend.tox_public_key_string, remote_ol);
+                                map.getOverlays().add(directed_ol);
+                            }
+                            catch(Exception e)
+                            {
+                            }
+                        }
+                    }
+                }
+            }
         }
         catch(Exception e)
         {
@@ -4294,6 +4349,8 @@ public class MainActivity extends BaseProtectedActivity
             add_map_overlays();
             inject_own_location();
             //**//move_map_to_own_location();
+            friend_locations_reinit();
+            f_tracker.repaint_all();
         }
         else
         {
