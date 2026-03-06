@@ -6433,8 +6433,8 @@ public class MainActivity extends BaseProtectedActivity
                                     {
                                         long current_ts_millis = System.currentTimeMillis();
 
-                                        float lat;
-                                        float lon;
+                                        double lat;
+                                        double lon;
                                         float alt;
                                         float acc;
                                         long loc_timestamp;
@@ -6444,16 +6444,16 @@ public class MainActivity extends BaseProtectedActivity
 
                                         if (proto_version == 0)
                                         {
-                                            lat = Float.parseFloat(separated[2]);
-                                            lon = Float.parseFloat(separated[3]);
+                                            lat = Double.parseDouble(separated[2]);
+                                            lon = Double.parseDouble(separated[3]);
                                             alt = Float.parseFloat(separated[4]); // not used
                                             acc = Float.parseFloat(separated[5]);
                                             bearing_index = 6;
                                         }
                                         else if (proto_version == 1)
                                         {
-                                            lat = Float.parseFloat(separated[2]);
-                                            lon = Float.parseFloat(separated[3]);
+                                            lat = Double.parseDouble(separated[2]);
+                                            lon = Double.parseDouble(separated[3]);
                                             alt = Float.parseFloat(separated[4]); // not used
                                             acc = Float.parseFloat(separated[5]);
                                             loc_timestamp = Long.parseLong(separated[6]);
@@ -6469,8 +6469,8 @@ public class MainActivity extends BaseProtectedActivity
                                         }
                                         else if (proto_version == 2)
                                         {
-                                            lat = Float.parseFloat(separated[2]);
-                                            lon = Float.parseFloat(separated[3]);
+                                            lat = Double.parseDouble(separated[2]);
+                                            lon = Double.parseDouble(separated[3]);
                                             alt = Float.parseFloat(separated[4]); // not used
                                             acc = Float.parseFloat(separated[5]);
                                             loc_timestamp = Long.parseLong(separated[6]);
