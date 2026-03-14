@@ -137,9 +137,24 @@ public class NorthingOverlay extends Overlay
 
     @Override
     public boolean onSingleTapConfirmed(final MotionEvent e, final MapView mapView) {
-        Log.i(TAG, "onSingleTapConfirmed " + e);
-        set_is_northed(!is_northed);
-        return true;
+
+        // Calculate distance from tap to center
+        float dx = e.getX();
+        float dy = e.getY();
+
+        // Log.i(TAG, "onSingleTapConfirmed" + " " + mCompassFrameCenterX + " " + mCompassCenterX + " " + mCompassRadius);
+        float compas_rect_x = mCompassFrameCenterX + (mCompassRadius * 6);
+        float compas_rect_y = mCompassFrameCenterY + (mCompassRadius * 6);
+        // Log.i(TAG, "onSingleTapConfirmed" + " " + dx + " " + dy + " " + compas_rect_x + " " + compas_rect_y);
+
+        // Check if the tap is within the radius (using squared values for performance)
+        if ((dx <= compas_rect_x) && (dy <= compas_rect_y))
+        {
+            Log.i(TAG, "onSingleTapConfirmed " + e);
+            set_is_northed(!is_northed);
+            return true;
+        }
+        return false;
     }
 
     private void invalidateCompass() {
