@@ -66,7 +66,7 @@ public class NorthingOverlay extends Overlay
 
         invalidateCompass();
 
-        Log.i(TAG, "NorthingOverlay");
+        // Log.i(TAG, "NorthingOverlay");
     }
 
     public interface NorthingCallback
@@ -141,14 +141,15 @@ public class NorthingOverlay extends Overlay
         float dx = e.getX();
         float dy = e.getY();
 
-        // Log.i(TAG, "onSingleTapConfirmed" + " " + mCompassFrameCenterX + " " + mCompassCenterX + " " + mCompassRadius);
-        float compas_rect_x = mCompassFrameCenterX + (mCompassRadius * 6);
-        float compas_rect_y = mCompassFrameCenterY + (mCompassRadius * 6);
+        // Log.i(TAG, "onSingleTapConfirmed" + " " + mCompassCenterX + " " + mCompassCenterY + " " + mCompassRadius);
         // Log.i(TAG, "onSingleTapConfirmed" + " " + dx + " " + dy + " " + compas_rect_x + " " + compas_rect_y);
 
-        if ((dx <= compas_rect_x) && (dy <= compas_rect_y))
+        // Log.i(TAG, "onSingleTapConfirmed" + " " + dx + " " + dy + " " + " " + mCompassRadius + " " + mScale);
+        // Log.i(TAG, "onSingleTapConfirmed" + " " + (mCompassRadius * mScale) * 4);
+
+        if ((dx <= (mCompassRadius * mScale) * 4) && (dy <= (mCompassRadius * mScale) * 4))
         {
-            Log.i(TAG, "onSingleTapConfirmed " + e);
+            // Log.i(TAG, "onSingleTapConfirmed " + e);
             set_is_northed(!is_northed);
             return true;
         }
@@ -156,7 +157,7 @@ public class NorthingOverlay extends Overlay
     }
 
     private void invalidateCompass() {
-        Log.i(TAG, "invalidateCompass");
+        // Log.i(TAG, "invalidateCompass");
 
         if (mLastRender + mLastRenderLag > System.currentTimeMillis())
         {
