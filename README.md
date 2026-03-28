@@ -7,6 +7,9 @@ This is a simplified version of [TRIfA](https://github.com/zoff99/ToxAndroidRefI
 ToLoShare is a specialized Android application for secure, peer-to-peer location sharing using the Tox protocol.<br>
 It enables real-time GPS coordinate broadcasting between friends through a decentralized network,<br>
 displaying locations on an integrated OpenStreetMap view without relying on central servers.<br>
+<br>
+It includes live map visualization, robust background operation,<br>
+multi-layer security including PIN protection and screenshot prevention.<br>
 
 This is a work in progress, feel free to help out.
 
