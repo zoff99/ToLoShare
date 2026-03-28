@@ -401,7 +401,7 @@ public class CaptureService extends Service
     {
         try
         {
-            final byte[] data_bin = getGeoMsg_proto_v2(location, own_location_last_ts_millis);
+            final byte[] data_bin = getGeoMsg_proto_v2(location, location.getTime());
             int data_bin_len = data_bin.length;
             data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
@@ -438,7 +438,7 @@ public class CaptureService extends Service
     {
         try
         {
-            final byte[] data_bin = getGeoMsg_proto_v2(location, own_location_last_ts_millis);
+            final byte[] data_bin = getGeoMsg_proto_v2(location, location.getTime());
             int data_bin_len = data_bin.length;
             data_bin[0] = (byte) GEO_COORDS_CUSTOM_LOSSLESS_ID;
 
