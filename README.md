@@ -2,7 +2,12 @@
 
 <img src="https://raw.githubusercontent.com/zoff99/ToLoShare/refs/heads/master/fastlane/metadata/android/en-US/icon.png" width="120">
 
-This is a simplified version of [TRIfA](https://github.com/zoff99/ToxAndroidRefImpl) (the Tox Message Application for Android) that focuses on stable location sharing.
+This is a simplified version of [TRIfA](https://github.com/zoff99/ToxAndroidRefImpl) (the Tox Message Application for Android) that focuses on stable location sharing.<br>
+
+ToLoShare is a specialized Android application for secure, peer-to-peer location sharing using the Tox protocol.<br>
+It enables real-time GPS coordinate broadcasting between friends through a decentralized network,<br>
+displaying locations on an integrated OpenStreetMap view without relying on central servers.<br>
+
 This is a work in progress, feel free to help out.
 
 <a href="https://f-droid.org/app/com.zoffcc.applications.toloshare"><img src="https://raw.githubusercontent.com/zoff99/ToLoShare/master/images/f-droid.png" width="200"></a>
