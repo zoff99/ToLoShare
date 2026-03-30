@@ -1,5 +1,7 @@
 # Sorma<sup>2</sup> - Simple ORM(Android)<sup>2</sup> <sub>(also for Desktop)<sub>
 
+sorma2 is a two-phase ORM system that generates Java code from annotated schema definitions during development, then uses that generated code at runtime for database operations.<br>
+
 It is based on the wonderful https://github.com/maskarade/Android-Orma by [FUJI Goro](https://github.com/gfx)
 <br>
 <br>
@@ -68,7 +70,7 @@ Android project you will need `com.github.zoff99:pkgs_zoffccAndroidJDBC` from [j
 add this dependency to your `build.gradle` file
 
 ```
-implementation 'com.github.zoff99:pkgs_zoffccAndroidJDBC:1.0.22'
+implementation 'com.github.zoff99:pkgs_zoffccAndroidJDBC:1.0.23'
 ```
 
 
