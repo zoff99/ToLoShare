@@ -32,6 +32,94 @@ Latest Automated Screenshots
 
 <img src="https://github.com/zoff99/ToLoShare/releases/download/nightly/android_screen01_21.png" width="120">&nbsp;<img src="https://github.com/zoff99/ToLoShare/releases/download/nightly/android_screen01_29.png" width="120">&nbsp;<img src="https://github.com/zoff99/ToLoShare/releases/download/nightly/android_screen01_33.png" width="120">&nbsp;<img src="https://github.com/zoff99/ToLoShare/releases/download/nightly/android_screen01_35.png" width="120">
 
+
+
+ToLoShare - Main Screen Usage Manual
+=
+
+## 🔘 The Three Toggle Switches (Top Bar)
+
+The three toggle switches are located in the **toolbar at the top** of the screen.
+
+### 1. Map / Friend-List View Switch
+
+**Toggles between the friend list and the live map.**
+
+| Position | Effect |
+|----------|--------|
+| **ON** | Shows the **friend list** (main view). The map is paused to save resources. |
+| **OFF** | Shows the **interactive map** with live GPS overlays for you and your friends. |
+
+When switched to map mode, the screen-keep-on flag is set (if configured), location overlays are re-added, and all friend positions are refreshed on the map.
+
+### 2. Own GPS Smoothing Switch
+
+**Toggles position smoothing for _your own_ GPS track.**
+
+| Position | Effect |
+|----------|--------|
+| **ON** | Your location marker moves smoothly between GPS fixes by interpolating intermediate steps. |
+| **OFF** | Your location marker jumps directly to each raw GPS fix. |
+
+This preference is saved and restored across sessions.
+
+### 3. Friend GPS Smoothing Switch
+
+**Toggles position smoothing for _your friends'_ GPS tracks.**
+
+| Position | Effect |
+|----------|--------|
+| **ON** | Friends' location markers move smoothly on the map between location updates. |
+| **OFF** | Friends' location markers jump directly to each newly received position. |
+
+## 🗺️ Map Control Buttons (Main Screen)
+
+These buttons appear in the **upper panel of the map view** and control which position the map follows. The currently active button is highlighted in **dark red** at full opacity; inactive buttons are dimmed.
+
+### ➤ Follow My Own Position
+
+Tapping this button **centres the map on your own current location** and keeps it locked there as you move.
+
+### ➤ Follow Friend #1
+
+Tapping this button **centres the map on the first friend's position** (sorted by public-key index) and keeps it locked as that friend moves.
+
+A companion **route button** next to it calculates and draws a route from your position to Friend #1 using the currently selected travel mode (car or walking).
+
+### ➤ Follow Friend #2
+
+Tapping this button **centres the map on the second friend's position** and keeps it locked as that friend moves.
+
+A companion **route button** calculates and draws a route to Friend #2.
+
+### 🚗 Travel Mode Button
+
+Taps toggle the **routing mode** used for the route buttons:
+
+| Icon | Mode |
+|------|------|
+| 🚗 Car icon | Route calculated for driving |
+| 🚶 Walking icon | Route calculated for walking |
+
+### ✖ Unfollow / Stop
+
+Tapping this button **unpins the map** from any position and **clears all drawn routes**. The map can then be scrolled and zoomed freely.
+
+## 🧭 Compass Icon - Toggling North-Up Mode
+
+A **compass widget** is rendered in the **top-left corner of the map**.
+
+- **Tap the compass** to toggle between two orientations:
+
+| State | Compass Appearance | Map Behaviour |
+|-------|--------------------|---------------|
+| **North-up ON** | Shows the letter **"N"** | Map is locked with North pointing up |
+| **North-up OFF** | Shows a **red/black needle** that rotates with the map | Map can rotate |
+
+Tapping anywhere within the compass circle area (approximately the top-left corner of the map) triggers the toggle.
+
+
+
 <br>
 Any use of this project's code by GitHub Copilot, past or present, is done
 without our permission.  We do not consent to GitHub's use of this project's
