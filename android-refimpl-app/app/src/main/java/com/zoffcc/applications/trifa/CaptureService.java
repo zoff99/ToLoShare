@@ -9,9 +9,11 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.LocationRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 import org.osmdroid.util.GeoPoint;
@@ -26,11 +28,15 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.location.LocationListenerCompat;
 
-import static android.location.LocationManager.FUSED_PROVIDER;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__force_udp_only;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_FUSED;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_GPS;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_NETWORK;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__use_cpu_wakelock;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
 import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
@@ -71,6 +77,7 @@ public class CaptureService extends Service
     String channelId_gps = "chl_svc1";
     LocationManager locationManager = null;
     LocationListenerCompat mLocationListener = null;
+    static PowerManager.WakeLock wakeLock = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
     final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
@@ -176,7 +183,34 @@ public class CaptureService extends Service
     {
         Log.i(TAG, "onStartCommand");
         // this gets called all the time!
+
+        try
+        {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            if (PREF__use_cpu_wakelock)
+            {
+                wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "trifa:trifa_location_wakeup_lock");
+                wakeLock.acquire();
+            }
+        }
+        catch(Exception ignored)
+        {
+        }
+
         return START_NOT_STICKY; // START_STICKY;
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        try
+        {
+            wakeLock.release();
+        }
+        catch(Exception ignored)
+        {
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -250,12 +284,6 @@ public class CaptureService extends Service
             @Override
             public void onProviderEnabled(@NonNull String provider)
             {
-                if (provider.equals(FUSED_PROVIDER))
-                {
-                    // Log.i(TAG, "isBetterLocation:ignoring FUSED provider!!");
-                    return;
-                }
-
                 Log.i(TAG1, "onProviderEnabled: " + provider + " currentBestLocation=" + currentBestLocation);
 
                 try
@@ -328,7 +356,22 @@ public class CaptureService extends Service
 
         try
         {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+            if (PREF__loc_provider_GPS)
+            {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                {
+                    LocationRequest request = new LocationRequest.Builder(1000) // 1 seconds
+                            .setQuality(LocationRequest.QUALITY_HIGH_ACCURACY).setMinUpdateDistanceMeters(0).build();
+
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, request, getMainExecutor(),
+                                                           mLocationListener);
+                }
+                else
+                {
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_UPDATE_FREQ_MS, 0,
+                                                           mLocationListener);
+                }
+            }
         }
         catch(Exception ignored)
         {
@@ -336,11 +379,38 @@ public class CaptureService extends Service
 
         try
         {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+            if (PREF__loc_provider_NETWORK)
+            {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, GPS_UPDATE_FREQ_MS, 0,
+                                                       mLocationListener);
+            }
         }
         catch(Exception ignored)
         {
         }
+
+        try
+        {
+            if (PREF__loc_provider_FUSED)
+            {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                {
+                    LocationRequest request = new LocationRequest.Builder(1000) // 1 seconds
+                            .setQuality(LocationRequest.QUALITY_HIGH_ACCURACY).setMinUpdateDistanceMeters(0).build();
+
+                    locationManager.requestLocationUpdates("fused", request, getMainExecutor(),
+                                                           mLocationListener);
+                }
+                else
+                {
+                    locationManager.requestLocationUpdates("fused", GPS_UPDATE_FREQ_MS, 0, mLocationListener);
+                }
+            }
+        }
+        catch(Exception ignored)
+        {
+        }
+
 
         try {
             if (currentBestLocation == null)

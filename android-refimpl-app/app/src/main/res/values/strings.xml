@@ -178,6 +178,15 @@
     <string name="pref_title_use_incognito_keyboard2">incognito Keyboard</string>
     <string name="pref_description_use_incognito_keyboard2">turn on to tell keyboard not to learn from your entered words</string>
 
+    <string name="pref_title_loc_provider_GPS">use GPS</string>
+    <string name="pref_description_loc_provider_GPS">use GPS location</string>
+
+    <string name="pref_title_loc_provider_NETWORK">use NETWORK</string>
+    <string name="pref_description_loc_provider_NETWORK">use NETWORK location</string>
+
+    <string name="pref_title_loc_provider_FUSED">use FUSED</string>
+    <string name="pref_description_loc_provider_FUSED">use FUSED location</string>
+
     <string name="pref_title_window_security">prevent Screenshots</string>
     <string name="pref_description_window_security">Enabling this setting adds FLAG_SECURE to Activities.\nIt prevents screenshots and screen recording and showing content in recents preview</string>
 

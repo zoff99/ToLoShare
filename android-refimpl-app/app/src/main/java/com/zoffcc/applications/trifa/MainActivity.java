@@ -533,6 +533,11 @@ public class MainActivity extends BaseProtectedActivity
     static double PREF__map_last_lat = 48.2085f;
     static double PREF__map_last_lon = 16.3730f;
 
+    static boolean PREF__loc_provider_GPS = true;
+    static boolean PREF__loc_provider_NETWORK = false;
+    static boolean PREF__loc_provider_FUSED = false;
+    static boolean PREF__use_cpu_wakelock = false;
+
     static boolean PREF__keep_screen_on_when_map = false;
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_smooth_friends = false;
@@ -4489,6 +4494,10 @@ public class MainActivity extends BaseProtectedActivity
         PREF__window_security = settings.getBoolean("window_security", true);
         PREF__use_native_audio_play = settings.getBoolean("X_use_native_audio_play", true);
         PREF__tox_set_do_not_sync_av = settings.getBoolean("X_tox_set_do_not_sync_av", false);
+
+        PREF__loc_provider_GPS  = settings.getBoolean("loc_provider_GPS", true);
+        PREF__loc_provider_NETWORK  = settings.getBoolean("loc_provider_NETWORK", false);
+        PREF__loc_provider_FUSED  = settings.getBoolean("loc_provider_FUSED", false);
 
         PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
 
