@@ -38,6 +38,7 @@ import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -53,6 +54,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.preference.SeekBarPreference;
 
 import static com.zoffcc.applications.trifa.HelperGeneric.IPisValid;
 import static com.zoffcc.applications.trifa.HelperGeneric.isIPPortValid;
@@ -272,6 +274,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity
                     return true;
                 }
             });
+
+            final Preference pref_loc_provider_change_timeout = findPreference("loc_provider_change_timeout");
+
+            pref_loc_provider_change_timeout.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
+            {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue)
+                {
+                    try
+                    {
+                        pref_loc_provider_change_timeout.setSummary("" + (((int)newValue + 1) * 10) + " secs.");
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }
+            });
+
+
+
+
+
+
+
 
             final SwitchPreference pref_startonboot = (SwitchPreference) findPreference("start_on_boot");
 

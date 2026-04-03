@@ -35,6 +35,7 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__force_udp_only;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_FUSED;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_GPS;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_NETWORK;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_change_timeout;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__use_cpu_wakelock;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
@@ -65,7 +66,7 @@ public class CaptureService extends Service
     static String found_location_providers = "";
 
     static boolean GPS_SERVICE_STARTED = false;
-    private static final int LOCATION_TOO_OLD_MS = 1000 * 40;
+    static int LOCATION_TOO_OLD_MS = PREF__loc_provider_change_timeout * 1000;
     private static final int LOCATION_ACCURACY_DELTA_METERS = 100;
     static final int GPS_UPDATE_FREQ_MS = 1000;
     static final int JITTER_LOC_DELTA_MS = 300;

@@ -162,6 +162,7 @@ import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
 import static com.zoffcc.applications.trifa.CaptureService.INVALID_BEARING;
 import static com.zoffcc.applications.trifa.CaptureService.INVALID_SPEED;
+import static com.zoffcc.applications.trifa.CaptureService.LOCATION_TOO_OLD_MS;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
@@ -537,6 +538,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__loc_provider_NETWORK = false;
     static boolean PREF__loc_provider_FUSED = false;
     static boolean PREF__use_cpu_wakelock = false;
+    static int PREF__loc_provider_change_timeout = (3 + 1) * 10;
 
     static boolean PREF__keep_screen_on_when_map = false;
     static boolean PREF__gps_smooth_own = false;
@@ -4498,6 +4500,16 @@ public class MainActivity extends BaseProtectedActivity
         PREF__loc_provider_GPS  = settings.getBoolean("loc_provider_GPS", true);
         PREF__loc_provider_NETWORK  = settings.getBoolean("loc_provider_NETWORK", false);
         PREF__loc_provider_FUSED  = settings.getBoolean("loc_provider_FUSED", false);
+
+        try
+        {
+            int PREF__loc_provider_change_timeout_tmp = settings.getInt("loc_provider_change_timeout", 3);
+            PREF__loc_provider_change_timeout = (PREF__loc_provider_change_timeout_tmp + 1) * 10;
+            LOCATION_TOO_OLD_MS = PREF__loc_provider_change_timeout * 1000;
+        }
+        catch(Exception e)
+        {
+        }
 
         PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
 

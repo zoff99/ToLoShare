@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="general">
         <ListPreference
@@ -61,6 +62,14 @@
             android:key="loc_provider_NETWORK"
             android:summary="@string/pref_description_loc_provider_NETWORK"
             android:title="@string/pref_title_loc_provider_NETWORK" />
+
+        <SeekBarPreference
+            android:key="loc_provider_change_timeout"
+            android:title="Timeout for Location provider change"
+            android:summary="change location provider after this many seconds of no new location updates from current provider"
+            android:defaultValue="3"
+            app:showSeekBarValue="true"
+            android:max="5" />
 
         <SwitchPreference
             android:defaultValue="false"
