@@ -167,6 +167,7 @@ import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_F
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_NONE;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
+import static com.zoffcc.applications.trifa.CaptureService.capture_location_wakeLock;
 import static com.zoffcc.applications.trifa.CaptureService.currentBestLocation;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_data;
 import static com.zoffcc.applications.trifa.CaptureService.remote_location_overlays;
@@ -535,9 +536,9 @@ public class MainActivity extends BaseProtectedActivity
     static double PREF__map_last_lon = 16.3730f;
 
     static boolean PREF__loc_provider_GPS = true;
-    static boolean PREF__loc_provider_NETWORK = false;
+    static boolean PREF__loc_provider_NETWORK = true;
     static boolean PREF__loc_provider_FUSED = false;
-    static boolean PREF__use_cpu_wakelock = false;
+    static boolean PREF__loc_provider_WAKELOCK = false;
     static int PREF__loc_provider_change_timeout = (3 + 1) * 10;
 
     static boolean PREF__keep_screen_on_when_map = false;
@@ -1892,6 +1893,16 @@ public class MainActivity extends BaseProtectedActivity
                             {
                             }
 
+                            try
+                            {
+                                // HINT: try to release the wakelock in any case
+                                //       the exception will catch any issues anyway
+                                capture_location_wakeLock.release();
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
 
                             // Exit
                             try
@@ -4497,9 +4508,10 @@ public class MainActivity extends BaseProtectedActivity
         PREF__use_native_audio_play = settings.getBoolean("X_use_native_audio_play", true);
         PREF__tox_set_do_not_sync_av = settings.getBoolean("X_tox_set_do_not_sync_av", false);
 
-        PREF__loc_provider_GPS  = settings.getBoolean("loc_provider_GPS", true);
-        PREF__loc_provider_NETWORK  = settings.getBoolean("loc_provider_NETWORK", false);
-        PREF__loc_provider_FUSED  = settings.getBoolean("loc_provider_FUSED", false);
+        PREF__loc_provider_GPS = settings.getBoolean("loc_provider_GPS", true);
+        PREF__loc_provider_NETWORK = settings.getBoolean("loc_provider_NETWORK", true);
+        PREF__loc_provider_FUSED = settings.getBoolean("loc_provider_FUSED", false);
+        PREF__loc_provider_WAKELOCK = settings.getBoolean("loc_provider_WAKELOCK", false);
 
         try
         {

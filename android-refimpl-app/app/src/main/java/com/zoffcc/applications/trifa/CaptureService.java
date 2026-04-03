@@ -31,13 +31,12 @@ import androidx.core.location.LocationListenerCompat;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__force_udp_only;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_FUSED;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_GPS;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_NETWORK;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_WAKELOCK;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_change_timeout;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__use_cpu_wakelock;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
 import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
@@ -78,7 +77,7 @@ public class CaptureService extends Service
     String channelId_gps = "chl_svc1";
     LocationManager locationManager = null;
     LocationListenerCompat mLocationListener = null;
-    static PowerManager.WakeLock wakeLock = null;
+    static PowerManager.WakeLock capture_location_wakeLock = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
     final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
     final static String GEO_COORD_PROTO_VERSION = "00"; // must be exactly 2 char wide
@@ -188,10 +187,10 @@ public class CaptureService extends Service
         try
         {
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            if (PREF__use_cpu_wakelock)
+            if (PREF__loc_provider_WAKELOCK)
             {
-                wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "trifa:trifa_location_wakeup_lock");
-                wakeLock.acquire();
+                capture_location_wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "trifa:trifa_location_wakeup_lock");
+                capture_location_wakeLock.acquire();
             }
         }
         catch(Exception ignored)
@@ -206,7 +205,7 @@ public class CaptureService extends Service
     {
         try
         {
-            wakeLock.release();
+            capture_location_wakeLock.release();
         }
         catch(Exception ignored)
         {

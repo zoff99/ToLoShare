@@ -58,10 +58,16 @@
             android:title="@string/pref_title_loc_provider_GPS" />
 
         <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="loc_provider_NETWORK"
             android:summary="@string/pref_description_loc_provider_NETWORK"
             android:title="@string/pref_title_loc_provider_NETWORK" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="loc_provider_WAKELOCK"
+            android:summary="use Wakelock"
+            android:title="keep the CPU awake while the app is running. enable this if you get issues with stable GPS location updates" />
 
         <SeekBarPreference
             android:key="loc_provider_change_timeout"
