@@ -50,6 +50,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -348,9 +349,12 @@ public class MainActivity extends BaseProtectedActivity
     static Handler handler = new Handler(Looper.getMainLooper());
     static boolean map_is_northed = true;
     static MyLocationNewOverlay2 mLocationOverlay = null;
+    static Polyline trailsOverlay = null;
+    final static int TRAILS_OVERLAY_COLOR = 0x90FF0000;
     // static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
+    static ThreadSafeFriendTracker f_trails = new ThreadSafeFriendTracker();
     static FriendTracker f_tracker = null;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
@@ -2389,6 +2393,20 @@ public class MainActivity extends BaseProtectedActivity
         }
     }
 
+    private static void debug_list_overlays()
+    {
+        try
+        {
+            for (Overlay ov : map.getOverlays())
+            {
+                Log.i(TAG, "OVXXXX:debug_list_overlays:" + ov + " " + ov.getClass());
+            }
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
     private static void clear_all_routes()
     {
         try
@@ -2407,6 +2425,13 @@ public class MainActivity extends BaseProtectedActivity
                                 map.getOverlays().remove(ov);
                             }
                         }
+
+                        trailsOverlay = new Polyline();
+                        trailsOverlay.setColor(TRAILS_OVERLAY_COLOR);
+                        trailsOverlay.setWidth(dp_to_px(6));
+                        map.getOverlays().add(trailsOverlay);
+                        Log.i(TAG, "OVXXXX:35: add trailsOverlay");
+                        debug_list_overlays();
                     }
                     catch(Exception e)
                     {
@@ -2612,6 +2637,13 @@ public class MainActivity extends BaseProtectedActivity
         catch(Exception e)
         {
         }
+
+        trailsOverlay = new Polyline();
+        trailsOverlay.setColor(TRAILS_OVERLAY_COLOR);
+        trailsOverlay.setWidth(dp_to_px(6));
+        map.getOverlays().add(trailsOverlay);
+        Log.i(TAG, "OVXXXX:33: add trailsOverlay");
+        debug_list_overlays();
     }
 
     private static void register_for_push(Context context)
@@ -6449,7 +6481,7 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 String[] separated = geo_data_raw.split(":");
-                                if ((separated[0].equals("TzGeo00")) || (separated[0].equals("TzGeo01"))  || (separated[0].equals("TzGeo02")))
+                                if ((separated[0].equals("TzGeo00")) || (separated[0].equals("TzGeo01")) || (separated[0].equals("TzGeo02")))
                                 {
                                     int proto_version = 0;
                                     if (separated[0].equals("TzGeo01"))
@@ -6470,7 +6502,7 @@ public class MainActivity extends BaseProtectedActivity
                                         double lon;
                                         float alt;
                                         float acc;
-                                        long loc_timestamp;
+                                        long loc_timestamp = current_ts_millis;
                                         String loc_provider = "unknown";
                                         int bearing_index;
                                         float speed_meters_per_second = 0.0f;
@@ -6494,7 +6526,7 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 loc_provider = separated[7];
                                             }
-                                            catch(Exception e)
+                                            catch (Exception e)
                                             {
                                                 loc_provider = "???";
                                             }
@@ -6511,7 +6543,7 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 loc_provider = separated[7];
                                             }
-                                            catch(Exception e)
+                                            catch (Exception e)
                                             {
                                                 loc_provider = "???";
                                             }
@@ -6520,7 +6552,7 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 speed_meters_per_second = Float.parseFloat(separated[9]);
                                             }
-                                            catch(Exception e)
+                                            catch (Exception e)
                                             {
                                             }
                                         }
@@ -6567,6 +6599,50 @@ public class MainActivity extends BaseProtectedActivity
                                             if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                             {
                                                 f_tracker.ping_incoming(f_pubkey);
+
+                                                // TRAILS ------------------
+                                                if (is_following_friend(f_pubkey))
+                                                {
+
+                                                    try
+                                                    {
+                                                        final Location tmp_location = new Location(loc_provider);
+                                                        tmp_location.setLatitude(lat);
+                                                        tmp_location.setLongitude(lon);
+                                                        tmp_location.setTime(loc_timestamp);
+                                                        f_trails.updateLocation(f_pubkey, tmp_location);
+
+                                                        List<Location> trails = f_trails.getRecentPositions(f_pubkey);
+                                                        try
+                                                        {
+                                                            List<GeoPoint> geoPointsList = new ArrayList<>();
+                                                            for (Location loc : trails)
+                                                            {
+                                                                try
+                                                                {
+                                                                    GeoPoint p = new GeoPoint(loc.getLatitude(),
+                                                                                              loc.getLongitude());
+                                                                    geoPointsList.add(p);
+                                                                }
+                                                                catch (Exception e)
+                                                                {
+                                                                    e.printStackTrace();
+                                                                }
+                                                            }
+                                                            trailsOverlay.setPoints(geoPointsList);
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            e.printStackTrace();
+                                                        }
+                                                        map.invalidate();
+                                                    }
+                                                    catch (Exception e)
+                                                    {
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                                // TRAILS ------------------
 
                                                 if (!remote_location_data.containsKey(f_pubkey))
                                                 {
@@ -6615,9 +6691,10 @@ public class MainActivity extends BaseProtectedActivity
                                                 }
                                                 else
                                                 {
-                                                    CaptureService.remote_location_overlay_entry ro = remote_location_overlays.get(f_pubkey);
+                                                    CaptureService.remote_location_overlay_entry ro = remote_location_overlays.get(
+                                                            f_pubkey);
                                                     select_location_icon(old_has_bearing, has_bearing, f_pubkey,
-                                                              f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1,
+                                                                         f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1,
                                                                          false, ro.remote_location_overlay);
                                                 }
                                             }
@@ -6641,8 +6718,7 @@ public class MainActivity extends BaseProtectedActivity
                                                 else
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
-                                                                         old_has_bearing, acc, 1,
-                                                                         f_pubkey, delta_value);
+                                                                         old_has_bearing, acc, 1, f_pubkey, delta_value);
                                                 }
                                             }
                                         }
@@ -6655,17 +6731,22 @@ public class MainActivity extends BaseProtectedActivity
                                         {
                                             String final_f_pubkey = f_pubkey;
                                             String finalLoc_provider;
-                                            if (loc_provider == null) {
+                                            if (loc_provider == null)
+                                            {
                                                 finalLoc_provider = "???";
-                                            } else {
+                                            }
+                                            else
+                                            {
                                                 finalLoc_provider = loc_provider;
                                             }
-                                            if (finalLoc_provider.length() > 4) {
+                                            if (finalLoc_provider.length() > 4)
+                                            {
                                                 finalLoc_provider = finalLoc_provider.substring(0, 4);
                                             }
                                             final String finalLoc_provider_ = finalLoc_provider;
                                             int finalProto_version = proto_version;
-                                            String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
+                                            String finalSpeed_kmh = String.format("%.1f km/h",
+                                                                                  speed_meters_per_second * 3.6f);
                                             float finalSpeed_meters_per_second = speed_meters_per_second;
                                             Runnable myRunnable = new Runnable()
                                             {
@@ -6678,9 +6759,10 @@ public class MainActivity extends BaseProtectedActivity
                                                                 final_f_pubkey);
                                                         re.remote_location_last_ts_millis = current_ts_millis;
                                                         re.remote_location_txt =
-                                                                "name: " + re.friend_name + "\n" +
-                                                                "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
-                                                                finalLoc_provider_ + " / " + finalProto_version +") "+finalSpeed_kmh+"\n";
+                                                                "name: " + re.friend_name + "\n" + "accur: " +
+                                                                (int) (Math.round(acc * 10f) / 10) + " m (" +
+                                                                finalLoc_provider_ + " / " + finalProto_version + ") " +
+                                                                finalSpeed_kmh + "\n";
                                                         set_debug_text_2(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                         select_speed_icon(finalSpeed_meters_per_second, 0);
@@ -6701,17 +6783,22 @@ public class MainActivity extends BaseProtectedActivity
                                         {
                                             String final_f_pubkey = f_pubkey;
                                             String finalLoc_provider1;
-                                            if (loc_provider == null) {
+                                            if (loc_provider == null)
+                                            {
                                                 finalLoc_provider1 = "???";
-                                            } else {
+                                            }
+                                            else
+                                            {
                                                 finalLoc_provider1 = loc_provider;
                                             }
-                                            if (finalLoc_provider1.length() > 4) {
+                                            if (finalLoc_provider1.length() > 4)
+                                            {
                                                 finalLoc_provider1 = finalLoc_provider1.substring(0, 4);
                                             }
                                             final String finalLoc_provider1_ = finalLoc_provider1;
                                             int finalProto_version1 = proto_version;
-                                            String finalSpeed_kmh = String.format("%.1f km/h", speed_meters_per_second * 3.6f);
+                                            String finalSpeed_kmh = String.format("%.1f km/h",
+                                                                                  speed_meters_per_second * 3.6f);
                                             float finalSpeed_meters_per_second1 = speed_meters_per_second;
                                             Runnable myRunnable = new Runnable()
                                             {
@@ -6724,9 +6811,10 @@ public class MainActivity extends BaseProtectedActivity
                                                                 final_f_pubkey);
                                                         re.remote_location_last_ts_millis = current_ts_millis;
                                                         re.remote_location_txt =
-                                                                "name: " + re.friend_name + "\n" +
-                                                                "accur: " + (int) (Math.round(acc * 10f) / 10) + " m (" +
-                                                                finalLoc_provider1_ + " / " + finalProto_version1 + ") "+finalSpeed_kmh+"\n";
+                                                                "name: " + re.friend_name + "\n" + "accur: " +
+                                                                (int) (Math.round(acc * 10f) / 10) + " m (" +
+                                                                finalLoc_provider1_ + " / " + finalProto_version1 +
+                                                                ") " + finalSpeed_kmh + "\n";
                                                         set_debug_text_3(
                                                                 location_info_text(re.remote_location_last_ts_millis, re.remote_location_txt));
                                                         select_speed_icon(finalSpeed_meters_per_second1, 1);

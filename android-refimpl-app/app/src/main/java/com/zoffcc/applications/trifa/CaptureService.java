@@ -506,6 +506,11 @@ public class CaptureService extends Service
 
     static void send_location_update_to_friend(@NonNull Location location, @NonNull String fpubkey)
     {
+        if (location == null)
+        {
+            return;
+        }
+
         try
         {
             final byte[] data_bin = getGeoMsg_proto_v2(location, location.getTime());
