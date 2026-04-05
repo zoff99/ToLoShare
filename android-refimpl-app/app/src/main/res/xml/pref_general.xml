@@ -66,16 +66,22 @@
         <SwitchPreference
             android:defaultValue="false"
             android:key="loc_provider_WAKELOCK"
-            android:summary="use Wakelock"
-            android:title="keep the CPU awake while the app is running. enable this if you get issues with stable GPS location updates" />
+            android:summary="@string/pref_description_loc_provider_WAKELOCK"
+            android:title="@string/pref_title_loc_provider_WAKELOCK" />
 
         <SeekBarPreference
             android:key="loc_provider_change_timeout"
-            android:title="Timeout for Location provider change"
-            android:summary="change location provider after this many seconds of no new location updates from current provider"
+            android:summary="@string/pref_description_loc_provider_change_timeout"
+            android:title="@string/pref_title_loc_provider_change_timeout"
             android:defaultValue="3"
             app:showSeekBarValue="true"
             android:max="5" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="show_friend_trails"
+            android:summary="@string/pref_description_show_friend_trails"
+            android:title="@string/pref_title_show_friend_trails" />
 
         <SwitchPreference
             android:defaultValue="false"

@@ -547,6 +547,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean PREF__keep_screen_on_when_map = false;
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_smooth_friends = false;
+    static boolean PREF__show_friend_trails = true;
     static ROUTE_TYPE PREF__route_type = ROUTE_TYPE.ROUTE_TYPE_BY_CAR;
 
     final static String push_instance_name = "com.zoffcc.applications.push_toloshare";
@@ -2230,6 +2231,7 @@ public class MainActivity extends BaseProtectedActivity
         switch_friend_gps_smoothing.setChecked(PREF__gps_smooth_friends);
 
         PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
+        PREF__show_friend_trails = settings.getBoolean("show_friend_trails", true);
 
         switch_own_gps_smoothing.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
@@ -4555,6 +4557,7 @@ public class MainActivity extends BaseProtectedActivity
         }
 
         PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
+        PREF__show_friend_trails = settings.getBoolean("show_friend_trails", true);
 
         PREF__map_follow_mode = settings.getInt("map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
         set_follow_button_ui();
