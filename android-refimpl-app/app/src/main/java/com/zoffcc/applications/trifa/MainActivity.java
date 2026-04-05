@@ -162,7 +162,6 @@ import permissions.dispatcher.RuntimePermissions;
 import static com.zoffcc.applications.sorm.OrmaDatabase.run_multi_sql;
 import static com.zoffcc.applications.sorm.OrmaDatabase.set_schema_upgrade_callback;
 import static com.zoffcc.applications.trifa.CaptureService.INVALID_BEARING;
-import static com.zoffcc.applications.trifa.CaptureService.INVALID_SPEED;
 import static com.zoffcc.applications.trifa.CaptureService.LOCATION_TOO_OLD_MS;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1;
@@ -354,7 +353,7 @@ public class MainActivity extends BaseProtectedActivity
     // static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
-    static ThreadSafeFriendTracker f_trails = new ThreadSafeFriendTracker();
+    static ThreadSafeFriendTrails f_trails = new ThreadSafeFriendTrails();
     static FriendTracker f_tracker = null;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
