@@ -232,6 +232,8 @@ public class TRIFAGlobals
     static final String TRIFA_SYSTEM_MESSAGE_PEER_PUBKEY = "-1";
     static final int TRIFA_SYSTEM_MESSAGE_PEER_CHATCOLOR = Color.parseColor("#C35838"); // red-ish
 
+    static final String TRIFA_SELFFAKE_PUBKEY_FOR_TRAIL = "self_trail";
+
     static final int FL_NOTIFICATION_ICON_ALPHA_SELECTED = 135;
     static final int FL_NOTIFICATION_ICON_ALPHA_NOT_SELECTED = 50;
     static final int FL_NOTIFICATION_ICON_SIZE_DP_SELECTED = 90;

@@ -19,6 +19,7 @@ import android.util.Log;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -37,7 +38,9 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_NETW
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_WAKELOCK;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_change_timeout;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
+import static com.zoffcc.applications.trifa.MainActivity.PREF__show_friend_trails;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
+import static com.zoffcc.applications.trifa.MainActivity.f_trails;
 import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
 import static com.zoffcc.applications.trifa.MainActivity.location_info_text;
 import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
@@ -47,11 +50,13 @@ import static com.zoffcc.applications.trifa.MainActivity.mapController;
 import static com.zoffcc.applications.trifa.MainActivity.map_is_northed;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
+import static com.zoffcc.applications.trifa.MainActivity.selfTrailsOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.set_found_loc_providers_text;
 import static com.zoffcc.applications.trifa.MainActivity.set_self_speed;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GEO_COORDS_CUSTOM_LOSSLESS_ID;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.TRIFA_SELFFAKE_PUBKEY_FOR_TRAIL;
 
 /** @noinspection CommentedOutCode, CallToPrintStackTrace , Convert2Lambda */
 public class CaptureService extends Service
@@ -257,6 +262,43 @@ public class CaptureService extends Service
         else
         {
             set_self_speed(0.0f);
+        }
+
+        try
+        {
+            if (PREF__show_friend_trails)
+            {
+                final Location tmp_location = currentBestLocation;
+                f_trails.updateLocation(TRIFA_SELFFAKE_PUBKEY_FOR_TRAIL, tmp_location);
+
+                List<Location> trails = f_trails.getRecentPositions(TRIFA_SELFFAKE_PUBKEY_FOR_TRAIL);
+                try
+                {
+                    List<GeoPoint> geoPointsList = new ArrayList<>();
+                    for (Location loc : trails)
+                    {
+                        try
+                        {
+                            GeoPoint p = new GeoPoint(loc.getLatitude(), loc.getLongitude());
+                            geoPointsList.add(p);
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                    selfTrailsOverlay.setPoints(geoPointsList);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                map.invalidate();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
         }
     }
 

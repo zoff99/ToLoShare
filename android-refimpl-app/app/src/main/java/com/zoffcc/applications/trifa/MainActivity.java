@@ -348,8 +348,10 @@ public class MainActivity extends BaseProtectedActivity
     static Handler handler = new Handler(Looper.getMainLooper());
     static boolean map_is_northed = true;
     static MyLocationNewOverlay2 mLocationOverlay = null;
-    static Polyline trailsOverlay = null;
+    static TrailPolyline trailsOverlay = null;
     final static int TRAILS_OVERLAY_COLOR = 0x90FF0000;
+    static SelftrailPolyline selfTrailsOverlay = null;
+    final static int SELFTRAILS_OVERLAY_COLOR = 0x900000FF;
     // static IMyLocationProvider mIMyLocationProvider = null;
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
@@ -2426,11 +2428,6 @@ public class MainActivity extends BaseProtectedActivity
                                 map.getOverlays().remove(ov);
                             }
                         }
-
-                        trailsOverlay = new Polyline();
-                        trailsOverlay.setColor(TRAILS_OVERLAY_COLOR);
-                        trailsOverlay.setWidth(dp_to_px(6));
-                        map.getOverlays().add(trailsOverlay);
                         Log.i(TAG, "OVXXXX:35: add trailsOverlay");
                         debug_list_overlays();
                     }
@@ -2639,11 +2636,19 @@ public class MainActivity extends BaseProtectedActivity
         {
         }
 
-        trailsOverlay = new Polyline();
+        trailsOverlay = new TrailPolyline();
         trailsOverlay.setColor(TRAILS_OVERLAY_COLOR);
         trailsOverlay.setWidth(dp_to_px(6));
         map.getOverlays().add(trailsOverlay);
         Log.i(TAG, "OVXXXX:33: add trailsOverlay");
+
+
+        selfTrailsOverlay = new SelftrailPolyline();
+        selfTrailsOverlay.setColor(SELFTRAILS_OVERLAY_COLOR);
+        selfTrailsOverlay.setWidth(dp_to_px(6));
+        map.getOverlays().add(selfTrailsOverlay);
+        Log.i(TAG, "OVXXXX:33: add selfTrailsOverlay");
+
         debug_list_overlays();
     }
 
@@ -6603,45 +6608,49 @@ public class MainActivity extends BaseProtectedActivity
                                                 f_tracker.ping_incoming(f_pubkey);
 
                                                 // TRAILS ------------------
-                                                if (is_following_friend(f_pubkey))
+                                                if (PREF__show_friend_trails)
                                                 {
-
-                                                    try
+                                                    if (is_following_friend(f_pubkey))
                                                     {
-                                                        final Location tmp_location = new Location(loc_provider);
-                                                        tmp_location.setLatitude(lat);
-                                                        tmp_location.setLongitude(lon);
-                                                        tmp_location.setTime(loc_timestamp);
-                                                        f_trails.updateLocation(f_pubkey, tmp_location);
 
-                                                        List<Location> trails = f_trails.getRecentPositions(f_pubkey);
                                                         try
                                                         {
-                                                            List<GeoPoint> geoPointsList = new ArrayList<>();
-                                                            for (Location loc : trails)
+                                                            final Location tmp_location = new Location(loc_provider);
+                                                            tmp_location.setLatitude(lat);
+                                                            tmp_location.setLongitude(lon);
+                                                            tmp_location.setTime(loc_timestamp);
+                                                            f_trails.updateLocation(f_pubkey, tmp_location);
+
+                                                            List<Location> trails = f_trails.getRecentPositions(
+                                                                    f_pubkey);
+                                                            try
                                                             {
-                                                                try
+                                                                List<GeoPoint> geoPointsList = new ArrayList<>();
+                                                                for (Location loc : trails)
                                                                 {
-                                                                    GeoPoint p = new GeoPoint(loc.getLatitude(),
-                                                                                              loc.getLongitude());
-                                                                    geoPointsList.add(p);
+                                                                    try
+                                                                    {
+                                                                        GeoPoint p = new GeoPoint(loc.getLatitude(),
+                                                                                                  loc.getLongitude());
+                                                                        geoPointsList.add(p);
+                                                                    }
+                                                                    catch (Exception e)
+                                                                    {
+                                                                        e.printStackTrace();
+                                                                    }
                                                                 }
-                                                                catch (Exception e)
-                                                                {
-                                                                    e.printStackTrace();
-                                                                }
+                                                                trailsOverlay.setPoints(geoPointsList);
                                                             }
-                                                            trailsOverlay.setPoints(geoPointsList);
+                                                            catch (Exception e)
+                                                            {
+                                                                e.printStackTrace();
+                                                            }
+                                                            map.invalidate();
                                                         }
                                                         catch (Exception e)
                                                         {
                                                             e.printStackTrace();
                                                         }
-                                                        map.invalidate();
-                                                    }
-                                                    catch (Exception e)
-                                                    {
-                                                        e.printStackTrace();
                                                     }
                                                 }
                                                 // TRAILS ------------------
