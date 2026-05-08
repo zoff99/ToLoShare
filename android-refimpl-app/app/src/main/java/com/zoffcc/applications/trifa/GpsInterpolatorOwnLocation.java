@@ -73,7 +73,7 @@ public class GpsInterpolatorOwnLocation
             timeDelta = 1;
         }
 
-        if ((!PREF__gps_smooth_friends) || (isFirstFix) || (steps < 1) || (steps > 30))
+        if ((!PREF__gps_smooth_own) || (isFirstFix) || (steps < 1) || (steps > 30))
         {
             lastLat = location.getLatitude();
             lastLon = location.getLongitude();
