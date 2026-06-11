@@ -127,7 +127,7 @@ dependencyVerification {
         'com.github.medyo:android-about-page:1.2.4:android-about-page-1.2.4.aar:15108c8bdedf5975d2aa60604107017109a4ad3640e0e95fa97fd438d347eb5c',
         'com.github.zoff99:pkgs_ToxAndroidRefImpl:1.0.175:pkgs_ToxAndroidRefImpl-1.0.175.aar:224a44b94ceab44293c652ec5d94e8b54ae4ede8198e7fd950e0ef9b387de456',
         'com.github.zoff99:pkgs_armchaAutoLinkTextView:0.3.0:pkgs_armchaAutoLinkTextView-0.3.0.aar:31e292b56159e6de8e57ccfdbf78add69827493d72238b8c17699d2a08c7486c',
-        'com.github.zoff99:pkgs_guardianprojectIOCipher:1.0.28:pkgs_guardianprojectIOCipher-1.0.28.aar:4a083fcc90f9e07a063fe48498ded6ac2e58c1d01fb29ae264558eb26295c285',
+        'com.github.zoff99:pkgs_guardianprojectIOCipher:1.0.29:pkgs_guardianprojectIOCipher-1.0.29.aar:b5a92ff122df4a8aa5cbd1ffa35ff845f5a4acdecbed30889cca25d77b8aa2c2',
         'com.github.zoff99:pkgs_hotchemiPermissionsdispatcher-processor:3.2.0:pkgs_hotchemiPermissionsdispatcher-processor-3.2.0.jar:f7374192b263a94f63186dee91cb954c9369122519e4f08e055b72969699b52d',
         'com.github.zoff99:pkgs_hotchemiPermissionsdispatcher:3.2.0:pkgs_hotchemiPermissionsdispatcher-3.2.0.aar:40191c8c726445dcab4fa2a4ef7a7e76186ef154dc385fe07520944fe4720089',
         'com.github.zoff99:pkgs_zoffccAndroidJDBC:1.0.27:pkgs_zoffccAndroidJDBC-1.0.27.aar:fdf4454eb036dc4cab2f1dc71305044f9c3e7805052a5d8bb3e0ff2ab876cdbb',
