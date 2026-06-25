@@ -20,7 +20,7 @@ jobs:
     permissions:
         contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Move nightly tag to head for nightly release
         run: git tag -f nightly && git push origin nightly -f
 
@@ -34,7 +34,7 @@ jobs:
       contents: write
     if: ${{ true }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: install deps
         run: |
