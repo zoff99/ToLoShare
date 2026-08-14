@@ -47,6 +47,7 @@ import static com.zoffcc.applications.trifa.MainActivity.mLocationOverlay;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.map;
 import static com.zoffcc.applications.trifa.MainActivity.mapController;
+import static com.zoffcc.applications.trifa.MainActivity.map_currently_dragging;
 import static com.zoffcc.applications.trifa.MainActivity.map_is_northed;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
@@ -636,17 +637,19 @@ public class CaptureService extends Service
     {
         try
         {
-            // HINT: follow own location on the map
-            GeoPoint new_center = new GeoPoint(location.getLatitude(),
-                                               location.getLongitude());
-            // mapController.animateTo(new_center);
-            mapController.setCenter(new_center);
-
-            if (!map_is_northed)
+            if (!map_currently_dragging)
             {
-                if (location.hasBearing())
+                // HINT: follow own location on the map
+                GeoPoint new_center = new GeoPoint(location.getLatitude(), location.getLongitude());
+                // mapController.animateTo(new_center);
+                mapController.setCenter(new_center);
+
+                if (!map_is_northed)
                 {
-                    map.setMapOrientation(-location.getBearing());
+                    if (location.hasBearing())
+                    {
+                        map.setMapOrientation(-location.getBearing());
+                    }
                 }
             }
         }

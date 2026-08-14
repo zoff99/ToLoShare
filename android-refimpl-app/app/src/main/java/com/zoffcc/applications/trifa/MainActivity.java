@@ -70,6 +70,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -348,6 +349,7 @@ public class MainActivity extends BaseProtectedActivity
     static Handler handler = new Handler(Looper.getMainLooper());
     static boolean map_is_northed = true;
     static MyLocationNewOverlay2 mLocationOverlay = null;
+    static boolean map_currently_dragging = false;
     static TrailPolyline trailsOverlay = null;
     final static int TRAILS_OVERLAY_COLOR = 0x90FF0000;
     static SelftrailPolyline selfTrailsOverlay = null;
@@ -2648,6 +2650,35 @@ public class MainActivity extends BaseProtectedActivity
         selfTrailsOverlay.setWidth(dp_to_px(6));
         map.getOverlays().add(selfTrailsOverlay);
         Log.i(TAG, "OVXXXX:33: add selfTrailsOverlay");
+
+        Overlay touchOverlay = new Overlay() {
+            @Override
+            public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+                Log.i(TAG, "Follow:001");
+                if (event.getAction() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 1)
+                {
+                    // The user is actively dragging the map with one finger
+                    if (mLocationOverlay != null)
+                    {
+                        // HINT: stop map center updates while the user is dragging the map with 1 finger
+                        map_currently_dragging = true;
+                        Log.i(TAG, "map_currently_dragging:1=" + map_currently_dragging);
+                    }
+                    else
+                    {
+                        map_currently_dragging = false;
+                        Log.i(TAG, "map_currently_dragging:2=" + map_currently_dragging);
+                    }
+                }
+                else
+                {
+                    map_currently_dragging = false;
+                    Log.i(TAG, "map_currently_dragging:3=" + map_currently_dragging);
+                }
+                return false; // Return false so the map still moves under the finger
+            }
+        };
+        map.getOverlays().add(touchOverlay);
 
         debug_list_overlays();
     }
