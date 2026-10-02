@@ -135,9 +135,9 @@ public class Aboutpage extends AppCompatActivity
             */
 
             Element trifa_commit = new Element();
-            trifa_commit.setTitle("TRIfA commit hash link");
+            trifa_commit.setTitle("ToLoShare commit hash link");
             Intent trifa_commit_page = new Intent(Intent.ACTION_VIEW, Uri.parse(
-                    "https://github.com/zoff99/ToxAndroidRefImpl/commit/" + BuildConfig.GitHash));
+                    "https://github.com/zoff99/ToLoShare/commit/" + BuildConfig.GitHash));
             trifa_commit.setIntent(trifa_commit_page);
             aboutPage.addItem(trifa_commit);
 
