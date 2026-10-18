@@ -138,18 +138,31 @@ public class NorthingOverlay extends Overlay
     @Override
     public boolean onSingleTapConfirmed(final MotionEvent e, final MapView mapView) {
 
-        float dx = e.getX();
-        float dy = e.getY();
+        // When the map is rotated, the MotionEvent passed to overlays is also rotated
+        // to match the map's unrotated coordinate space. We must convert it back to
+        // actual screen coordinates to check against the visual compass position.
+        android.graphics.Point screenPt = mapView.getProjection().rotateAndScalePoint((int) e.getX(), (int) e.getY(), null);
+        float dx = screenPt.x;
+        float dy = screenPt.y;
 
-        // Log.i(TAG, "onSingleTapConfirmed" + " " + mCompassCenterX + " " + mCompassCenterY + " " + mCompassRadius);
-        // Log.i(TAG, "onSingleTapConfirmed" + " " + dx + " " + dy + " " + compas_rect_x + " " + compas_rect_y);
+        float centerX;
+        float centerY;
+        if (mInCenter) {
+            final Rect rect = mapView.getProjection().getScreenRect();
+            centerX = rect.exactCenterX();
+            centerY = rect.exactCenterY();
+        } else {
+            centerX = mCompassCenterX * mScale;
+            centerY = mCompassCenterY * mScale;
+        }
 
-        // Log.i(TAG, "onSingleTapConfirmed" + " " + dx + " " + dy + " " + " " + mCompassRadius + " " + mScale);
-        // Log.i(TAG, "onSingleTapConfirmed" + " " + (mCompassRadius * mScale) * 4);
+        // The visual radius of the compass frame (matches the bitmap creation logic)
+        float radius = (mCompassRadius + 5) * mScale;
 
-        if ((dx <= (mCompassRadius * mScale) * 4) && (dy <= (mCompassRadius * mScale) * 4))
-        {
-            // Log.i(TAG, "onSingleTapConfirmed " + e);
+        // Calculate Euclidean distance from the touch point to the compass center
+        float dist = (float) Math.sqrt((dx - centerX) * (dx - centerX) + (dy - centerY) * (dy - centerY));
+
+        if (dist <= radius) {
             set_is_northed(!is_northed);
             return true;
         }
