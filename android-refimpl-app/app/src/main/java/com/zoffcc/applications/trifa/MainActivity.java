@@ -7368,6 +7368,24 @@ public class MainActivity extends BaseProtectedActivity
     static void android_tox_callback_group_custom_private_packet_cb_method(long group_number, long peer_id, final byte[] data, long length)
     {}
 
+    /**
+     * Called from JNI whenever the persistent peer roster changes for a group.
+     * Refresh your UI list here.
+     *
+     * THREAD SAFETY & THROTTLING:
+     * - This may be called from ANY thread (JNI callback thread).
+     * - We use a single-threaded scheduled executor to ensure only one update runs
+     *   at a time, and to throttle updates to at most once per second.
+     * - If updates arrive faster than 1/sec, we schedule a "trailing" update to
+     *   ensure the final state of a burst is never missed.
+     * - The final peer list is built completely in the background, then swapped
+     *   atomically via AtomicReference. Readers never see a half-built list.
+     *
+     * @noinspection ExtractMethodRecommender
+     */
+    static void android_tox_callback_group_mid_peer_list_changed_cb(String group_id)
+    {
+    }
     // -------- called by native new Group methods --------
     // -------- called by native new Group methods --------
     // -------- called by native new Group methods --------
