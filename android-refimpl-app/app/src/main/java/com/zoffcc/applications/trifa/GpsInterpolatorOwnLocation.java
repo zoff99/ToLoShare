@@ -4,6 +4,8 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 
+import org.osmdroid.util.GeoPoint;
+
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MAX;
 import static com.zoffcc.applications.trifa.CaptureService.GPS_UPDATE_FREQ_MS_MIN;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
@@ -28,11 +30,12 @@ public class GpsInterpolatorOwnLocation
     private boolean isFirstFix = true;
 
     void push_geo_pos(double newLat, double newLon, double newBearing, double acc, boolean has_bearing,
-                      MyLocationNewOverlay2 myLocationNewOverlay2)
+                      MyLocationNewOverlay2 myLocationNewOverlay2, Location original_location)
     {
+        boolean playback_active = TrailPlaybackState.isPlaybackActive();
+
         try
         {
-            // Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
             Location interpolated_location = new Location(LocationManager.GPS_PROVIDER);
             interpolated_location.setAccuracy((float)acc);
             interpolated_location.setLatitude(newLat);
@@ -45,10 +48,74 @@ public class GpsInterpolatorOwnLocation
             {
                 interpolated_location.removeBearing();
             }
-            myLocationNewOverlay2.onLocationChanged_real(interpolated_location, null);
-            if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+
+            if (original_location != null && original_location.hasSpeed())
             {
-                set_map_center_to_proxy_uithread(interpolated_location);
+                interpolated_location.setSpeed(original_location.getSpeed());
+            }
+
+            if (!playback_active)
+            {
+                myLocationNewOverlay2.onLocationChanged_real(interpolated_location, null);
+
+                if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                {
+                    set_map_center_to_proxy_uithread(interpolated_location);
+                }
+            }
+        }
+        catch(Exception ignored)
+        {
+        }
+
+        try
+        {
+            Location trail_location = new Location(LocationManager.GPS_PROVIDER);
+            trail_location.setLatitude(newLat);
+            trail_location.setLongitude(newLon);
+            trail_location.setAccuracy((float)acc);
+
+            if (has_bearing)
+            {
+                trail_location.setBearing((float)newBearing);
+            }
+
+            if (original_location != null && original_location.hasSpeed())
+            {
+                trail_location.setSpeed(original_location.getSpeed());
+            }
+
+            if (original_location != null && original_location.getTime() > 0)
+            {
+                trail_location.setTime(original_location.getTime());
+            }
+            else
+            {
+                trail_location.setTime(System.currentTimeMillis());
+            }
+
+            MainActivity.self_trails.updateLocation(trail_location);
+        }
+        catch(Exception ignored)
+        {
+        }
+
+        try
+        {
+            if (!playback_active && MainActivity.own_speed_badge != null)
+            {
+                MainActivity.own_speed_badge.setPosition(new org.osmdroid.util.GeoPoint(newLat, newLon));
+
+                float speed_kmh = 0.0f;
+                boolean has_speed = false;
+
+                if (original_location != null && original_location.hasSpeed())
+                {
+                    speed_kmh = original_location.getSpeed() * 3.6f;
+                    has_speed = true;
+                }
+
+                MainActivity.own_speed_badge.setSpeed(speed_kmh, has_speed);
             }
         }
         catch(Exception ignored)
@@ -60,7 +127,8 @@ public class GpsInterpolatorOwnLocation
      * Called on every new GPS update.
      * Calculates the time since the last update and sleeps between steps.
      */
-    public void onGpsUpdate(Location location, int steps, MyLocationNewOverlay2 myLocationNewOverlay2) {
+    public void onGpsUpdate(Location location, int steps, MyLocationNewOverlay2 myLocationNewOverlay2,
+                            float speed_meters_per_second) {
 
         // Log.i(TAG, "__* START __");
         long currentTime = System.currentTimeMillis();
@@ -89,7 +157,7 @@ public class GpsInterpolatorOwnLocation
             lastUpdateTime = currentTime;
             lastHasBearing = location.hasBearing();
             isFirstFix = false;
-            push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, location.hasBearing(), myLocationNewOverlay2);
+            push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, location.hasBearing(), myLocationNewOverlay2, location);
             // Log.i(TAG, "** RETURN **");
             return;
         }
@@ -149,7 +217,7 @@ public class GpsInterpolatorOwnLocation
                 //Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
                 //           ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, location.getAccuracy(),
-                             location.hasBearing(), myLocationNewOverlay2);
+                             location.hasBearing(), myLocationNewOverlay2, location);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
                 // Log.i(TAG, "** BREAK **");

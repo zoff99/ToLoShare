@@ -1,0 +1,39 @@
+package com.zoffcc.applications.trifa;
+
+import android.location.Location;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
+public class ThreadSafeSelfTrails
+{
+    private final Deque<Location> selfLocations = new ConcurrentLinkedDeque<>();
+    private static final long MAX_AGE_MS = 1L * 60L * 60L * 1000L; // 1 hours in milliseconds
+    private static final int MAX_POSITIONS = 1000;
+
+    public void updateLocation(Location newLoc)
+    {
+        synchronized (selfLocations)
+        {
+            selfLocations.addFirst(newLoc);
+            long cutoff = System.currentTimeMillis() - MAX_AGE_MS;
+
+            while (!selfLocations.isEmpty() && selfLocations.peekLast().getTime() < cutoff)
+            {
+                selfLocations.removeLast();
+            }
+
+            while (selfLocations.size() > MAX_POSITIONS)
+            {
+                selfLocations.removeLast();
+            }
+        }
+    }
+
+    public List<Location> getRecentPositions()
+    {
+        synchronized (selfLocations)
+        {
+            return new ArrayList<>(selfLocations);
+        }
+    }
+}

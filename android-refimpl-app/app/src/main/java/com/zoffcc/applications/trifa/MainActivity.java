@@ -351,6 +351,7 @@ public class MainActivity extends BaseProtectedActivity
     static MyLocationNewOverlay2 mLocationOverlay = null;
     static boolean map_currently_dragging = false;
     static TrailPolyline trailsOverlay = null;
+    static SpeedBadgeOverlay own_speed_badge = null;
     final static int TRAILS_OVERLAY_COLOR = 0x90FF0000;
     static SelftrailPolyline selfTrailsOverlay = null;
     final static int SELFTRAILS_OVERLAY_COLOR = 0x900000FF;
@@ -358,6 +359,7 @@ public class MainActivity extends BaseProtectedActivity
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
     static ThreadSafeFriendTrails f_trails = new ThreadSafeFriendTrails();
+    static ThreadSafeSelfTrails self_trails = new ThreadSafeSelfTrails();
     static FriendTracker f_tracker = null;
     static String own_location_txt = "";
     static String own_location_time_txt = "";
@@ -742,6 +744,205 @@ public class MainActivity extends BaseProtectedActivity
         map.setFlingEnabled(true);
         map.setTilesScaledToDpi(true);
         map.setMinZoomLevel(null);
+
+        android.widget.SeekBar trail_playback_seekbar = (android.widget.SeekBar) findViewById(R.id.trail_playback_seekbar);
+        if (trail_playback_seekbar != null)
+        {
+            trail_playback_seekbar.setMax(1000);
+            trail_playback_seekbar.setProgress(1000);
+
+            trail_playback_seekbar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener()
+            {
+                @Override
+                public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser)
+                {
+                    if (!fromUser)
+                    {
+                        return;
+                    }
+
+                    if (map == null)
+                    {
+                        return;
+                    }
+
+                    if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                    {
+                        scrubOwnTrail(seekBar, progress);
+                    }
+                    else if (trailsOverlay != null && f_trails != null)
+                    {
+                        scrubFriendTrail(seekBar, progress);
+                    }
+
+                    map.invalidate();
+                }
+
+                @Override
+                public void onStartTrackingTouch(android.widget.SeekBar seekBar)
+                {
+                }
+
+                @Override
+                public void onStopTrackingTouch(android.widget.SeekBar seekBar)
+                {
+                }
+
+                private void scrubOwnTrail(android.widget.SeekBar seekBar, int progress)
+                {
+                    java.util.List<Location> trails = self_trails.getRecentPositions();
+
+                    if ((trails == null) || trails.isEmpty())
+                    {
+                        return;
+                    }
+
+                    java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
+
+                    for (Location loc : trails)
+                    {
+                        pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                    }
+
+                    selfTrailsOverlay.setPoints(pts);
+
+                    int count = trails.size();
+                    Location target_pos;
+
+                    if ((progress >= seekBar.getMax()) || (count == 1))
+                    {
+                        TrailPlaybackState.setLive();
+                        target_pos = trails.get(0);
+                    }
+                    else
+                    {
+                        long idx_long = ((long)(seekBar.getMax() - progress) * (long)(count - 1)) / (long)seekBar.getMax();
+                        int idx = (int)idx_long;
+
+                        if (idx < 0)
+                        {
+                            idx = 0;
+                        }
+
+                        if (idx >= count)
+                        {
+                            idx = count - 1;
+                        }
+
+                        target_pos = trails.get(idx);
+
+                        TrailPlaybackState.setPlaybackTimestamp(target_pos.getTime());
+                    }
+
+                    if (mLocationOverlay != null)
+                    {
+                        mLocationOverlay.forceLocationChange(target_pos);
+                    }
+
+                    if (own_speed_badge != null)
+                    {
+                        own_speed_badge.setPosition(new GeoPoint(target_pos.getLatitude(), target_pos.getLongitude()));
+
+                        if (target_pos.hasSpeed())
+                        {
+                            own_speed_badge.setSpeed(target_pos.getSpeed() * 3.6f, true);
+                        }
+                        else
+                        {
+                            own_speed_badge.setSpeed(0.0f, false);
+                        }
+                    }
+                }
+
+                private void scrubFriendTrail(android.widget.SeekBar seekBar, int progress)
+                {
+                    for (String key : CaptureService.remote_location_data.keySet())
+                    {
+                        if (!is_following_friend(key))
+                        {
+                            continue;
+                        }
+
+                        java.util.List<Location> trails = f_trails.getRecentPositions(key);
+
+                        if ((trails == null) || trails.isEmpty())
+                        {
+                            continue;
+                        }
+
+                        java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
+
+                        for (Location loc : trails)
+                        {
+                            pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                        }
+
+                        trailsOverlay.setPoints(pts);
+
+                        int count = trails.size();
+                        Location target_pos;
+
+                        if ((progress >= seekBar.getMax()) || (count == 1))
+                        {
+                            TrailPlaybackState.setLive();
+                            target_pos = trails.get(0);
+                        }
+                        else
+                        {
+                            long idx_long = ((long)(seekBar.getMax() - progress) * (long)(count - 1)) / (long)seekBar.getMax();
+                            int idx = (int)idx_long;
+
+                            if (idx < 0)
+                            {
+                                idx = 0;
+                            }
+
+                            if (idx >= count)
+                            {
+                                idx = count - 1;
+                            }
+
+                            target_pos = trails.get(idx);
+
+                            TrailPlaybackState.setPlaybackTimestamp(target_pos.getTime());
+                        }
+
+                        CaptureService.remote_location_overlay_entry remote_ol = CaptureService.remote_location_overlays.get(key);
+
+                        if ((remote_ol != null) && (remote_ol.remote_location_overlay != null))
+                        {
+                            remote_ol.remote_location_overlay.setLocation(new GeoPoint(target_pos.getLatitude(),
+                                                                                       target_pos.getLongitude()));
+
+                            remote_ol.remote_location_overlay.setAccuracy(Math.round(target_pos.getAccuracy()));
+
+                            if (target_pos.hasBearing())
+                            {
+                                remote_ol.remote_location_overlay.setBearing(target_pos.getBearing());
+                            }
+
+                            if (remote_ol.remote_location_overlay instanceof FadeDirectedLocationOverlay)
+                            {
+                                FadeDirectedLocationOverlay fade_ol = (FadeDirectedLocationOverlay)remote_ol.remote_location_overlay;
+
+                                float speed_kmh = 0.0f;
+                                boolean has_speed = false;
+
+                                if (target_pos.hasSpeed())
+                                {
+                                    speed_kmh = target_pos.getSpeed() * 3.6f;
+                                    has_speed = true;
+                                }
+
+                                fade_ol.setSpeedIndicator(speed_kmh, has_speed);
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            });
+        }
 
         roadManager = new OSRMRoadManager(this, BuildConfig.APPLICATION_ID);
         ((OSRMRoadManager)roadManager).setMean(MEAN_BY_CAR);
@@ -2543,7 +2744,7 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
-                                DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(context_s);
+                                FadeDirectedLocationOverlay directed_ol = new FadeDirectedLocationOverlay(context_s);
                                 directed_ol.setShowAccuracy(true);
                                 remote_ol.remote_location_overlay = directed_ol;
                                 GeoPoint geop = new GeoPoint(re.remoteBestLocation.getLatitude(),
@@ -2637,6 +2838,9 @@ public class MainActivity extends BaseProtectedActivity
         catch(Exception e)
         {
         }
+
+        own_speed_badge = new SpeedBadgeOverlay(map);
+        map.getOverlays().add(own_speed_badge);
 
         trailsOverlay = new TrailPolyline();
         trailsOverlay.setColor(TRAILS_OVERLAY_COLOR);
@@ -6720,7 +6924,7 @@ public class MainActivity extends BaseProtectedActivity
                                                 if (!remote_location_overlays.containsKey(f_pubkey))
                                                 {
                                                     CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
-                                                    DirectedLocationOverlay directed_ol = new DirectedLocationOverlay(
+                                                    FadeDirectedLocationOverlay directed_ol = new FadeDirectedLocationOverlay(
                                                             context_s);
                                                     directed_ol.setShowAccuracy(true);
 
@@ -6755,12 +6959,13 @@ public class MainActivity extends BaseProtectedActivity
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
                                                                          old_has_bearing, acc, SMOOTH_POS_STEPS_FRIENDS,
-                                                                         f_pubkey, delta_value);
+                                                                         f_pubkey, delta_value, speed_meters_per_second);
                                                 }
                                                 else
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
-                                                                         old_has_bearing, acc, 1, f_pubkey, delta_value);
+                                                                         old_has_bearing, acc, 1, f_pubkey, delta_value,
+                                                                         speed_meters_per_second);
                                                 }
                                             }
                                         }

@@ -25,17 +25,36 @@ public class GpsInterpolator
     private long lastUpdateTime = 0;
     private boolean isFirstFix = true;
 
-    void push_geo_pos(double newLat, double newLon, double newBearing, float acc, boolean has_bearing, String f_pubkey)
+    void push_geo_pos(double newLat, double newLon, double newBearing, float acc, boolean has_bearing, String f_pubkey,
+                      float speed_meters_per_second)
     {
         try
         {
-            // Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
             CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
             if (remote_ol != null)
             {
-                remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
-                remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
-                remote_ol.remote_location_overlay.setBearing((float)newBearing);
+                if (remote_ol.remote_location_overlay instanceof FadeDirectedLocationOverlay)
+                {
+                    FadeDirectedLocationOverlay fade_ol = (FadeDirectedLocationOverlay)remote_ol.remote_location_overlay;
+
+                    fade_ol.timestamp_ms = System.currentTimeMillis();
+
+                    if (!TrailPlaybackState.isPlaybackActive())
+                    {
+                        float speed_kmh = speed_meters_per_second * 3.6f;
+                        fade_ol.setSpeedIndicator(speed_kmh, true);
+                    }
+                }
+
+                if (!TrailPlaybackState.isPlaybackActive())
+                {
+                    if (remote_ol.remote_location_overlay != null)
+                    {
+                        remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
+                        remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
+                        remote_ol.remote_location_overlay.setBearing((float)newBearing);
+                    }
+                }
             }
         }
         catch(Exception ignored)
@@ -83,7 +102,8 @@ public class GpsInterpolator
      */
     public void onGpsUpdate(double newLat, double newLon, double newBearing_, boolean has_bearing,
                             boolean old_has_bearing,
-                            float acc, int steps, String f_pubkey, long update_time_millis) {
+                            float acc, int steps, String f_pubkey, long update_time_millis,
+                            float speed_meters_per_second) {
 
         long currentTime = System.currentTimeMillis();
 
@@ -121,7 +141,7 @@ public class GpsInterpolator
             }
             lastBearing = newBearing;
             isFirstFix = false;
-            push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey);
+            push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey, speed_meters_per_second);
             // Log.i(TAG, "onGpsUpdate: return 1");
             return;
         }
@@ -180,7 +200,7 @@ public class GpsInterpolator
                 }
                 // Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
                 //            ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
-                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey);
+                push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey, speed_meters_per_second);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
                 Log.i(TAG, "currentThread_interrupt");

@@ -503,6 +503,17 @@
 
     </FrameLayout>
 
+    <SeekBar
+        android:id="@+id/trail_playback_seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="32dp"
+        android:max="1000"
+        android:progress="1000" />
+
 </RelativeLayout>
 
 

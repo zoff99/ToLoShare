@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 public class ThreadSafeFriendTrails
 {
     private final Map<String, Deque<Location>> friendLocations = new ConcurrentHashMap<>();
-    private static final long MAX_AGE_MS = 180 * 1000; // n seconds in milliseconds
-    private static final int MAX_POSITIONS = 80;
+    private static final long MAX_AGE_MS = 1L * 60L * 60L * 1000L; // 1 hours in milliseconds
+    private static final int MAX_POSITIONS = 1000;
 
     public void updateLocation(String friendId, Location newLoc)
     {
