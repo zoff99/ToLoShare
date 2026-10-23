@@ -366,8 +366,8 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
     //**MOCK**// private MockLocationSimulator simulator;
-     static int NUMBER_OF_MOCK_FRIENDS = 3;
-     private MockFriendLocationSimulator[] friend_simulator;
+    //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 3;
+    //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
 
     static int AudioMode_old;
     static int RingerMode_old;
@@ -2515,12 +2515,12 @@ public class MainActivity extends BaseProtectedActivity
         // Start the driving simulation
         //**MOCK**// simulator.startSimulation();
 
-         friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
-         for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
-         {
-             friend_simulator[j] = new MockFriendLocationSimulator(this, j);
-             friend_simulator[j].startSimulation();
-         }
+        //**MOCK**// friend_simulator = new MockFriendLocationSimulator[NUMBER_OF_MOCK_FRIENDS];
+        //**MOCK**// for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+        //**MOCK**// {
+        //**MOCK**//     friend_simulator[j] = new MockFriendLocationSimulator(this, j);
+        //**MOCK**//     friend_simulator[j].startSimulation();
+        //**MOCK**// }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
@@ -4523,16 +4523,16 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**//     simulator.stopSimulation();
         //**MOCK**// }
 
-         if (friend_simulator != null)
-         {
-             for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
-             {
-                 if (friend_simulator[j] != null)
-                 {
-                     friend_simulator[j].stopSimulation();
-                 }
-             }
-         }
+        //**MOCK**// if (friend_simulator != null)
+        //**MOCK**// {
+        //**MOCK**//     for (int j=0;j < NUMBER_OF_MOCK_FRIENDS;j++)
+        //**MOCK**//     {
+        //**MOCK**//         if (friend_simulator[j] != null)
+        //**MOCK**//         {
+        //**MOCK**//             friend_simulator[j].stopSimulation();
+        //**MOCK**//         }
+        //**MOCK**//     }
+        //**MOCK**// }
     }
 
     @Override
@@ -6829,12 +6829,12 @@ public class MainActivity extends BaseProtectedActivity
                                         {
                                             f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
 
-
-                                             if ((f_pubkey == null) || (f_pubkey.equals("-1")))
-                                             {
-                                                 f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
-                                             }
-
+                                            //**MOCK**//
+                                            //**MOCK**// if ((f_pubkey == null) || (f_pubkey.equals("-1")))
+                                            //**MOCK**// {
+                                            //**MOCK**//     f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                            //**MOCK**// }
+                                            //**MOCK**//
 
                                             if ((f_pubkey != null) && (f_pubkey.length() > 10))
                                             {
@@ -6916,9 +6916,9 @@ public class MainActivity extends BaseProtectedActivity
                                         }
                                         catch (Exception e)
                                         {
-
-                                             f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
-
+                                            //**MOCK**//
+                                            //**MOCK**// f_pubkey = "AAAAAAAAAAAA" + friend_number + "BB" + friend_number + "BB" + friend_number + "BB" + friend_number;
+                                            //**MOCK**//
                                         }
 
                                         try
@@ -7338,12 +7338,12 @@ public class MainActivity extends BaseProtectedActivity
         String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
         if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
         {
-
-             if (f_pubkey.equals("AAAAAAAAAAAA0BB0BB0BB0") || (f_pubkey.equals("-1")))
-             {
-                 return true;
-             }
-
+            //**MOCK**//
+            //**MOCK**// if (f_pubkey.equals("AAAAAAAAAAAA0BB0BB0BB0") || (f_pubkey.equals("-1")))
+            //**MOCK**// {
+            //**MOCK**//     return true;
+            //**MOCK**// }
+            //**MOCK**//
 
             if ((f_pubkey_pseudo_num_0 != null) &&
                 (f_pubkey != null) &&
@@ -7370,13 +7370,13 @@ public class MainActivity extends BaseProtectedActivity
         String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
         if (PREF__map_follow_mode == MAP_FOLLOW_MODE_FRIEND_0.value)
         {
-
-             if (f_pubkey.equals("AAAAAAAAAAAA0BB0BB0BB0") || (f_pubkey.equals("-1")))
-             {
-                 CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                 set_map_center_to_proxy_uithread(re.remoteBestLocation);
-             }
-
+            //**MOCK**//
+            //**MOCK**// if (f_pubkey.equals("AAAAAAAAAAAA0BB0BB0BB0") || (f_pubkey.equals("-1")))
+            //**MOCK**// {
+            //**MOCK**//     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
+            //**MOCK**//     set_map_center_to_proxy_uithread(re.remoteBestLocation);
+            //**MOCK**// }
+            //**MOCK**//
 
             if ((f_pubkey_pseudo_num_0 != null) &&
                 (f_pubkey != null) &&
