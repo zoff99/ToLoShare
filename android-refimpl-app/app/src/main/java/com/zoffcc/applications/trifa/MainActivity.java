@@ -178,6 +178,7 @@ import static com.zoffcc.applications.trifa.CaptureService.set_map_center_to_pro
 import static com.zoffcc.applications.trifa.FriendListFragment.fl_loading_progressbar;
 import static com.zoffcc.applications.trifa.HelperFriend.get_friend_pubkey_sorted_by_pubkey_num;
 import static com.zoffcc.applications.trifa.HelperFriend.get_set_is_default_ft_contact;
+import static com.zoffcc.applications.trifa.HelperFriend.is_default_ft_contact;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.send_friend_msg_receipt_v2_wrapper;
 import static com.zoffcc.applications.trifa.HelperFriend.send_pushurl_to_friend;
@@ -350,7 +351,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean map_is_northed = true;
     static MyLocationNewOverlay2 mLocationOverlay = null;
     static boolean map_currently_dragging = false;
-    static TrailPolyline trailsOverlay = null;
+    static java.util.HashMap<String, TrailPolyline> friend_trail_overlays = new java.util.HashMap<>();
     static SpeedBadgeOverlay own_speed_badge = null;
     final static int TRAILS_OVERLAY_COLOR = 0x90FF0000;
     static SelftrailPolyline selfTrailsOverlay = null;
@@ -766,14 +767,20 @@ public class MainActivity extends BaseProtectedActivity
                         return;
                     }
 
-                    if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                    if ((progress >= seekBar.getMax()))
                     {
-                        scrubOwnTrail(seekBar, progress);
+                        TrailPlaybackState.setLive();
                     }
-                    else if (trailsOverlay != null && f_trails != null)
+                    else
                     {
-                        scrubFriendTrail(seekBar, progress);
+                        long now_ms = System.currentTimeMillis();
+                        long span_ms = 24L * 60L * 60L * 1000L;
+                        long delta_ms = ((long)(seekBar.getMax() - progress) * span_ms) / (long)seekBar.getMax();
+                        TrailPlaybackState.setPlaybackTimestamp(now_ms - delta_ms);
                     }
+
+                    scrubAllFriends(seekBar, progress);
+                    scrubOwnTrail(seekBar, progress);
 
                     map.invalidate();
                 }
@@ -788,81 +795,10 @@ public class MainActivity extends BaseProtectedActivity
                 {
                 }
 
-                private void scrubOwnTrail(android.widget.SeekBar seekBar, int progress)
-                {
-                    java.util.List<Location> trails = self_trails.getRecentPositions();
-
-                    if ((trails == null) || trails.isEmpty())
-                    {
-                        return;
-                    }
-
-                    java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
-
-                    for (Location loc : trails)
-                    {
-                        pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
-                    }
-
-                    selfTrailsOverlay.setPoints(pts);
-
-                    int count = trails.size();
-                    Location target_pos;
-
-                    if ((progress >= seekBar.getMax()) || (count == 1))
-                    {
-                        TrailPlaybackState.setLive();
-                        target_pos = trails.get(0);
-                    }
-                    else
-                    {
-                        long idx_long = ((long)(seekBar.getMax() - progress) * (long)(count - 1)) / (long)seekBar.getMax();
-                        int idx = (int)idx_long;
-
-                        if (idx < 0)
-                        {
-                            idx = 0;
-                        }
-
-                        if (idx >= count)
-                        {
-                            idx = count - 1;
-                        }
-
-                        target_pos = trails.get(idx);
-
-                        TrailPlaybackState.setPlaybackTimestamp(target_pos.getTime());
-                    }
-
-                    if (mLocationOverlay != null)
-                    {
-                        mLocationOverlay.forceLocationChange(target_pos);
-                    }
-
-                    if (own_speed_badge != null)
-                    {
-                        own_speed_badge.setPosition(new GeoPoint(target_pos.getLatitude(), target_pos.getLongitude()));
-
-                        if (target_pos.hasSpeed())
-                        {
-                            own_speed_badge.setSpeed(target_pos.getSpeed() * 3.6f, true);
-                        }
-                        else
-                        {
-                            own_speed_badge.setSpeed(0.0f, false);
-                        }
-                    }
-                }
-
-                private void scrubFriendTrail(android.widget.SeekBar seekBar, int progress)
+                private void scrubAllFriends(android.widget.SeekBar seekBar, int progress)
                 {
                     for (String key : CaptureService.remote_location_data.keySet())
                     {
-                        if (!is_following_friend(key))
-                        {
-                            continue;
-                        }
-
                         java.util.List<Location> trails = f_trails.getRecentPositions(key);
 
                         if ((trails == null) || trails.isEmpty())
@@ -870,21 +806,22 @@ public class MainActivity extends BaseProtectedActivity
                             continue;
                         }
 
-                        java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
-
-                        for (Location loc : trails)
+                        TrailPolyline friend_trail = friend_trail_overlays.get(key);
+                        if (friend_trail != null)
                         {
-                            pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                            java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
+                            for (Location loc : trails)
+                            {
+                                pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                            }
+                            friend_trail.setPoints(pts);
                         }
-
-                        trailsOverlay.setPoints(pts);
 
                         int count = trails.size();
                         Location target_pos;
 
                         if ((progress >= seekBar.getMax()) || (count == 1))
                         {
-                            TrailPlaybackState.setLive();
                             target_pos = trails.get(0);
                         }
                         else
@@ -903,8 +840,6 @@ public class MainActivity extends BaseProtectedActivity
                             }
 
                             target_pos = trails.get(idx);
-
-                            TrailPlaybackState.setPlaybackTimestamp(target_pos.getTime());
                         }
 
                         CaptureService.remote_location_overlay_entry remote_ol = CaptureService.remote_location_overlays.get(key);
@@ -937,8 +872,69 @@ public class MainActivity extends BaseProtectedActivity
                                 fade_ol.setSpeedIndicator(speed_kmh, has_speed);
                             }
                         }
+                    }
+                }
 
-                        break;
+                private void scrubOwnTrail(android.widget.SeekBar seekBar, int progress)
+                {
+                    java.util.List<Location> trails = self_trails.getRecentPositions();
+
+                    if ((trails == null) || trails.isEmpty())
+                    {
+                        return;
+                    }
+
+                    java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
+
+                    for (Location loc : trails)
+                    {
+                        pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                    }
+
+                    selfTrailsOverlay.setPoints(pts);
+
+                    int count = trails.size();
+                    Location target_pos;
+
+                    if ((progress >= seekBar.getMax()) || (count == 1))
+                    {
+                        target_pos = trails.get(0);
+                    }
+                    else
+                    {
+                        long idx_long = ((long)(seekBar.getMax() - progress) * (long)(count - 1)) / (long)seekBar.getMax();
+                        int idx = (int)idx_long;
+
+                        if (idx < 0)
+                        {
+                            idx = 0;
+                        }
+
+                        if (idx >= count)
+                        {
+                            idx = count - 1;
+                        }
+
+                        target_pos = trails.get(idx);
+                    }
+
+                    if (mLocationOverlay != null)
+                    {
+                        mLocationOverlay.forceLocationChange(target_pos);
+                    }
+
+                    if (own_speed_badge != null)
+                    {
+                        own_speed_badge.setPosition(new GeoPoint(target_pos.getLatitude(), target_pos.getLongitude()));
+
+                        if (target_pos.hasSpeed())
+                        {
+                            own_speed_badge.setSpeed(target_pos.getSpeed() * 3.6f, true);
+                        }
+                        else
+                        {
+                            own_speed_badge.setSpeed(0.0f, false);
+                        }
                     }
                 }
             });
@@ -2704,9 +2700,18 @@ public class MainActivity extends BaseProtectedActivity
         catch(Exception e)
         {
         }
+
         try
         {
             mLocationOverlay.disableMyLocation();
+        }
+        catch(Exception e)
+        {
+        }
+
+        try
+        {
+            friend_trail_overlays.clear();
         }
         catch(Exception e)
         {
@@ -2841,13 +2846,6 @@ public class MainActivity extends BaseProtectedActivity
 
         own_speed_badge = new SpeedBadgeOverlay(map);
         map.getOverlays().add(own_speed_badge);
-
-        trailsOverlay = new TrailPolyline();
-        trailsOverlay.setColor(TRAILS_OVERLAY_COLOR);
-        trailsOverlay.setWidth(dp_to_px(6));
-        map.getOverlays().add(trailsOverlay);
-        Log.i(TAG, "OVXXXX:33: add trailsOverlay");
-
 
         selfTrailsOverlay = new SelftrailPolyline();
         selfTrailsOverlay.setColor(SELFTRAILS_OVERLAY_COLOR);
@@ -6845,47 +6843,53 @@ public class MainActivity extends BaseProtectedActivity
                                                 // TRAILS ------------------
                                                 if (PREF__show_friend_trails)
                                                 {
-                                                    if (is_following_friend(f_pubkey))
+                                                    try
                                                     {
+                                                        final Location tmp_location = new Location(loc_provider);
+                                                        tmp_location.setLatitude(lat);
+                                                        tmp_location.setLongitude(lon);
+                                                        tmp_location.setTime(loc_timestamp);
+                                                        f_trails.updateLocation(f_pubkey, tmp_location);
+
+                                                        List<Location> trails = f_trails.getRecentPositions(f_pubkey);
+
+                                                        TrailPolyline friend_trail = friend_trail_overlays.get(f_pubkey);
+                                                        if (friend_trail == null)
+                                                        {
+                                                            friend_trail = new TrailPolyline();
+                                                            friend_trail.setColor(TRAILS_OVERLAY_COLOR);
+                                                            friend_trail.setWidth(dp_to_px(6));
+                                                            map.getOverlays().add(friend_trail);
+                                                            friend_trail_overlays.put(f_pubkey, friend_trail);
+                                                        }
 
                                                         try
                                                         {
-                                                            final Location tmp_location = new Location(loc_provider);
-                                                            tmp_location.setLatitude(lat);
-                                                            tmp_location.setLongitude(lon);
-                                                            tmp_location.setTime(loc_timestamp);
-                                                            f_trails.updateLocation(f_pubkey, tmp_location);
-
-                                                            List<Location> trails = f_trails.getRecentPositions(
-                                                                    f_pubkey);
-                                                            try
+                                                            List<GeoPoint> geoPointsList = new ArrayList<>();
+                                                            for (Location loc : trails)
                                                             {
-                                                                List<GeoPoint> geoPointsList = new ArrayList<>();
-                                                                for (Location loc : trails)
+                                                                try
                                                                 {
-                                                                    try
-                                                                    {
-                                                                        GeoPoint p = new GeoPoint(loc.getLatitude(),
-                                                                                                  loc.getLongitude());
-                                                                        geoPointsList.add(p);
-                                                                    }
-                                                                    catch (Exception e)
-                                                                    {
-                                                                        e.printStackTrace();
-                                                                    }
+                                                                    GeoPoint p = new GeoPoint(loc.getLatitude(),
+                                                                                              loc.getLongitude());
+                                                                    geoPointsList.add(p);
                                                                 }
-                                                                trailsOverlay.setPoints(geoPointsList);
+                                                                catch (Exception e)
+                                                                {
+                                                                    e.printStackTrace();
+                                                                }
                                                             }
-                                                            catch (Exception e)
-                                                            {
-                                                                e.printStackTrace();
-                                                            }
-                                                            map.invalidate();
+                                                            friend_trail.setPoints(geoPointsList);
                                                         }
                                                         catch (Exception e)
                                                         {
                                                             e.printStackTrace();
                                                         }
+                                                        map.invalidate();
+                                                    }
+                                                    catch (Exception e)
+                                                    {
+                                                        e.printStackTrace();
                                                     }
                                                 }
                                                 // TRAILS ------------------
@@ -6955,7 +6959,8 @@ public class MainActivity extends BaseProtectedActivity
                                             {
                                                 CaptureService.remote_location_entry re = remote_location_data.get(
                                                         f_pubkey);
-                                                if ((f_pubkey != null) && (is_following_friend(f_pubkey)))
+
+                                                if (is_smooth_driving_vip(f_pubkey))
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
                                                                          old_has_bearing, acc, SMOOTH_POS_STEPS_FRIENDS,
@@ -6964,10 +6969,8 @@ public class MainActivity extends BaseProtectedActivity
                                                 else
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
-                                                                         old_has_bearing, acc, 1, f_pubkey, delta_value,
-                                                                         speed_meters_per_second);
-                                                }
-                                            }
+                                                                         old_has_bearing, acc, 1, f_pubkey, delta_value, speed_meters_per_second);
+                                                }                                            }
                                         }
                                         catch (Exception e)
                                         {
@@ -7095,7 +7098,7 @@ public class MainActivity extends BaseProtectedActivity
                             }
                         };
 
-                        if ((PREF__gps_smooth_friends) && (is_following_friend(f_pubkey_top)))
+                        if (is_smooth_driving_vip(f_pubkey_top))
                         {
                             runTaskFriendLocationIncoming(process_incoming_gps_location, System.currentTimeMillis());
                         }
@@ -7293,6 +7296,35 @@ public class MainActivity extends BaseProtectedActivity
                         drawable_res_id)).getBitmap(),
                 Color.parseColor(color));
         directed_ol.setDirectionArrow(location_arrow_2);
+    }
+
+    static boolean is_smooth_driving_vip(final String f_pubkey)
+    {
+        if (!PREF__gps_smooth_friends)
+        {
+            return false;
+        }
+
+        if (f_pubkey == null)
+        {
+            return false;
+        }
+
+        boolean is_following_any_friend = (PREF__map_follow_mode == CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_0.value) ||
+                                          (PREF__map_follow_mode == CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_1.value) ||
+                                          (PREF__map_follow_mode == CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_FRIEND_2.value);
+
+        if (is_following_any_friend)
+        {
+            // Priority 1: If we are following a specific friend, ONLY that friend gets smooth driving.
+            // We do NOT check the default friend here to prevent double-VIPs.
+            return is_following_friend(f_pubkey);
+        }
+        else
+        {
+            // Priority 2: If we are NOT following anyone, the default friend gets smooth driving.
+            return is_default_ft_contact(f_pubkey);
+        }
     }
 
     static boolean is_following_friend(String f_pubkey)

@@ -72,6 +72,9 @@ public class HelperFriend
     static HashMap<String, Long> ping_push_blocker_cache = new HashMap<>();
     final static long TWO_HOURS_IN_MILLIS = (2 * 3600 * 1000); // 2 hours in millis
 
+    private static volatile String cached_default_ft_contact_pubkey = null;
+    private static volatile boolean cached_default_ft_contact_loaded = false;
+
     static FriendList main_get_friend(long friendnum)
     {
         FriendList f = null;
@@ -1569,10 +1572,7 @@ public class HelperFriend
         }
     }
 
-    //
-    // keep this as a "synchronized" function, so we always have a consistent state for "is_default_ft_contact"
-    //
-    static synchronized String get_set_is_default_ft_contact(final String friend_pubkey, final boolean set)
+    static String get_set_is_default_ft_contact(final String friend_pubkey, final boolean set)
     {
         // on "get" the "friend_pubkey" input parameter is ignored, and the return value is either null oder friend_pubkey
         // on "set" the return value is null, and the input parameter "friend_pubkey" must not be null
@@ -1580,27 +1580,68 @@ public class HelperFriend
         {
             if (set)
             {
-                if ((friend_pubkey != null) && (friend_pubkey.length() == (TOX_PUBLIC_KEY_SIZE * 2)))
+                synchronized (HelperFriend.class)
                 {
-                    // delete all flags
-                    orma.updateFriendList().is_default_ft_contact(false).execute();
-                    // now set the flag only for the wanted friend
-                    orma.updateFriendList().tox_public_key_stringEq(friend_pubkey.toString()).is_default_ft_contact(true).execute();
+                    if ((friend_pubkey != null) && (friend_pubkey.length() == (TOX_PUBLIC_KEY_SIZE * 2)))
+                    {
+                        // delete all flags
+                        orma.updateFriendList().is_default_ft_contact(false).execute();
+                        // now set the flag only for the wanted friend
+                        orma.updateFriendList().tox_public_key_stringEq(friend_pubkey.toString()).is_default_ft_contact(true).execute();
+
+                        // update cache
+                        cached_default_ft_contact_pubkey = friend_pubkey.toString();
+                        cached_default_ft_contact_loaded = true;
+                    }
                 }
                 return null;
             }
             else // get
             {
-                // get the friends public key of the friend that has the flas set
-                // null on error
-                return orma.selectFromFriendList().is_default_ft_contactEq(true).orderByAdded_timestampAsc().get(0).tox_public_key_string;
+                // fast path: cache already loaded, no locking needed
+                if (cached_default_ft_contact_loaded)
+                {
+                    return cached_default_ft_contact_pubkey;
+                }
+
+                // slow path: load from DB once
+                synchronized (HelperFriend.class)
+                {
+                    if (!cached_default_ft_contact_loaded)
+                    {
+                        try
+                        {
+                            cached_default_ft_contact_pubkey = orma.selectFromFriendList()
+                                    .is_default_ft_contactEq(true)
+                                    .orderByAdded_timestampAsc()
+                                    .get(0)
+                                    .tox_public_key_string;
+                        }
+                        catch (Exception e2)
+                        {
+                            cached_default_ft_contact_pubkey = null;
+                        }
+                        cached_default_ft_contact_loaded = true;
+                    }
+                }
+                return cached_default_ft_contact_pubkey;
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             // e.printStackTrace();
             //Log.i(TAG, "get_set_is_default_ft_contact:EE01:" + e.getMessage());
         }
         return null;
+    }
+
+    static boolean is_default_ft_contact(final String friend_pubkey)
+    {
+        if (friend_pubkey == null)
+        {
+            return false;
+        }
+        String cached = get_set_is_default_ft_contact(null, false);
+        return friend_pubkey.equals(cached);
     }
 }
