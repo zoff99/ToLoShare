@@ -297,6 +297,7 @@ public class MainActivity extends BaseProtectedActivity
     static final int SMOOTH_POS_STEPS_OWN = 20;
     static final int SMOOTH_POS_STEPS_FRIENDS = 40;
     static final long MAX_AGE_MS = 1L * 60L * 60L * 1000L; // 1 hours in milliseconds
+    static final int MAX_TRAIL_POSITIONS = 1000;
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -358,6 +359,8 @@ public class MainActivity extends BaseProtectedActivity
     static SelftrailPolyline selfTrailsOverlay = null;
     final static int SELFTRAILS_OVERLAY_COLOR = 0x900000FF;
     // static IMyLocationProvider mIMyLocationProvider = null;
+    static List<GeoPoint> self_trail_geo_points = new ArrayList<>();
+    static java.util.HashMap<String, List<GeoPoint>> friend_trail_geo_points = new java.util.HashMap<>();
     static GpsInterpolatorOwnLocation gps_int_own = null;
     static IMapController mapController = null;
     static ThreadSafeFriendTrails f_trails = new ThreadSafeFriendTrails();
@@ -6965,20 +6968,27 @@ public class MainActivity extends BaseProtectedActivity
                                                 {
                                                     try
                                                     {
-                                                        final Location tmp_location = new Location(loc_provider);
-                                                        tmp_location.setLatitude(lat);
-                                                        tmp_location.setLongitude(lon);
-                                                        tmp_location.setTime(loc_timestamp);
-                                                        tmp_location.setAccuracy(acc);
-                                                        if (has_bearing)
+                                                        // 1. Record in the data structure (handles time/size limits internally)
+                                                        f_trails.addLocation(f_pubkey, loc_provider, lat, lon, loc_timestamp, acc, (float)bearing, has_bearing, speed_meters_per_second);
+
+                                                        // 2. Get or create the visual GeoPoint list for this friend
+                                                        List<GeoPoint> geoPointsList = friend_trail_geo_points.get(f_pubkey);
+                                                        if (geoPointsList == null)
                                                         {
-                                                            tmp_location.setBearing((float) bearing);
+                                                            geoPointsList = new ArrayList<>();
+                                                            friend_trail_geo_points.put(f_pubkey, geoPointsList);
                                                         }
-                                                        tmp_location.setSpeed(speed_meters_per_second);
-                                                        f_trails.updateLocation(f_pubkey, tmp_location);
 
-                                                        List<Location> trails = f_trails.getRecentPositions(f_pubkey);
+                                                        // 3. O(1) Append the new point
+                                                        geoPointsList.add(new GeoPoint(lat, lon));
 
+                                                        // 4. Keep the visual list size in sync with MAX_TRAIL_POSITIONS
+                                                        if (geoPointsList.size() > MAX_TRAIL_POSITIONS)
+                                                        {
+                                                            geoPointsList.remove(0); // Remove the oldest point
+                                                        }
+
+                                                        // 5. Get or create the polyline overlay for this friend
                                                         TrailPolyline friend_trail = friend_trail_overlays.get(f_pubkey);
                                                         if (friend_trail == null)
                                                         {
@@ -6989,28 +6999,8 @@ public class MainActivity extends BaseProtectedActivity
                                                             friend_trail_overlays.put(f_pubkey, friend_trail);
                                                         }
 
-                                                        try
-                                                        {
-                                                            List<GeoPoint> geoPointsList = new ArrayList<>();
-                                                            for (Location loc : trails)
-                                                            {
-                                                                try
-                                                                {
-                                                                    GeoPoint p = new GeoPoint(loc.getLatitude(),
-                                                                                              loc.getLongitude());
-                                                                    geoPointsList.add(p);
-                                                                }
-                                                                catch (Exception e)
-                                                                {
-                                                                    e.printStackTrace();
-                                                                }
-                                                            }
-                                                            friend_trail.setPoints(geoPointsList);
-                                                        }
-                                                        catch (Exception e)
-                                                        {
-                                                            e.printStackTrace();
-                                                        }
+                                                        // 6. Update the overlay and redraw
+                                                        friend_trail.setPoints(geoPointsList);
                                                         map.invalidate();
                                                     }
                                                     catch (Exception e)

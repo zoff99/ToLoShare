@@ -32,6 +32,7 @@ import androidx.core.location.LocationListenerCompat;
 import static com.zoffcc.applications.trifa.CaptureService.MAP_FOLLOW_MODE.MAP_FOLLOW_MODE_SELF;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytes_to_hex;
+import static com.zoffcc.applications.trifa.MainActivity.MAX_TRAIL_POSITIONS;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_FUSED;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_GPS;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_NETWORK;
@@ -52,6 +53,8 @@ import static com.zoffcc.applications.trifa.MainActivity.map_is_northed;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_last_ts_millis;
 import static com.zoffcc.applications.trifa.MainActivity.own_location_txt;
 import static com.zoffcc.applications.trifa.MainActivity.selfTrailsOverlay;
+import static com.zoffcc.applications.trifa.MainActivity.self_trail_geo_points;
+import static com.zoffcc.applications.trifa.MainActivity.self_trails;
 import static com.zoffcc.applications.trifa.MainActivity.set_debug_text;
 import static com.zoffcc.applications.trifa.MainActivity.set_found_loc_providers_text;
 import static com.zoffcc.applications.trifa.MainActivity.set_self_speed;
@@ -270,30 +273,21 @@ public class CaptureService extends Service
             if (PREF__show_friend_trails)
             {
                 final Location tmp_location = currentBestLocation;
-                f_trails.updateLocation(TRIFA_SELFFAKE_PUBKEY_FOR_TRAIL, tmp_location);
 
-                List<Location> trails = f_trails.getRecentPositions(TRIFA_SELFFAKE_PUBKEY_FOR_TRAIL);
-                try
+                // 1. Record in the data structure (handles time/size limits internally)
+                self_trails.addLocation(tmp_location);
+
+                // 2. O(1) Append the new point to our visual list
+                self_trail_geo_points.add(new GeoPoint(tmp_location.getLatitude(), tmp_location.getLongitude()));
+
+                // 3. Keep the visual list size in sync with MAX_TRAIL_POSITIONS
+                if (self_trail_geo_points.size() > MAX_TRAIL_POSITIONS)
                 {
-                    List<GeoPoint> geoPointsList = new ArrayList<>();
-                    for (Location loc : trails)
-                    {
-                        try
-                        {
-                            GeoPoint p = new GeoPoint(loc.getLatitude(), loc.getLongitude());
-                            geoPointsList.add(p);
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                    selfTrailsOverlay.setPoints(geoPointsList);
+                    self_trail_geo_points.remove(0); // Remove the oldest point
                 }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+
+                // 4. Update the map overlay and redraw
+                selfTrailsOverlay.setPoints(self_trail_geo_points);
                 map.invalidate();
             }
         }

@@ -30,6 +30,7 @@ public class GpsInterpolator
     {
         try
         {
+            // Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
             CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
             if (remote_ol != null)
             {
@@ -89,7 +90,11 @@ public class GpsInterpolator
 
         try
         {
-            follow_friend_on_map(f_pubkey);
+            // ONLY follow the friend on the map if we are in LIVE mode (slider at 100%)
+            if (!TrailPlaybackState.isPlaybackActive())
+            {
+                follow_friend_on_map(f_pubkey);
+            }
         }
         catch(Exception ignored)
         {

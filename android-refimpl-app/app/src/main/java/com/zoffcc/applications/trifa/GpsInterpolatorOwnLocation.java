@@ -36,6 +36,7 @@ public class GpsInterpolatorOwnLocation
 
         try
         {
+            // Log.i(TAG, "push_geo_pos: " + newLat + " " + newLon + " " + newBearing + " " + acc);
             Location interpolated_location = new Location(LocationManager.GPS_PROVIDER);
             interpolated_location.setAccuracy((float)acc);
             interpolated_location.setLatitude(newLat);
@@ -58,43 +59,15 @@ public class GpsInterpolatorOwnLocation
             {
                 myLocationNewOverlay2.onLocationChanged_real(interpolated_location, null);
 
-                if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                // ONLY update UI and follow map if we are in LIVE mode
+                if (!TrailPlaybackState.isPlaybackActive())
                 {
-                    set_map_center_to_proxy_uithread(interpolated_location);
+                    if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
+                    {
+                        set_map_center_to_proxy_uithread(interpolated_location);
+                    }
                 }
             }
-        }
-        catch(Exception ignored)
-        {
-        }
-
-        try
-        {
-            Location trail_location = new Location(LocationManager.GPS_PROVIDER);
-            trail_location.setLatitude(newLat);
-            trail_location.setLongitude(newLon);
-            trail_location.setAccuracy((float)acc);
-
-            if (has_bearing)
-            {
-                trail_location.setBearing((float)newBearing);
-            }
-
-            if (original_location != null && original_location.hasSpeed())
-            {
-                trail_location.setSpeed(original_location.getSpeed());
-            }
-
-            if (original_location != null && original_location.getTime() > 0)
-            {
-                trail_location.setTime(original_location.getTime());
-            }
-            else
-            {
-                trail_location.setTime(System.currentTimeMillis());
-            }
-
-            MainActivity.self_trails.updateLocation(trail_location);
         }
         catch(Exception ignored)
         {

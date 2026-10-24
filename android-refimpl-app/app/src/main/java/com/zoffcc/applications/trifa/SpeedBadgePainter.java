@@ -99,11 +99,28 @@ public class SpeedBadgePainter
 
         badge_rect.set(left, top, left + badge_w, top + badge_h);
 
-        badge_paint.setColor(color);
-        badge_paint.setStyle(Paint.Style.FILL);
+        int saveCount = c.save();
+        try {
+            // Counter-rotate the canvas around the exact screen point.
+            // This keeps the bubble's position perfectly locked to the icon,
+            // but makes the drawing axes upright so the text/rect are not rotated.
+            float mapRotation = 0f;
+            if (MainActivity.map != null) {
+                mapRotation = MainActivity.map.getMapOrientation();
+            }
 
-        c.drawRoundRect(badge_rect, BADGE_CORNER_RADIUS_DP * density, BADGE_CORNER_RADIUS_DP * density, badge_paint);
+            if (mapRotation != 0f) {
+                c.rotate(-mapRotation, screen_point.x, screen_point.y);
+            }
 
-        c.drawText(label, screen_point.x, top + badge_h - (BADGE_TEXT_BASELINE_DP * density), text_paint);
+            badge_paint.setColor(color);
+            badge_paint.setStyle(Paint.Style.FILL);
+
+            c.drawRoundRect(badge_rect, BADGE_CORNER_RADIUS_DP * density, BADGE_CORNER_RADIUS_DP * density, badge_paint);
+
+            c.drawText(label, screen_point.x, top + badge_h - (BADGE_TEXT_BASELINE_DP * density), text_paint);
+        } finally {
+            c.restoreToCount(saveCount);
+        }
     }
 }
