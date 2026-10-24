@@ -727,6 +727,53 @@ public class MainActivity extends BaseProtectedActivity
         setContentView(R.layout.activity_main);
         Log.i(TAG, "M:STARTUP:setContentView end");
 
+
+        ImageButton zoom_in_btn = (ImageButton) findViewById(R.id.map_zoom_in);
+        if (zoom_in_btn != null)
+        {
+            zoom_in_btn.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    try
+                    {
+                        if (mapController != null)
+                        {
+                            mapController.zoomIn();
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
+            });
+        }
+
+        ImageButton zoom_out_btn = (ImageButton) findViewById(R.id.map_zoom_out);
+        if (zoom_out_btn != null)
+        {
+            zoom_out_btn.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    try
+                    {
+                        if (mapController != null)
+                        {
+                            mapController.zoomOut();
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                    }
+                }
+            });
+        }
+
+
+
         out_count_view = findViewById(R.id.out_count);
         out_count_view.removeAll();
         in_count_view = findViewById(R.id.in_count);
@@ -740,7 +787,7 @@ public class MainActivity extends BaseProtectedActivity
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
-        map.setBuiltInZoomControls(true);
+        map.setBuiltInZoomControls(false);
         map.setMultiTouchControls(true);
         map.setFlingEnabled(true);
         map.setTilesScaledToDpi(true);
