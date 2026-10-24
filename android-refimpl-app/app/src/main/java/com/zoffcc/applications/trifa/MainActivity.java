@@ -851,10 +851,20 @@ public class MainActivity extends BaseProtectedActivity
 
                             remote_ol.remote_location_overlay.setAccuracy(Math.round(target_pos.getAccuracy()));
 
-                            if (target_pos.hasBearing())
+                            boolean historical_has_bearing = target_pos.hasBearing();
+                            float historical_bearing = historical_has_bearing ? target_pos.getBearing() : 0.0f;
+
+                            if (historical_has_bearing)
                             {
-                                remote_ol.remote_location_overlay.setBearing(target_pos.getBearing());
+                                remote_ol.remote_location_overlay.setBearing(historical_bearing);
                             }
+
+                            // Update the icon based on whether this historical location has bearing
+                            String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
+                            String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
+                            select_location_icon(!historical_has_bearing, historical_has_bearing, key,
+                                                 f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1,
+                                                 false, remote_ol.remote_location_overlay);
 
                             if (remote_ol.remote_location_overlay instanceof FadeDirectedLocationOverlay)
                             {
@@ -6849,6 +6859,12 @@ public class MainActivity extends BaseProtectedActivity
                                                         tmp_location.setLatitude(lat);
                                                         tmp_location.setLongitude(lon);
                                                         tmp_location.setTime(loc_timestamp);
+                                                        tmp_location.setAccuracy(acc);
+                                                        if (has_bearing)
+                                                        {
+                                                            tmp_location.setBearing((float) bearing);
+                                                        }
+                                                        tmp_location.setSpeed(speed_meters_per_second);
                                                         f_trails.updateLocation(f_pubkey, tmp_location);
 
                                                         List<Location> trails = f_trails.getRecentPositions(f_pubkey);
