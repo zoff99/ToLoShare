@@ -4,10 +4,11 @@ import android.location.Location;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import static com.zoffcc.applications.trifa.MainActivity.MAX_AGE_MS;
+
 public class ThreadSafeSelfTrails
 {
     private final Deque<Location> selfLocations = new ConcurrentLinkedDeque<>();
-    private static final long MAX_AGE_MS = 1L * 60L * 60L * 1000L; // 1 hours in milliseconds
     private static final int MAX_POSITIONS = 1000;
 
     public void updateLocation(Location newLoc)

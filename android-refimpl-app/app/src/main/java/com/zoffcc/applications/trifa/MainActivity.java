@@ -296,6 +296,7 @@ public class MainActivity extends BaseProtectedActivity
     static boolean GEO_TIME_THREAD_STARTED = false;
     static final int SMOOTH_POS_STEPS_OWN = 20;
     static final int SMOOTH_POS_STEPS_FRIENDS = 40;
+    static final long MAX_AGE_MS = 1L * 60L * 60L * 1000L; // 1 hours in milliseconds
 
     static TextView mt = null;
     static ImageView top_imageview = null;
@@ -799,8 +800,16 @@ public class MainActivity extends BaseProtectedActivity
             trail_playback_seekbar.setMax(1000);
             trail_playback_seekbar.setProgress(1000);
 
+            final int SNAP_THRESHOLD = 950;
+
+            float density = getResources().getDisplayMetrics().density;
+            final DynamicTextThumbDrawable dynamicThumb = new DynamicTextThumbDrawable(density);
+            trail_playback_seekbar.setThumb(dynamicThumb);
+
             trail_playback_seekbar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener()
             {
+                private long cached_oldest_timestamp_ms = Long.MAX_VALUE;
+
                 @Override
                 public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser)
                 {
@@ -814,17 +823,57 @@ public class MainActivity extends BaseProtectedActivity
                         return;
                     }
 
-                    if ((progress >= seekBar.getMax()))
+                    String timeLabel = "";
+                    int thumbColor;
+                    float thumbRadiusDp;
+                    boolean showText;
+
+                    // Snap to 100% if near the end
+                    if (progress >= SNAP_THRESHOLD)
                     {
+                        progress = seekBar.getMax();
+                        seekBar.setProgress(progress);
                         TrailPlaybackState.setLive();
+
+                        timeLabel = "";
+                        thumbColor = android.graphics.Color.parseColor("#22C55E"); // Green
+                        thumbRadiusDp = 8.0f; // Small
+                        showText = false;
                     }
                     else
                     {
+                        // Use cached oldest timestamp (calculated once in onStartTrackingTouch)
                         long now_ms = System.currentTimeMillis();
-                        long span_ms = 24L * 60L * 60L * 1000L;
-                        long delta_ms = ((long)(seekBar.getMax() - progress) * span_ms) / (long)seekBar.getMax();
+                        long actual_available_ms = now_ms - cached_oldest_timestamp_ms;
+                        long effective_timespan_ms = Math.min(MAX_AGE_MS, actual_available_ms);
+
+                        // Calculate how far back based on slider position and actual available time
+                        long delta_ms = ((long)(seekBar.getMax() - progress) * effective_timespan_ms) / (long)seekBar.getMax();
                         TrailPlaybackState.setPlaybackTimestamp(now_ms - delta_ms);
+
+                        // Calculate human-readable time back
+                        long mins = delta_ms / (60L * 1000L);
+
+                        if (mins >= 60L)
+                        {
+                            timeLabel = "1h";
+                        }
+                        else if (mins >= 1L)
+                        {
+                            timeLabel = mins + "m";
+                        }
+                        else
+                        {
+                            timeLabel = "<1m";
+                        }
+
+                        thumbColor = android.graphics.Color.parseColor("#F97316"); // Orange
+                        thumbRadiusDp = 16.0f; // Larger
+                        showText = true;
                     }
+
+                    // Update the custom thumb appearance
+                    dynamicThumb.updateState(thumbColor, thumbRadiusDp, timeLabel, showText);
 
                     scrubAllFriends(seekBar, progress);
                     scrubOwnTrail(seekBar, progress);
@@ -835,11 +884,44 @@ public class MainActivity extends BaseProtectedActivity
                 @Override
                 public void onStartTrackingTouch(android.widget.SeekBar seekBar)
                 {
+                    // Calculate oldest timestamp ONCE when user starts dragging
+                    cached_oldest_timestamp_ms = Long.MAX_VALUE;
+
+                    for (String key : CaptureService.remote_location_data.keySet())
+                    {
+                        java.util.List<Location> trails = f_trails.getRecentPositions(key);
+                        if ((trails != null) && !trails.isEmpty())
+                        {
+                            Location oldest = trails.get(trails.size() - 1);
+                            if (oldest.getTime() < cached_oldest_timestamp_ms)
+                            {
+                                cached_oldest_timestamp_ms = oldest.getTime();
+                            }
+                        }
+                    }
+
+                    java.util.List<Location> self_trails_list = self_trails.getRecentPositions();
+                    if ((self_trails_list != null) && !self_trails_list.isEmpty())
+                    {
+                        Location oldest = self_trails_list.get(self_trails_list.size() - 1);
+                        if (oldest.getTime() < cached_oldest_timestamp_ms)
+                        {
+                            cached_oldest_timestamp_ms = oldest.getTime();
+                        }
+                    }
+
+                    // If no trails exist yet, use current time as oldest
+                    if (cached_oldest_timestamp_ms == Long.MAX_VALUE)
+                    {
+                        cached_oldest_timestamp_ms = System.currentTimeMillis();
+                    }
                 }
 
                 @Override
                 public void onStopTrackingTouch(android.widget.SeekBar seekBar)
                 {
+                    // Reset cache when user stops dragging
+                    cached_oldest_timestamp_ms = Long.MAX_VALUE;
                 }
 
                 private void scrubAllFriends(android.widget.SeekBar seekBar, int progress)
@@ -876,15 +958,8 @@ public class MainActivity extends BaseProtectedActivity
                             long idx_long = ((long)(seekBar.getMax() - progress) * (long)(count - 1)) / (long)seekBar.getMax();
                             int idx = (int)idx_long;
 
-                            if (idx < 0)
-                            {
-                                idx = 0;
-                            }
-
-                            if (idx >= count)
-                            {
-                                idx = count - 1;
-                            }
+                            if (idx < 0) idx = 0;
+                            if (idx >= count) idx = count - 1;
 
                             target_pos = trails.get(idx);
                         }
@@ -899,14 +974,11 @@ public class MainActivity extends BaseProtectedActivity
                             remote_ol.remote_location_overlay.setAccuracy(Math.round(target_pos.getAccuracy()));
 
                             boolean historical_has_bearing = target_pos.hasBearing();
-                            float historical_bearing = historical_has_bearing ? target_pos.getBearing() : 0.0f;
-
                             if (historical_has_bearing)
                             {
-                                remote_ol.remote_location_overlay.setBearing(historical_bearing);
+                                remote_ol.remote_location_overlay.setBearing(target_pos.getBearing());
                             }
 
-                            // Update the icon based on whether this historical location has bearing
                             String f_pubkey_pseudo_num_0 = get_friend_pubkey_sorted_by_pubkey_num(0);
                             String f_pubkey_pseudo_num_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
                             select_location_icon(!historical_has_bearing, historical_has_bearing, key,
@@ -942,12 +1014,10 @@ public class MainActivity extends BaseProtectedActivity
                     }
 
                     java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
-
                     for (Location loc : trails)
                     {
                         pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
                     }
-
                     selfTrailsOverlay.setPoints(pts);
 
                     int count = trails.size();
@@ -962,15 +1032,8 @@ public class MainActivity extends BaseProtectedActivity
                         long idx_long = ((long)(seekBar.getMax() - progress) * (long)(count - 1)) / (long)seekBar.getMax();
                         int idx = (int)idx_long;
 
-                        if (idx < 0)
-                        {
-                            idx = 0;
-                        }
-
-                        if (idx >= count)
-                        {
-                            idx = count - 1;
-                        }
+                        if (idx < 0) idx = 0;
+                        if (idx >= count) idx = count - 1;
 
                         target_pos = trails.get(idx);
                     }
@@ -7033,7 +7096,8 @@ public class MainActivity extends BaseProtectedActivity
                                                 {
                                                     re.gps_i.onGpsUpdate(lat, lon, bearing, has_bearing,
                                                                          old_has_bearing, acc, 1, f_pubkey, delta_value, speed_meters_per_second);
-                                                }                                            }
+                                                }
+                                            }
                                         }
                                         catch (Exception e)
                                         {

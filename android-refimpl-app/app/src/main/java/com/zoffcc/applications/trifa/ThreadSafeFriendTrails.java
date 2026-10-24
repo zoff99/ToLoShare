@@ -5,10 +5,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.zoffcc.applications.trifa.MainActivity.MAX_AGE_MS;
+
 public class ThreadSafeFriendTrails
 {
     private final Map<String, Deque<Location>> friendLocations = new ConcurrentHashMap<>();
-    private static final long MAX_AGE_MS = 1L * 60L * 60L * 1000L; // 1 hours in milliseconds
     private static final int MAX_POSITIONS = 1000;
 
     public void updateLocation(String friendId, Location newLoc)
