@@ -2547,6 +2547,7 @@ public class MainActivity extends BaseProtectedActivity
             update_online_count_indicator_update_all();
             friend_locations_reinit();
             f_tracker.repaint_all();
+            rebuildAllTrails();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2609,6 +2610,7 @@ public class MainActivity extends BaseProtectedActivity
                     update_online_count_indicator_update_all();
                     friend_locations_reinit();
                     f_tracker.repaint_all();
+                    rebuildAllTrails();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -2769,6 +2771,83 @@ public class MainActivity extends BaseProtectedActivity
         {
             e.printStackTrace();
         }
+    }
+
+    private void rebuildAllTrails()
+    {
+        if (map == null) return;
+
+        // 1. Rebuild Self Trail Visuals
+        try
+        {
+            self_trail_geo_points.clear();
+            List<Location> self_trails_list = self_trails.getRecentPositions();
+
+            // Add points in reverse order because getRecentPositions returns newest-first,
+            // but polylines usually draw from index 0 to N.
+            for (int i = self_trails_list.size() - 1; i >= 0; i--)
+            {
+                Location loc = self_trails_list.get(i);
+                self_trail_geo_points.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+            }
+
+            if (selfTrailsOverlay != null)
+            {
+                selfTrailsOverlay.setPoints(self_trail_geo_points);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        // 2. Rebuild Friend Trail Visuals
+        for (String key : CaptureService.remote_location_data.keySet())
+        {
+            try
+            {
+                List<Location> trails = f_trails.getRecentPositions(key);
+
+                // Get or create the visual list for this friend
+                List<GeoPoint> geoPointsList = friend_trail_geo_points.get(key);
+                if (geoPointsList == null)
+                {
+                    geoPointsList = new ArrayList<>();
+                    friend_trail_geo_points.put(key, geoPointsList);
+                }
+                else
+                {
+                    geoPointsList.clear();
+                }
+
+                // Add points in reverse order (oldest to newest) for correct drawing direction
+                for (int i = trails.size() - 1; i >= 0; i--)
+                {
+                    Location loc = trails.get(i);
+                    geoPointsList.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                }
+
+                // Get or create the polyline overlay
+                TrailPolyline friend_trail = friend_trail_overlays.get(key);
+                if (friend_trail == null)
+                {
+                    friend_trail = new TrailPolyline();
+                    friend_trail.setColor(TRAILS_OVERLAY_COLOR);
+                    friend_trail.setWidth(dp_to_px(6));
+                    map.getOverlays().add(friend_trail);
+                    friend_trail_overlays.put(key, friend_trail);
+                }
+
+                // Update the points in the existing overlay
+                friend_trail.setPoints(geoPointsList);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        map.invalidate();
     }
 
     private static void enable_mylocation_overlay()
@@ -4759,6 +4838,8 @@ public class MainActivity extends BaseProtectedActivity
             //**//move_map_to_own_location();
             friend_locations_reinit();
             f_tracker.repaint_all();
+
+            rebuildAllTrails();
         }
         else
         {
