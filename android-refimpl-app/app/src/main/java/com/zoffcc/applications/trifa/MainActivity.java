@@ -3221,7 +3221,13 @@ public class MainActivity extends BaseProtectedActivity
             mScaleBarOverlay.setLineWidth(dp_to_px(2));
             mScaleBarOverlay.setTextSize(dp_to_px(18));
             mScaleBarOverlay.setUnitsOfMeasure(ScaleBarOverlay.UnitsOfMeasure.metric);
-            mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 40);
+
+            float density = getResources().getDisplayMetrics().density;
+            int hud_handle_height_px = (int) (24 * density);
+            int extra_padding_px = (int) (4 * density);
+            int move_down_px = hud_handle_height_px + extra_padding_px;
+            mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, (int)(10 * density) + move_down_px);
+
             map.getOverlays().add(mScaleBarOverlay);
         }
         catch(Exception e)

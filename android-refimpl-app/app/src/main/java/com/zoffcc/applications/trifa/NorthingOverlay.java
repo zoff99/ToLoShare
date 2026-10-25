@@ -29,7 +29,7 @@ public class NorthingOverlay extends Overlay
 
     private final boolean mInCenter = false;
     private final float mCompassCenterX = 35.0f;
-    private final float mCompassCenterY = 35.0f;
+    private final float mCompassCenterY = 55.0f;
     private final float mCompassRadius = 20.0f;
 
     private boolean is_northed = false;
