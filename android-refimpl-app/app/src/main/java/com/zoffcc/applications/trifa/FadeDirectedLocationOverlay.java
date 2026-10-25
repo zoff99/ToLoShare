@@ -7,9 +7,6 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class FadeDirectedLocationOverlay extends DirectedLocationOverlay
 {
     public long timestamp_ms = 0;

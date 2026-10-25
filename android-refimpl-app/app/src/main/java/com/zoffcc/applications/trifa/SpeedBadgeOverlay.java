@@ -7,9 +7,6 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.Overlay;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class SpeedBadgeOverlay extends Overlay
 {
     private GeoPoint position = null;
