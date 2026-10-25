@@ -92,10 +92,12 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__window_security;
 import static com.zoffcc.applications.trifa.MainActivity.clipboard;
 import static com.zoffcc.applications.trifa.MainActivity.friend_list_fragment;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.own_speed_badge;
 import static com.zoffcc.applications.trifa.MainActivity.push_instance_name;
 import static com.zoffcc.applications.trifa.MainActivity.tox_get_all_tcp_relays;
 import static com.zoffcc.applications.trifa.MainActivity.tox_get_all_udp_connections;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_capabilities;
+import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_name;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_name;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_status_message;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.VFS_OWN_AVATAR_DIR;
@@ -816,6 +818,18 @@ public class ProfileActivity extends AppCompatActivity
         catch (Exception e)
         {
             e.printStackTrace();
+        }
+
+        try
+        {
+            final String own_name = tox_self_get_name();
+            if (own_name != null)
+            {
+                own_speed_badge.setNickname(own_name);
+            }
+        }
+        catch (Exception e)
+        {
         }
     }
 

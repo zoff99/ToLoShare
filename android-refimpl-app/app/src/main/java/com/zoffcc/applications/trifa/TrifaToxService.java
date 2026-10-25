@@ -104,6 +104,7 @@ import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.get_my_toxid;
 import static com.zoffcc.applications.trifa.MainActivity.global_battery_percent;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
+import static com.zoffcc.applications.trifa.MainActivity.own_speed_badge;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_get_connection_status;
 import static com.zoffcc.applications.trifa.MainActivity.tox_iterate;
 import static com.zoffcc.applications.trifa.MainActivity.tox_iteration_interval;
@@ -844,6 +845,18 @@ public class TrifaToxService extends Service
                     tox_self_set_name("TRIfA " + my_tox_id_local.substring(0, 4));
                     global_my_name = ("TRIfA " + my_tox_id_local.substring(0, 4));
                     Log.i(TAG, "AAA:005");
+                }
+
+                try
+                {
+                    final String own_name = tox_self_get_name();
+                    if (own_name != null)
+                    {
+                        own_speed_badge.setNickname(own_name);
+                    }
+                }
+                catch (Exception e)
+                {
                 }
 
                 if (tox_self_get_status_message_size() > 0)

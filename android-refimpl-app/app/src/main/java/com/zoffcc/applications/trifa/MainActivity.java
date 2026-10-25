@@ -2976,6 +2976,7 @@ public class MainActivity extends BaseProtectedActivity
                             {
                                 CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
                                 FadeDirectedLocationOverlay directed_ol = new FadeDirectedLocationOverlay(context_s);
+                                directed_ol.setNickname(friend.name);
                                 directed_ol.setShowAccuracy(true);
                                 remote_ol.remote_location_overlay = directed_ol;
                                 GeoPoint geop = new GeoPoint(re.remoteBestLocation.getLatitude(),
@@ -3072,6 +3073,18 @@ public class MainActivity extends BaseProtectedActivity
 
         own_speed_badge = new SpeedBadgeOverlay(map);
         map.getOverlays().add(own_speed_badge);
+
+        try
+        {
+            final String own_name = tox_self_get_name();
+            if (own_name != null)
+            {
+                own_speed_badge.setNickname(own_name);
+            }
+        }
+        catch (Exception e)
+        {
+        }
 
         selfTrailsOverlay = new SelftrailPolyline();
         selfTrailsOverlay.setColor(SELFTRAILS_OVERLAY_COLOR);
@@ -6445,12 +6458,31 @@ public class MainActivity extends BaseProtectedActivity
                 }
                 CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
                 re.friend_name = friend_name;
+
             }
         }
         catch(Exception e)
         {
         }
 
+        try
+        {
+            String f_pubkey = tox_friend_get_public_key__wrapper(friend_number);
+            if ((f_pubkey != null) && (f_pubkey.length() > 10))
+            {
+                CaptureService.remote_location_overlay_entry remote_ol = remote_location_overlays.get(f_pubkey);
+                if (remote_ol != null)
+                {
+                    if (remote_ol.remote_location_overlay instanceof FadeDirectedLocationOverlay fade_ol)
+                    {
+                        fade_ol.setNickname(tox_friend_get_name(friend_number));
+                    }
+                }
+            }
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     static void android_tox_callback_friend_status_message_cb_method(long friend_number, String status_message, long length)
@@ -7151,6 +7183,13 @@ public class MainActivity extends BaseProtectedActivity
                                                     CaptureService.remote_location_overlay_entry remote_ol = new CaptureService.remote_location_overlay_entry();
                                                     FadeDirectedLocationOverlay directed_ol = new FadeDirectedLocationOverlay(
                                                             context_s);
+                                                    try
+                                                    {
+                                                        directed_ol.setNickname(tox_friend_get_name(friend_number));
+                                                    }
+                                                    catch(Exception e)
+                                                    {
+                                                    }
                                                     directed_ol.setShowAccuracy(true);
 
                                                     select_location_icon(old_has_bearing, has_bearing, f_pubkey,

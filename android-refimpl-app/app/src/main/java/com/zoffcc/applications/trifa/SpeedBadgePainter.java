@@ -21,13 +21,13 @@ public class SpeedBadgePainter
     private static final int BADGE_TEXT_COLOR       = Color.WHITE;
 
     // badge size / layout values (in dp)
-    private static final float BADGE_TEXT_SIZE_DP      = 16.0f;
-    private static final float BADGE_MIN_WIDTH_DP      = 36.0f;
+    private static final float BADGE_TEXT_SIZE_DP      = 16.0f; // Kept at 16 as requested
+    private static final float BADGE_MIN_WIDTH_DP      = 60.0f; // Increased to comfortably fit 12 chars
     private static final float BADGE_PADDING_DP        = 16.0f;
-    private static final float BADGE_HEIGHT_DP         = 22.0f;
-    private static final float BADGE_OFFSET_Y_DP       = 50.0f;
+    private static final float BADGE_HEIGHT_DP         = 44.0f; // Increased to fit two lines of 16dp text
+    private static final float BADGE_OFFSET_Y_DP       = 38.0f; // Kept close to the icon
     private static final float BADGE_CORNER_RADIUS_DP  = 6.0f;
-    private static final float BADGE_TEXT_BASELINE_DP  = 5.8f;
+    private static final float BADGE_LINE_GAP_DP       = 2.0f;  // Small gap between the two lines of text
 
     // speed thresholds (km/h)
     private static final float SPEED_STATIONARY_MAX_KMH = 1.0f;
@@ -48,7 +48,7 @@ public class SpeedBadgePainter
         text_paint.setFakeBoldText(true);
     }
 
-    public void draw(Canvas c, Projection pProjection, GeoPoint position, float speed_kmh, boolean has_speed)
+    public void draw(Canvas c, Projection pProjection, GeoPoint position, float speed_kmh, boolean has_speed, String nickname)
     {
         if (position == null)
         {
@@ -77,21 +77,22 @@ public class SpeedBadgePainter
             color = BADGE_COLOR_WALKING;
         }
 
-        String label;
-        if (!has_speed)
-        {
-            label = "--";
+        // Shorten nickname to max 12 characters
+        String shortName = "Unknown";
+        if (nickname != null && !nickname.isEmpty()) {
+            shortName = nickname.length() > 12 ? nickname.substring(0, 12) : nickname;
         }
-        else
-        {
-            label = String.valueOf(speed);
-        }
+
+        String speedStr = has_speed ? String.valueOf(speed) : "--";
 
         text_paint.setTextSize(BADGE_TEXT_SIZE_DP * density);
 
-        float text_width = text_paint.measureText(label);
+        // Measure both lines to find the maximum width needed
+        float name_width = text_paint.measureText(shortName);
+        float speed_width = text_paint.measureText(speedStr);
+        float max_text_width = Math.max(name_width, speed_width);
 
-        float badge_w = Math.max(BADGE_MIN_WIDTH_DP * density, text_width + (BADGE_PADDING_DP * density));
+        float badge_w = Math.max(BADGE_MIN_WIDTH_DP * density, max_text_width + (BADGE_PADDING_DP * density));
         float badge_h = BADGE_HEIGHT_DP * density;
 
         float left = screen_point.x - (badge_w / 2.0f);
@@ -102,8 +103,6 @@ public class SpeedBadgePainter
         int saveCount = c.save();
         try {
             // Counter-rotate the canvas around the exact screen point.
-            // This keeps the bubble's position perfectly locked to the icon,
-            // but makes the drawing axes upright so the text/rect are not rotated.
             float mapRotation = 0f;
             if (MainActivity.map != null) {
                 mapRotation = MainActivity.map.getMapOrientation();
@@ -118,7 +117,18 @@ public class SpeedBadgePainter
 
             c.drawRoundRect(badge_rect, BADGE_CORNER_RADIUS_DP * density, BADGE_CORNER_RADIUS_DP * density, badge_paint);
 
-            c.drawText(label, screen_point.x, top + badge_h - (BADGE_TEXT_BASELINE_DP * density), text_paint);
+            // Draw two lines of text, perfectly centered vertically
+            Paint.FontMetrics fm = text_paint.getFontMetrics();
+            float text_height = fm.descent - fm.ascent;
+            float line_gap = BADGE_LINE_GAP_DP * density;
+            float total_text_height = (text_height * 2.0f) + line_gap;
+
+            // Calculate the Y position for the first line so both lines are centered in the badge
+            float start_y = top + (badge_h - total_text_height) / 2.0f - fm.ascent;
+
+            c.drawText(shortName, screen_point.x, start_y, text_paint);
+            c.drawText(speedStr, screen_point.x, start_y + text_height + line_gap, text_paint);
+
         } finally {
             c.restoreToCount(saveCount);
         }

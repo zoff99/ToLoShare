@@ -14,6 +14,7 @@ public class FadeDirectedLocationOverlay extends DirectedLocationOverlay
     private float speed_kmh = 0.0f;
     private boolean has_speed = false;
     private GeoPoint current_pos = null;
+    private String nickname = "";
 
     private final SpeedBadgePainter badge_painter;
 
@@ -23,6 +24,11 @@ public class FadeDirectedLocationOverlay extends DirectedLocationOverlay
 
         float density = ctx.getResources().getDisplayMetrics().density;
         badge_painter = new SpeedBadgePainter(density);
+    }
+
+    public void setNickname(String nickname)
+    {
+        this.nickname = nickname;
     }
 
     @Override
@@ -60,7 +66,7 @@ public class FadeDirectedLocationOverlay extends DirectedLocationOverlay
 
             if (current_pos != null)
             {
-                badge_painter.draw(c, pProjection, current_pos, speed_kmh, has_speed);
+                badge_painter.draw(c, pProjection, current_pos, speed_kmh, has_speed, this.nickname);
             }
         }
         finally

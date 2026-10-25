@@ -12,6 +12,7 @@ public class SpeedBadgeOverlay extends Overlay
     private GeoPoint position = null;
     private float speed_kmh = 0.0f;
     private boolean has_speed = false;
+    private String nickname = "";
 
     private final SpeedBadgePainter badge_painter;
 
@@ -21,6 +22,11 @@ public class SpeedBadgeOverlay extends Overlay
 
         float density = mapView.getContext().getResources().getDisplayMetrics().density;
         badge_painter = new SpeedBadgePainter(density);
+    }
+
+    public void setNickname(String nickname)
+    {
+        this.nickname = nickname;
     }
 
     public void setPosition(GeoPoint pos)
@@ -37,6 +43,6 @@ public class SpeedBadgeOverlay extends Overlay
     @Override
     public void draw(Canvas c, Projection pProjection)
     {
-        badge_painter.draw(c, pProjection, position, speed_kmh, has_speed);
+        badge_painter.draw(c, pProjection, position, speed_kmh, has_speed, this.nickname);
     }
 }
