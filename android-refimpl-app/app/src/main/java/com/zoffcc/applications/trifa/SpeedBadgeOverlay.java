@@ -7,6 +7,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.Overlay;
 
+import static com.zoffcc.applications.trifa.MainActivity.PREF__show_navigation_bubble;
+
 public class SpeedBadgeOverlay extends Overlay
 {
     private GeoPoint position = null;
@@ -43,9 +45,15 @@ public class SpeedBadgeOverlay extends Overlay
     @Override
     public void draw(Canvas c, Projection pProjection)
     {
-        if (position == null) return;
+        if (position == null)
+        {
+            return;
+        }
 
-        // Pass null because the self badge should check against all friend overlays
-        badge_painter.draw(c, pProjection, position, speed_kmh, has_speed, this.nickname, null);
+        if (PREF__show_navigation_bubble)
+        {
+            // Pass null because the self badge should check against all friend overlays
+            badge_painter.draw(c, pProjection, position, speed_kmh, has_speed, this.nickname, null);
+        }
     }
 }

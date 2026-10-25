@@ -5,9 +5,15 @@ public class TrailPlaybackState
     public static final long PLAYBACK_OFF = 0L;
     public static volatile long playback_timestamp_ms = PLAYBACK_OFF;
 
+    // Production VALUES
     public static final long STALE_START_MS = 5L * 60L * 1000L;
-    public static final long STALE_GHOST_MS = 15L * 60L * 1000L;
-    public static final long STALE_DEAD_MS = 60L * 60L * 1000L;
+    public static final long STALE_GHOST_MS = 10L * 60L * 1000L;
+    public static final long STALE_DEAD_MS = 20L * 60L * 1000L;
+
+    // testing VALUES
+    // public static final long STALE_START_MS = 5L * 1000L;       // 5 seconds
+    // public static final long STALE_GHOST_MS = 15L * 1000L;      // 15 seconds
+    // public static final long STALE_DEAD_MS = 30L * 1000L;       // 30 seconds
 
     public static boolean isPlaybackActive()
     {

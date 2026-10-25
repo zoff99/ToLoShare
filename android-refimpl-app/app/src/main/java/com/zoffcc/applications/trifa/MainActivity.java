@@ -556,6 +556,7 @@ public class MainActivity extends BaseProtectedActivity
     static int PREF__loc_provider_change_timeout = (3 + 1) * 10;
 
     static boolean PREF__keep_screen_on_when_map = false;
+    static boolean PREF__show_navigation_bubble = true;
     static boolean PREF__gps_smooth_own = false;
     static boolean PREF__gps_smooth_friends = false;
     static boolean PREF__show_friend_trails = true;
@@ -2556,6 +2557,7 @@ public class MainActivity extends BaseProtectedActivity
         switch_friend_gps_smoothing.setChecked(PREF__gps_smooth_friends);
 
         PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
+        PREF__show_navigation_bubble = settings.getBoolean("show_navigation_bubble", true);
         PREF__show_friend_trails = settings.getBoolean("show_friend_trails", true);
 
         switch_own_gps_smoothing.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
@@ -4974,6 +4976,51 @@ public class MainActivity extends BaseProtectedActivity
                                 // e.printStackTrace();
                             }
 
+                            // --- SMART ALPHA REDRAW LOGIC ---
+                            try
+                            {
+                                boolean needs_alpha_redraw = false;
+                                long now_ms = System.currentTimeMillis();
+                                long start_ms = TrailPlaybackState.STALE_START_MS;
+                                long dead_ms = TrailPlaybackState.STALE_DEAD_MS;
+
+                                // 1. Check if SELF is actively fading
+                                if (own_location_last_ts_millis > 0)
+                                {
+                                    long age = now_ms - own_location_last_ts_millis;
+                                    if (age >= start_ms && age < dead_ms)
+                                    {
+                                        needs_alpha_redraw = true;
+                                    }
+                                }
+
+                                // 2. Check if ANY FRIEND is actively fading
+                                if (!needs_alpha_redraw)
+                                {
+                                    for (CaptureService.remote_location_entry re : CaptureService.remote_location_data.values())
+                                    {
+                                        if (re != null && re.remote_location_last_ts_millis > 0)
+                                        {
+                                            long age = now_ms - re.remote_location_last_ts_millis;
+                                            if (age >= start_ms && age < dead_ms)
+                                            {
+                                                needs_alpha_redraw = true;
+                                                break; // Found one, stop looping
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 3. ONLY redraw the map if someone is actively fading
+                                if (needs_alpha_redraw && !PREF__normal_main_view && map != null)
+                                {
+                                    map.postInvalidate();
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                            }
+
                             Thread.sleep(30 * 1000);
                         }
                     }
@@ -5036,6 +5083,7 @@ public class MainActivity extends BaseProtectedActivity
         }
 
         PREF__keep_screen_on_when_map = settings.getBoolean("keep_screen_on_when_map", false);
+        PREF__show_navigation_bubble = settings.getBoolean("show_navigation_bubble", true);
         PREF__show_friend_trails = settings.getBoolean("show_friend_trails", true);
 
         PREF__map_follow_mode = settings.getInt("map_follow_mode", MAP_FOLLOW_MODE_SELF.value);
