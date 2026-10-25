@@ -347,6 +347,19 @@ public class MainActivity extends BaseProtectedActivity
     static TriangleTextView out_count_view = null;
     static TriangleTextView in_count_view = null;
     static TriangleTextView online_count = null;
+
+    // HUD collapse state (the 4 grey info bars above the map)
+    private boolean isHudVisible = true;
+    private int hudBarsFullHeight = 0;
+    private android.animation.ValueAnimator hudAnimator = null;
+
+    // HUD drag support
+    private View hudBarsView = null;
+    private float hudDragStartY = 0f;
+    private int hudDragStartHeight = 0;
+    private boolean hudDragging = false;
+    private android.view.VelocityTracker hudVelocityTracker = null;
+
     static RoadManager roadManager = null;
     static ExecutorService routing_executor = Executors.newSingleThreadExecutor();
     static Handler handler = new Handler(Looper.getMainLooper());
@@ -1152,6 +1165,121 @@ public class MainActivity extends BaseProtectedActivity
         // Initialize with car icon from Material Icons
         button_travel_mode.setImageResource(R.drawable.outline_directions_car_24);
         PREF__route_type = ROUTE_TYPE.ROUTE_TYPE_BY_CAR;
+
+        View hud_handle = findViewById(R.id.hud_handle);
+        if (hud_handle != null)
+        {
+            hud_handle.setOnTouchListener(new View.OnTouchListener()
+            {
+                private final int touchSlop = android.view.ViewConfiguration.get(getApplicationContext()).getScaledTouchSlop();
+
+                @Override
+                public boolean onTouch(View v, android.view.MotionEvent ev)
+                {
+                    // Make sure we know the full expanded height
+                    if (hudBarsFullHeight == 0)
+                    {
+                        if (hudBarsView == null)
+                        {
+                            hudBarsView = findViewById(R.id.top_hud_bars);
+                        }
+                        if ((hudBarsView != null) && (hudBarsView.getHeight() > 0))
+                        {
+                            hudBarsFullHeight = hudBarsView.getHeight();
+                        }
+                    }
+                    if (hudBarsFullHeight == 0)
+                    {
+                        return false;
+                    }
+
+                    switch (ev.getActionMasked())
+                    {
+                        case android.view.MotionEvent.ACTION_DOWN:
+                            hudDragStartY = ev.getRawY();
+                            hudDragStartHeight = hudBarsView.getHeight();
+                            hudDragging = false;
+
+                            if (hudVelocityTracker == null)
+                            {
+                                hudVelocityTracker = android.view.VelocityTracker.obtain();
+                            }
+                            else
+                            {
+                                hudVelocityTracker.clear();
+                            }
+                            hudVelocityTracker.addMovement(ev);
+
+                            // Stop any running snap animation, finger takes over
+                            if (hudAnimator != null)
+                            {
+                                hudAnimator.cancel();
+                                hudAnimator = null;
+                            }
+                            return true;
+
+                        case android.view.MotionEvent.ACTION_MOVE:
+                            hudVelocityTracker.addMovement(ev);
+
+                            float delta = ev.getRawY() - hudDragStartY;
+                            if (!hudDragging && (Math.abs(delta) > touchSlop))
+                            {
+                                hudDragging = true;
+                            }
+                            if (hudDragging)
+                            {
+                                // Follow the finger 1:1
+                                setHudHeight(hudDragStartHeight + (int) delta);
+                            }
+                            return true;
+
+                        case android.view.MotionEvent.ACTION_UP:
+                        case android.view.MotionEvent.ACTION_CANCEL:
+                            hudVelocityTracker.addMovement(ev);
+
+                            if (!hudDragging)
+                            {
+                                // It was a tap, not a drag: toggle
+                                toggleTopHud();
+                            }
+                            else
+                            {
+                                // Decide snap target: fast fling wins, otherwise 50% threshold
+                                hudVelocityTracker.computeCurrentVelocity(1000);
+                                float velocityY = hudVelocityTracker.getYVelocity();
+
+                                int currentHeight = hudBarsView.getHeight();
+                                float progress = 1.0f - ((float) currentHeight / (float) hudBarsFullHeight);
+
+                                boolean snapCollapsed;
+                                if (velocityY < -800)
+                                {
+                                    snapCollapsed = true;        // fast fling up
+                                }
+                                else if (velocityY > 800)
+                                {
+                                    snapCollapsed = false;       // fast fling down
+                                }
+                                else
+                                {
+                                    snapCollapsed = progress > 0.5f;
+                                }
+
+                                animateHudTo(snapCollapsed ? 0 : hudBarsFullHeight);
+                            }
+
+                            hudDragging = false;
+                            if (hudVelocityTracker != null)
+                            {
+                                hudVelocityTracker.recycle();
+                                hudVelocityTracker = null;
+                            }
+                            return true;
+                    }
+                    return true;
+                }
+            });
+        }
 
         button_travel_mode.setOnClickListener(v -> {
             if (PREF__route_type == ROUTE_TYPE.ROUTE_TYPE_BY_CAR) {
@@ -2797,6 +2925,83 @@ public class MainActivity extends BaseProtectedActivity
         {
             e.printStackTrace();
         }
+    }
+
+    // Applies a height to the bars + synced pixel slide
+    private void setHudHeight(int val)
+    {
+        if (hudBarsView == null)
+        {
+            hudBarsView = findViewById(R.id.top_hud_bars);
+        }
+        if ((hudBarsView == null) || (hudBarsFullHeight == 0))
+        {
+            return;
+        }
+
+        if (val < 0) val = 0;
+        if (val > hudBarsFullHeight) val = hudBarsFullHeight;
+
+        android.view.ViewGroup.LayoutParams lp = hudBarsView.getLayoutParams();
+        lp.height = val;
+        hudBarsView.setLayoutParams(lp);
+
+        float fraction = 1.0f - ((float) val / (float) hudBarsFullHeight);
+        hudBarsView.setTranslationY(-fraction * (float) hudBarsFullHeight);
+    }
+
+    // Smoothly snaps the HUD to a target height (0 = collapsed, full = expanded)
+    private void animateHudTo(int targetHeight)
+    {
+        if ((hudBarsView == null) || (hudBarsFullHeight == 0))
+        {
+            return;
+        }
+
+        if (hudAnimator != null)
+        {
+            hudAnimator.cancel();
+            hudAnimator = null;
+        }
+
+        final int from = hudBarsView.getHeight();
+
+        hudAnimator = android.animation.ValueAnimator.ofInt(from, targetHeight);
+        hudAnimator.setDuration(250);
+        hudAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        hudAnimator.addUpdateListener(new android.animation.ValueAnimator.AnimatorUpdateListener()
+        {
+            @Override
+            public void onAnimationUpdate(android.animation.ValueAnimator animation)
+            {
+                setHudHeight((Integer) animation.getAnimatedValue());
+            }
+        });
+        hudAnimator.start();
+
+        isHudVisible = (targetHeight == hudBarsFullHeight);
+    }
+
+    // Simple tap/click toggle: snap to the opposite state
+    private void toggleTopHud()
+    {
+        if (hudBarsFullHeight == 0)
+        {
+            if (hudBarsView == null)
+            {
+                hudBarsView = findViewById(R.id.top_hud_bars);
+            }
+            if ((hudBarsView != null) && (hudBarsView.getHeight() > 0))
+            {
+                hudBarsFullHeight = hudBarsView.getHeight();
+            }
+        }
+        if (hudBarsFullHeight == 0)
+        {
+            return;
+        }
+
+        animateHudTo(isHudVisible ? 0 : hudBarsFullHeight);
     }
 
     private void rebuildAllTrails()

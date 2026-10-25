@@ -208,6 +208,9 @@
 
             </FrameLayout>
 
+
+            <!-- left side with map -->
+            <!-- left side with map -->
             <LinearLayout
                 android:id="@+id/main_gallery_container"
                 android:layout_weight="5"
@@ -215,7 +218,9 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical" >
 
+                <!-- The 4 grey bars, wrapped so they can collapse -->
                 <LinearLayout
+                    android:id="@+id/top_hud_bars"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" >
@@ -484,62 +489,85 @@
 
                 </LinearLayout>
 
-            <FrameLayout
-                android:id="@+id/main_gallery_container_inside"
-                android:layout_weight="5"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <org.osmdroid.views.MapView android:id="@+id/map"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent" />
-
-                <!-- Add the SeekBar here, inside the FrameLayout -->
-                <SeekBar
-                    android:id="@+id/trail_playback_seekbar"
+                <FrameLayout
+                    android:id="@+id/main_gallery_container_inside"
+                    android:layout_weight="5"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginLeft="40dp"
-                    android:layout_marginRight="30dp"
-                    android:layout_marginBottom="32dp"
-                    android:max="1000"
-                    android:progress="1000" />
+                    android:layout_height="match_parent">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|right"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="80dp"
-                    android:orientation="vertical">
+                    <org.osmdroid.views.MapView android:id="@+id/map"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" />
 
-                    <ImageButton
-                        android:id="@+id/map_zoom_in"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@android:color/white"
-                        android:src="@drawable/zoom_in"
-                        android:scaleType="centerInside"
-                        android:visibility="gone"
-                        android:contentDescription="Zoom In" />
+                    <!-- Add the SeekBar here, inside the FrameLayout -->
+                    <SeekBar
+                        android:id="@+id/trail_playback_seekbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginLeft="40dp"
+                        android:layout_marginRight="30dp"
+                        android:layout_marginBottom="32dp"
+                        android:max="1000"
+                        android:progress="1000" />
 
-                    <ImageButton
-                        android:id="@+id/map_zoom_out"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@android:color/white"
-                        android:src="@drawable/zoom_out"
-                        android:scaleType="centerInside"
-                        android:visibility="gone"
-                        android:contentDescription="Zoom Out" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|right"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginBottom="80dp"
+                        android:orientation="vertical">
 
-                </LinearLayout>
+                        <ImageButton
+                            android:id="@+id/map_zoom_in"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@android:color/white"
+                            android:src="@drawable/zoom_in"
+                            android:scaleType="centerInside"
+                            android:visibility="gone"
+                            android:contentDescription="Zoom In" />
 
-            </FrameLayout>
+                        <ImageButton
+                            android:id="@+id/map_zoom_out"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@android:color/white"
+                            android:src="@drawable/zoom_out"
+                            android:scaleType="centerInside"
+                            android:visibility="gone"
+                            android:contentDescription="Zoom Out" />
 
-        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Modern pull-handle: OVERLAYS the map at the top, semi-transparent background -->
+                    <LinearLayout
+                        android:id="@+id/hud_handle"
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_gravity="top"
+                        android:background="#CCF5F5F5"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:tooltipText="show / hide map info panel">
+
+                        <View
+                            android:id="@+id/hud_handle_chevron"
+                            android:layout_width="40dp"
+                            android:layout_height="4dp"
+                            android:background="@drawable/hud_grabber" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+            </LinearLayout>
+            <!-- left side with map -->
+            <!-- left side with map -->
 
         </LinearLayout>
 
