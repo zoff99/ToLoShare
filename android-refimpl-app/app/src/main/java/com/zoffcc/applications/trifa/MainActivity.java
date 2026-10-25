@@ -2603,6 +2603,18 @@ public class MainActivity extends BaseProtectedActivity
                     Log.i(TAG, "OOO:x:2");
                     Log.i(TAG, "remove_map_overlays:006");
                     remove_map_overlays();
+                    try
+                    {
+                        int so = remote_location_overlays.size();
+                        for(int j=0; j<so ;j++)
+                        {
+                            Log.i(TAG, "OVXXXX:2x:" + j + " " + remote_location_overlays.get(j));
+                        }
+                        remote_location_overlays.clear();
+                    }
+                    catch(Exception e)
+                    {
+                    }
                     Log.i(TAG, "add_map_overlays:006");
                     add_map_overlays();
                     inject_own_location();
@@ -2614,8 +2626,20 @@ public class MainActivity extends BaseProtectedActivity
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
-                    Log.i(TAG, "remove_map_overlays:006b");
+                    Log.i(TAG, "remove_map_overlays:044b");
                     remove_map_overlays();
+                    try
+                    {
+                        int so = remote_location_overlays.size();
+                        for(int j=0; j<so ;j++)
+                        {
+                            Log.i(TAG, "OVXXXX:442x:" + j + " " + remote_location_overlays.get(j));
+                        }
+                        remote_location_overlays.clear();
+                    }
+                    catch(Exception e)
+                    {
+                    }
                     map.onPause();
                     friend_locations.onPause();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
