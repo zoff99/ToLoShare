@@ -7,6 +7,9 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.mylocation.DirectedLocationOverlay;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FadeDirectedLocationOverlay extends DirectedLocationOverlay
 {
     public long timestamp_ms = 0;
@@ -66,7 +69,8 @@ public class FadeDirectedLocationOverlay extends DirectedLocationOverlay
 
             if (current_pos != null)
             {
-                badge_painter.draw(c, pProjection, current_pos, speed_kmh, has_speed, this.nickname);
+                // Pass 'this' so the painter knows to skip checking collision against itself
+                badge_painter.draw(c, pProjection, current_pos, speed_kmh, has_speed, this.nickname, this);
             }
         }
         finally

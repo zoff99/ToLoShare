@@ -7,6 +7,9 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.Overlay;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SpeedBadgeOverlay extends Overlay
 {
     private GeoPoint position = null;
@@ -43,6 +46,9 @@ public class SpeedBadgeOverlay extends Overlay
     @Override
     public void draw(Canvas c, Projection pProjection)
     {
-        badge_painter.draw(c, pProjection, position, speed_kmh, has_speed, this.nickname);
+        if (position == null) return;
+
+        // Pass null because the self badge should check against all friend overlays
+        badge_painter.draw(c, pProjection, position, speed_kmh, has_speed, this.nickname, null);
     }
 }
