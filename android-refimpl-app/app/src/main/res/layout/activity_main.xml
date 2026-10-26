@@ -546,11 +546,11 @@
                     <LinearLayout
                         android:id="@+id/hud_handle"
                         android:layout_width="match_parent"
-                        android:layout_height="24dp"
+                        android:layout_height="20dp"
                         android:orientation="horizontal"
                         android:gravity="center"
                         android:layout_gravity="top"
-                        android:background="#CCF5F5F5"
+                        android:background="#99F5F5F5"
                         android:clickable="true"
                         android:focusable="true"
                         android:tooltipText="show / hide map info panel">
