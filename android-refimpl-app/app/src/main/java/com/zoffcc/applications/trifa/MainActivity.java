@@ -899,7 +899,7 @@ public class MainActivity extends BaseProtectedActivity
                     scrubAllFriends(seekBar, progress);
                     scrubOwnTrail(seekBar, progress);
 
-                    map.invalidate();
+                    MapPaintWrapper.invalidate();
                 }
 
                 @Override
@@ -2874,7 +2874,7 @@ public class MainActivity extends BaseProtectedActivity
                 {
                 }
             }
-            map.invalidate();
+            MapPaintWrapper.invalidate();
         }
     }
 
@@ -2916,7 +2916,7 @@ public class MainActivity extends BaseProtectedActivity
                     catch(Exception e)
                     {
                     }
-                    map.invalidate();
+                    MapPaintWrapper.invalidate();
                 }
                 catch(Exception e)
                 {
@@ -3079,7 +3079,7 @@ public class MainActivity extends BaseProtectedActivity
             }
         }
 
-        map.invalidate();
+        MapPaintWrapper.invalidate();
     }
 
     private static void enable_mylocation_overlay()
@@ -5226,7 +5226,7 @@ public class MainActivity extends BaseProtectedActivity
                                 // 3. ONLY redraw the map if someone is actively fading
                                 if (needs_alpha_redraw && !PREF__normal_main_view && map != null)
                                 {
-                                    map.postInvalidate();
+                                    MapPaintWrapper.postInvalidate();
                                 }
                             }
                             catch (Exception e)
@@ -7358,7 +7358,7 @@ public class MainActivity extends BaseProtectedActivity
 
                                                         // 6. Update the overlay and redraw
                                                         friend_trail.setPoints(geoPointsList);
-                                                        map.invalidate();
+                                                        MapPaintWrapper.invalidate();
                                                     }
                                                     catch (Exception e)
                                                     {
@@ -7878,7 +7878,7 @@ public class MainActivity extends BaseProtectedActivity
                 set_map_center_to_proxy_uithread(re.remoteBestLocation);
             }
         }
-        map.postInvalidate();
+        MapPaintWrapper.postInvalidate();
     }
 
     synchronized private static void init_friend_location_data_struct(String friend_name, String f_pubkey, boolean has_bearing)

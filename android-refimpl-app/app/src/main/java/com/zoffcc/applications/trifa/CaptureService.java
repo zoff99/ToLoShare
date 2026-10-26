@@ -289,7 +289,7 @@ public class CaptureService extends Service
 
                 // 4. Update the map overlay and redraw
                 selfTrailsOverlay.setPoints(self_trail_geo_points);
-                map.invalidate();
+                MapPaintWrapper.invalidate();
             }
         }
         catch (Exception e)
