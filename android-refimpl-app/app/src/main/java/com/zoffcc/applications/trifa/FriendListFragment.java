@@ -362,7 +362,6 @@ public class FriendListFragment extends Fragment
                     List<com.zoffcc.applications.sorm.FriendList> fl = orma.selectFromFriendList().
                             is_relayNotEq(true).
                             orderByTOX_CONNECTION_on_offDesc().
-                            orderByNotification_silentAsc().
                             orderByLast_online_timestampDesc().
                             toList();
 
@@ -387,7 +386,6 @@ public class FriendListFragment extends Fragment
                     // reload conferences
                     List<com.zoffcc.applications.sorm.ConferenceDB> confs = orma.selectFromConferenceDB().
                             orderByConference_activeDesc().
-                            orderByNotification_silentAsc().
                             toList();
 
                     if (confs != null)
@@ -409,7 +407,6 @@ public class FriendListFragment extends Fragment
 
                     // reload groups
                     List<com.zoffcc.applications.sorm.GroupDB> groups = orma.selectFromGroupDB().
-                            orderByNotification_silentAsc().
                             toList();
 
                     if (groups != null)
@@ -453,7 +450,6 @@ public class FriendListFragment extends Fragment
                 List<com.zoffcc.applications.sorm.FriendList> fl = orma.selectFromFriendList().
                         is_relayNotEq(true).
                         orderByTOX_CONNECTION_on_offDesc().
-                        orderByNotification_silentAsc().
                         orderByLast_online_timestampDesc().
                         toList();
 
@@ -478,7 +474,6 @@ public class FriendListFragment extends Fragment
                 // reload conferences
                 List<com.zoffcc.applications.sorm.ConferenceDB> confs = orma.selectFromConferenceDB().
                         orderByConference_activeDesc().
-                        orderByNotification_silentAsc().
                         toList();
 
                 if (confs != null)
@@ -500,7 +495,6 @@ public class FriendListFragment extends Fragment
 
                 // reload groups
                 List<com.zoffcc.applications.sorm.GroupDB> groups = orma.selectFromGroupDB().
-                        orderByNotification_silentAsc().
                         toList();
 
                 if (groups != null)
@@ -570,7 +564,6 @@ public class FriendListFragment extends Fragment
                                         is_relayNotEq(true).
                                         added_timestampGt(System.currentTimeMillis() - ONE_HOUR_IN_MS).
                                         orderByTOX_CONNECTION_on_offDesc().
-                                        orderByNotification_silentAsc().
                                         orderByLast_online_timestampDesc().
                                         toList();
 
@@ -598,7 +591,6 @@ public class FriendListFragment extends Fragment
                                         is_relayNotEq(true).
                                         added_timestampLe(System.currentTimeMillis() - ONE_HOUR_IN_MS).
                                         orderByTOX_CONNECTION_on_offDesc().
-                                        orderByNotification_silentAsc().
                                         orderByLast_online_timestampDesc().
                                         toList();
 
@@ -636,7 +628,6 @@ public class FriendListFragment extends Fragment
                                 // ------------- add conferences (with new messages) -------------
                                 List<com.zoffcc.applications.sorm.ConferenceDB> confsm = orma.selectFromConferenceDB().
                                         orderByConference_activeDesc().
-                                        orderByNotification_silentAsc().
                                         toList();
 
                                 if (confsm != null)
@@ -673,7 +664,6 @@ public class FriendListFragment extends Fragment
 
                                 // ------------- add groups (with new messages) -------------
                                 List<com.zoffcc.applications.sorm.GroupDB> groupsm = orma.selectFromGroupDB().
-                                        orderByNotification_silentAsc().
                                         toList();
 
                                 if (groupsm != null)
@@ -714,7 +704,6 @@ public class FriendListFragment extends Fragment
                                         is_relayNotEq(true).
                                         added_timestampLe(System.currentTimeMillis() - ONE_HOUR_IN_MS).
                                         orderByTOX_CONNECTION_on_offDesc().
-                                        orderByNotification_silentAsc().
                                         orderByLast_online_timestampDesc().
                                         toList();
 
@@ -754,7 +743,6 @@ public class FriendListFragment extends Fragment
                                 // ------------- add conferences -------------
                                 List<com.zoffcc.applications.sorm.ConferenceDB> confs = orma.selectFromConferenceDB().
                                         orderByConference_activeDesc().
-                                        orderByNotification_silentAsc().
                                         toList();
 
                                 if (confs != null)
@@ -792,7 +780,6 @@ public class FriendListFragment extends Fragment
 
                                 // ------------- add groups -------------
                                 List<com.zoffcc.applications.sorm.GroupDB> groups = orma.selectFromGroupDB().
-                                        orderByNotification_silentAsc().
                                         toList();
 
                                 if (groups != null)

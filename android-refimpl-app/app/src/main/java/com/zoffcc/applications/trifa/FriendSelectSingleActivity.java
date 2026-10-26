@@ -72,7 +72,6 @@ public class FriendSelectSingleActivity extends ListActivity
                 fl = orma.selectFromFriendList().
                         is_relayNotEq(true).
                         orderByTOX_CONNECTION_on_offDesc().
-                        orderByNotification_silentAsc().
                         orderByLast_online_timestampDesc().
                         toList();
             }
@@ -82,7 +81,6 @@ public class FriendSelectSingleActivity extends ListActivity
                         is_relayNotEq(true).
                         TOX_CONNECTION_realNotEq(0).
                         orderByTOX_CONNECTION_on_offDesc().
-                        orderByNotification_silentAsc().
                         orderByLast_online_timestampDesc().
                         toList();
             }
@@ -115,7 +113,6 @@ public class FriendSelectSingleActivity extends ListActivity
             try
             {
                 gr = orma.selectFromGroupDB().
-                        orderByNotification_silentAsc().
                         orderByNameAsc().
                         toList();
             }

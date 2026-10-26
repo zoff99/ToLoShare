@@ -594,7 +594,7 @@ public class TrifaToxService extends Service
             {
                 if (fl != null && fl.tox_public_key_string != null && fl.tox_public_key_string.length() > 3)
                 {
-                    cache_friend_share_location.put(fl.tox_public_key_string, fl.notification_silent);
+                    cache_friend_share_location.put(fl.tox_public_key_string, !fl.notification_silent);
                 }
             }
             Log.i(TAG, "load_friend_share_location_cache: loaded " + cache_friend_share_location.size() + " friends");

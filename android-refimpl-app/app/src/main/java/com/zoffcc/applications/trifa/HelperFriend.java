@@ -753,7 +753,7 @@ public class HelperFriend
                 f.avatar_filename = null;
                 f.capabilities = 0;
 
-                cache_friend_share_location.put(f.tox_public_key_string, false); // default = share ON (notification_silent = false)
+                cache_friend_share_location.put(f.tox_public_key_string, true); // default = share ON (notification_silent = false)
 
                 try
                 {
@@ -1004,7 +1004,7 @@ public class HelperFriend
                 // e.printStackTrace();
             }
 
-            cache_friend_share_location.put(f.tox_public_key_string, false); // default = share ON (notification_silent = false)
+            cache_friend_share_location.put(f.tox_public_key_string, true); // default = share ON (notification_silent = false)
 
             update_single_friend_in_friendlist_view(f);
         }
@@ -1082,7 +1082,7 @@ public class HelperFriend
                 // e.printStackTrace();
             }
 
-            cache_friend_share_location.put(f.tox_public_key_string, false); // default = share ON (notification_silent = false)
+            cache_friend_share_location.put(f.tox_public_key_string, true); // default = share ON (notification_silent = false)
 
             update_single_friend_in_friendlist_view(f);
         }

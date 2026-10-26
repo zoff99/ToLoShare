@@ -563,7 +563,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
 
     public void friend_toggle_share_location()
     {
-        // Toggle the value (inverted logic: notification_silent=false means share=ON)
+        // Toggle the value
         this.friendlist.notification_silent = !this.friendlist.notification_silent;
 
         orma.updateFriendList()
@@ -571,7 +571,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
                 .notification_silent(this.friendlist.notification_silent)
                 .execute();
 
-        cache_friend_share_location.put(this.friendlist.tox_public_key_string, this.friendlist.notification_silent);
+        cache_friend_share_location.put(this.friendlist.tox_public_key_string, !this.friendlist.notification_silent);
 
         // Update icon immediately
         if (this.friendlist.notification_silent)
