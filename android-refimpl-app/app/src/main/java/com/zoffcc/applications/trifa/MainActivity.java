@@ -2945,9 +2945,6 @@ public class MainActivity extends BaseProtectedActivity
         android.view.ViewGroup.LayoutParams lp = hudBarsView.getLayoutParams();
         lp.height = val;
         hudBarsView.setLayoutParams(lp);
-
-        float fraction = 1.0f - ((float) val / (float) hudBarsFullHeight);
-        hudBarsView.setTranslationY(-fraction * (float) hudBarsFullHeight);
     }
 
     // Smoothly snaps the HUD to a target height (0 = collapsed, full = expanded)
