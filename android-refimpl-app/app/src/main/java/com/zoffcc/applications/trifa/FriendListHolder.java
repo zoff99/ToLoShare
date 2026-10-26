@@ -556,7 +556,6 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
         }
     }
 
-
     public void friend_toggle_notification_silent()
     {
         if (!this.friendlist.notification_silent)
@@ -662,7 +661,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
             }
             else
             {
-                show_messagelist_acticvity_for_friend(v.getContext(), this.friendlist.tox_public_key_string);
+                // **DISABLED **// show_messagelist_acticvity_for_friend(v.getContext(), this.friendlist.tox_public_key_string);
             }
         }
         catch (Exception e)

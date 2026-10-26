@@ -7126,46 +7126,6 @@ public class MainActivity extends BaseProtectedActivity
 
     static void android_tox_callback_friend_typing_cb_method(long friend_number, final int typing)
     {
-        // Log.i(TAG, "friend_typing_cb:fn=" + friend_number + " typing=" + typing);
-        final long friend_number_ = friend_number;
-        Runnable myRunnable = new Runnable()
-        {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void run()
-            {
-                try
-                {
-                    if (message_list_activity != null)
-                    {
-                        if (ml_friend_typing != null)
-                        {
-                            if (message_list_activity.get_current_friendnum() == friend_number_)
-                            {
-                                if (typing == 1)
-                                {
-                                    ml_friend_typing.setText(R.string.MainActivity_friend_is_typing);
-                                }
-                                else
-                                {
-                                    ml_friend_typing.setText("");
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    // e.printStackTrace();
-                    Log.i(TAG, "friend_typing_cb:EE:" + e.getMessage());
-                }
-            }
-        };
-
-        if (main_handler_s != null)
-        {
-            main_handler_s.post(myRunnable);
-        }
     }
 
     static void android_tox_callback_friend_read_receipt_message_v2_cb_method(final long friend_number, long ts_sec, byte[] msg_id)
