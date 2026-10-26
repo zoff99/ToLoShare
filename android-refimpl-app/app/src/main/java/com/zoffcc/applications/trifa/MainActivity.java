@@ -618,6 +618,10 @@ public class MainActivity extends BaseProtectedActivity
     ProfileDrawerItem profile_d_item = null;
     // main drawer ----------
 
+    // Cache for "share location with friend" settings (notification_silent field)
+    // Key: friend pubkey, Value: notification_silent (true = don't share, false = share)
+    public static Map<String, Boolean> cache_friend_share_location = new HashMap<>();
+
     Spinner spinner_own_status = null;
 
     // 1 worker thread, 0 queue capacity, silently drop if busy

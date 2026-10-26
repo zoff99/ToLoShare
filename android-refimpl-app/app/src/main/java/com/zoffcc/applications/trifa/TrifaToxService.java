@@ -99,6 +99,7 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__use_push_service;
 import static com.zoffcc.applications.trifa.MainActivity.SD_CARD_FILES_DEBUG_DIR;
 import static com.zoffcc.applications.trifa.MainActivity.VFS_ENCRYPT;
 import static com.zoffcc.applications.trifa.MainActivity.cache_fnum_pubkey;
+import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_location;
 import static com.zoffcc.applications.trifa.MainActivity.cache_pubkey_fnum;
 import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.get_my_toxid;
@@ -582,6 +583,28 @@ public class TrifaToxService extends Service
         }
     }
 
+    // Load all friend share location settings into cache
+    public static void load_friend_share_location_cache()
+    {
+        try
+        {
+            cache_friend_share_location.clear();
+            List<FriendList> friends = orma.selectFromFriendList().toList();
+            for (FriendList fl : friends)
+            {
+                if (fl != null && fl.tox_public_key_string != null && fl.tox_public_key_string.length() > 3)
+                {
+                    cache_friend_share_location.put(fl.tox_public_key_string, fl.notification_silent);
+                }
+            }
+            Log.i(TAG, "load_friend_share_location_cache: loaded " + cache_friend_share_location.size() + " friends");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     static void write_debug_file(String filename)
     {
         if (DEBUG_BATTERY_OPTIMIZATION_LOGGING)
@@ -882,6 +905,8 @@ public class TrifaToxService extends Service
                 HelperGeneric.update_savedata_file_wrapper();
 
                 load_and_add_all_friends();
+
+                load_friend_share_location_cache();
 
                 // --------------- bootstrap ---------------
                 // --------------- bootstrap ---------------

@@ -29,6 +29,10 @@
     <color name="icon_colors">#303F9F</color>
     <color name="text_on_blue_color">#000000</color>
 
+    <!-- Share location toggle icon colors (light theme) -->
+    <color name="share_location_icon_colors_set">#C62828</color>
+    <color name="share_location_icon_colors_unset">#9E9E9E</color>
+
     <!--reds-->
     <color name="md_red_50">#FFEBEE</color>
     <color name="md_red_100">#FFCDD2</color>

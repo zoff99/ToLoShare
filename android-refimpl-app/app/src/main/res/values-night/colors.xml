@@ -29,6 +29,9 @@
     <color name="icon_colors">#8AFFFFFF</color>
     <color name="text_on_blue_color">#000000</color>
 
+    <color name="share_location_icon_colors_set">#F44336</color>
+    <color name="share_location_icon_colors_unset">#757575</color>
+
     <!--reds-->
     <color name="md_red_50">#FFEBEE</color>
     <color name="md_red_100">#FFCDD2</color>

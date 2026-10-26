@@ -50,6 +50,7 @@ import static com.zoffcc.applications.trifa.HelperRelay.own_push_token_load;
 import static com.zoffcc.applications.trifa.HelperRelay.push_token_to_push_url;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__orbot_enabled;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__use_push_service;
+import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_location;
 import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND;
@@ -752,6 +753,8 @@ public class HelperFriend
                 f.avatar_filename = null;
                 f.capabilities = 0;
 
+                cache_friend_share_location.put(f.tox_public_key_string, false); // default = share ON (notification_silent = false)
+
                 try
                 {
                     // Log.i(TAG, "friend_request:insert:001:f=" + f);
@@ -1001,6 +1004,8 @@ public class HelperFriend
                 // e.printStackTrace();
             }
 
+            cache_friend_share_location.put(f.tox_public_key_string, false); // default = share ON (notification_silent = false)
+
             update_single_friend_in_friendlist_view(f);
         }
         else
@@ -1076,6 +1081,8 @@ public class HelperFriend
             {
                 // e.printStackTrace();
             }
+
+            cache_friend_share_location.put(f.tox_public_key_string, false); // default = share ON (notification_silent = false)
 
             update_single_friend_in_friendlist_view(f);
         }

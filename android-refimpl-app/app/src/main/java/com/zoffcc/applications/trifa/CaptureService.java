@@ -40,6 +40,7 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_WAKE
 import static com.zoffcc.applications.trifa.MainActivity.PREF__loc_provider_change_timeout;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__map_follow_mode;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__show_friend_trails;
+import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_location;
 import static com.zoffcc.applications.trifa.MainActivity.f_tracker;
 import static com.zoffcc.applications.trifa.MainActivity.f_trails;
 import static com.zoffcc.applications.trifa.MainActivity.inject_own_location;
@@ -515,22 +516,42 @@ public class CaptureService extends Service
             long[] friends = MainActivity.tox_self_get_friend_list();
             for (int fc = 0; fc < friends.length; fc++)
             {
-                //noinspection unused
-                final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
-                // Log.i(TAG, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
-
-                if (res == 1)
+                String f_pubkey = null;
+                try
                 {
-                    try
+                    f_pubkey = tox_friend_get_public_key__wrapper(fc);
+                }
+                catch(Exception e)
+                {
+
+                }
+
+                if (f_pubkey != null)
+                {
+                    Boolean share_enabled = cache_friend_share_location.get(f_pubkey);
+                    // If not in cache or sharing is disabled (notification_silent = true), skip
+                    if (share_enabled == null || share_enabled)
                     {
-                        String f_pubkey = tox_friend_get_public_key__wrapper(fc);
-                        if ((f_pubkey != null) && (f_pubkey.length() > 10))
-                        {
-                            f_tracker.ping_outgoing(f_pubkey);
-                        }
+                        // Sharing is OFF for this friend, skip sending
+                        return;
                     }
-                    catch(Exception e)
+
+                    //noinspection unused
+                    final int res = tox_friend_send_lossless_packet(fc, data_bin, data_bin_len);
+                    // Log.i(TAG, "fn=" + fc + " res=" + res + " " + bytes_to_hex(data_bin) + " len=" + data_bin_len);
+
+                    if (res == 1)
                     {
+                        try
+                        {
+                            if ((f_pubkey != null) && (f_pubkey.length() > 10))
+                            {
+                                f_tracker.ping_outgoing(f_pubkey);
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                        }
                     }
                 }
             }
@@ -545,6 +566,14 @@ public class CaptureService extends Service
     {
         if (location == null)
         {
+            return;
+        }
+
+        Boolean share_enabled = cache_friend_share_location.get(fpubkey);
+        // If not in cache or sharing is disabled (notification_silent = true), skip
+        if (share_enabled == null || share_enabled)
+        {
+            // Sharing is OFF for this friend, skip sending
             return;
         }
 

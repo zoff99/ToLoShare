@@ -62,6 +62,7 @@ import static com.zoffcc.applications.trifa.Identicon.create_avatar_identicon_fo
 import static com.zoffcc.applications.trifa.MainActivity.PREF__show_friendnumber_on_friendlist;
 import static com.zoffcc.applications.trifa.MainActivity.VFS_ENCRYPT;
 import static com.zoffcc.applications.trifa.MainActivity.cache_fnum_pubkey;
+import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_location;
 import static com.zoffcc.applications.trifa.MainActivity.cache_pubkey_fnum;
 import static com.zoffcc.applications.trifa.MainActivity.friend_list_fragment;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_delete;
@@ -204,23 +205,27 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
 
         if (fl.notification_silent)
         {
-            final Drawable d_notification = new IconicsDrawable(context).
-                    icon(GoogleMaterial.Icon.gmd_notifications_off).
-                    color(context.getResources().
-                            getColor(R.color.icon_colors)).
-                    alpha(FL_NOTIFICATION_ICON_ALPHA_NOT_SELECTED).sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_NOT_SELECTED);
-            f_notification.setImageDrawable(d_notification);
+            // Share location OFF
+            final Drawable d_share = new IconicsDrawable(context).
+                    icon(GoogleMaterial.Icon.gmd_location_off).
+                    color(context.getResources().getColor(R.color.share_location_icon_colors_unset)).
+                    alpha(FL_NOTIFICATION_ICON_ALPHA_NOT_SELECTED).
+                    sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_NOT_SELECTED);
+            f_notification.setImageDrawable(d_share);
             f_notification.setOnClickListener(this);
+            f_notification.setContentDescription("Share location: OFF");
         }
         else
         {
-            final Drawable d_notification = new IconicsDrawable(context).
-                    icon(GoogleMaterial.Icon.gmd_notifications_active).
-                    color(context.getResources().
-                            getColor(R.color.icon_colors)).
-                    alpha(FL_NOTIFICATION_ICON_ALPHA_SELECTED).sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_SELECTED);
-            f_notification.setImageDrawable(d_notification);
+            // Share location ON (default)
+            final Drawable d_share = new IconicsDrawable(context).
+                    icon(GoogleMaterial.Icon.gmd_location_on).
+                    color(context.getResources().getColor(R.color.share_location_icon_colors_set)).
+                    alpha(255).
+                    sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_SELECTED);
+            f_notification.setImageDrawable(d_share);
             f_notification.setOnClickListener(this);
+            f_notification.setContentDescription("Share location: ON");
         }
 
         final Drawable d_lock = new IconicsDrawable(context).
@@ -556,81 +561,48 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
         }
     }
 
-    public void friend_toggle_notification_silent()
+    public void friend_toggle_share_location()
     {
-        if (!this.friendlist.notification_silent)
+        // Toggle the value (inverted logic: notification_silent=false means share=ON)
+        this.friendlist.notification_silent = !this.friendlist.notification_silent;
+
+        orma.updateFriendList()
+                .tox_public_key_stringEq(this.friendlist.tox_public_key_string)
+                .notification_silent(this.friendlist.notification_silent)
+                .execute();
+
+        cache_friend_share_location.put(this.friendlist.tox_public_key_string, this.friendlist.notification_silent);
+
+        // Update icon immediately
+        if (this.friendlist.notification_silent)
         {
-            this.friendlist.notification_silent = true;
-            orma.updateFriendList().tox_public_key_stringEq(this.friendlist.tox_public_key_string).
-                    notification_silent(this.friendlist.notification_silent).execute();
-
-            final Drawable d_notification = new IconicsDrawable(context).
-                    icon(GoogleMaterial.Icon.gmd_notifications_off).
-                    color(context.getResources().
-                            getColor(R.color.icon_colors)).
-                    alpha(FL_NOTIFICATION_ICON_ALPHA_NOT_SELECTED).sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_NOT_SELECTED);
-            f_notification.setImageDrawable(d_notification);
-
-            try
-            {
-                if (friend_list_fragment != null)
-                {
-                    // TODO: dirty hack, make better
-                    final boolean sorted_reload = true;
-                    if (!sorted_reload)
-                    {
-                        CombinedFriendsAndConferences cc = new CombinedFriendsAndConferences();
-                        cc.is_friend = COMBINED_IS_FRIEND;
-                        cc.friend_item = this.friendlist;
-                        friend_list_fragment.modify_friend(cc, cc.is_friend);
-                    }
-                    else
-                    {
-                        friend_list_fragment.add_all_friends_clear(0);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+            final Drawable d_share = new IconicsDrawable(context).
+                    icon(GoogleMaterial.Icon.gmd_location_off).
+                    color(context.getResources().getColor(R.color.share_location_icon_colors_unset)).
+                    alpha(FL_NOTIFICATION_ICON_ALPHA_NOT_SELECTED).
+                    sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_NOT_SELECTED);
+            f_notification.setImageDrawable(d_share);
         }
         else
         {
-            this.friendlist.notification_silent = false;
-            orma.updateFriendList().tox_public_key_stringEq(this.friendlist.tox_public_key_string).
-                    notification_silent(this.friendlist.notification_silent).execute();
+            final Drawable d_share = new IconicsDrawable(context).
+                    icon(GoogleMaterial.Icon.gmd_location_on).
+                    color(context.getResources().getColor(R.color.share_location_icon_colors_set)).
+                    alpha(255).
+                    sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_SELECTED);
+            f_notification.setImageDrawable(d_share);
+        }
 
-            final Drawable d_notification = new IconicsDrawable(context).
-                    icon(GoogleMaterial.Icon.gmd_notifications_active).
-                    color(context.getResources().
-                            getColor(R.color.icon_colors)).
-                    alpha(FL_NOTIFICATION_ICON_ALPHA_SELECTED).sizeDp(FL_NOTIFICATION_ICON_SIZE_DP_SELECTED);
-            f_notification.setImageDrawable(d_notification);
-
-            try
+        try
+        {
+            if (friend_list_fragment != null)
             {
-                if (friend_list_fragment != null)
-                {
-                    // TODO: dirty hack, make better
-                    final boolean sorted_reload = true;
-                    if (!sorted_reload)
-                    {
-                        CombinedFriendsAndConferences cc = new CombinedFriendsAndConferences();
-                        cc.is_friend = COMBINED_IS_FRIEND;
-                        cc.friend_item = this.friendlist;
-                        friend_list_fragment.modify_friend(cc, cc.is_friend);
-                    }
-                    else
-                    {
-                        friend_list_fragment.add_all_friends_clear(0);
-                    }
-                }
+                friend_list_fragment.add_all_friends_clear(0);
             }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -642,26 +614,12 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
         {
             if (v.equals(f_notification))
             {
-                AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-                builder.setTitle(v.getContext().getString(R.string.FriendListHolder_toggle_notification_silent_title));
-                builder.setMessage(v.getContext().getString(R.string.FriendListHolder_toggle_notification_silent_message));
-
-                builder.setNegativeButton(v.getContext().getString(R.string.MainActivity_no_button), null);
-                builder.setPositiveButton(v.getContext().getString(R.string.MainActivity_yes_button), new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        friend_toggle_notification_silent();
-                    }
-                });
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                // Direct toggle, no confirmation dialog
+                friend_toggle_share_location();
             }
             else
             {
-                // **DISABLED **// show_messagelist_acticvity_for_friend(v.getContext(), this.friendlist.tox_public_key_string);
+                show_messagelist_acticvity_for_friend(v.getContext(), this.friendlist.tox_public_key_string);
             }
         }
         catch (Exception e)
@@ -722,6 +680,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
                                 cache_pubkey_fnum.clear();
                                 cache_fnum_pubkey.clear();
                                 update_savedata_file_wrapper(); // save toxcore datafile (friend removed)
+                                cache_friend_share_location.remove(f2.tox_public_key_string);
                                 Log.i(TAG, "onMenuItemClick:5:res=" + res);
                             }
                             // delete friend - tox ----
@@ -842,6 +801,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
                                         cache_pubkey_fnum.clear();
                                         cache_fnum_pubkey.clear();
                                         update_savedata_file_wrapper(); // save toxcore datafile (friend removed)
+                                        cache_friend_share_location.remove(f2.tox_public_key_string);
                                         Log.i(TAG, "onMenuItemClick:5:res=" + res);
                                     }
                                     // delete friend - tox ----
