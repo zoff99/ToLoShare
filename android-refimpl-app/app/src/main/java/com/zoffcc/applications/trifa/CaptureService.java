@@ -523,17 +523,15 @@ public class CaptureService extends Service
                 }
                 catch(Exception e)
                 {
-
                 }
 
                 if (f_pubkey != null)
                 {
                     Boolean share_enabled = cache_friend_share_location.get(f_pubkey);
-                    // If not in cache or sharing is disabled (notification_silent = true), skip
-                    if (share_enabled == null || share_enabled)
+                    // If not in cache or sharing is disabled then skip
+                    if (share_enabled == null || share_enabled == false)
                     {
-                        // Sharing is OFF for this friend, skip sending
-                        return;
+                        continue;
                     }
 
                     //noinspection unused
@@ -570,10 +568,9 @@ public class CaptureService extends Service
         }
 
         Boolean share_enabled = cache_friend_share_location.get(fpubkey);
-        // If not in cache or sharing is disabled (notification_silent = true), skip
-        if (share_enabled == null || share_enabled)
+        // If not in cache or sharing is disabled then skip
+        if (share_enabled == null || share_enabled == false)
         {
-            // Sharing is OFF for this friend, skip sending
             return;
         }
 
