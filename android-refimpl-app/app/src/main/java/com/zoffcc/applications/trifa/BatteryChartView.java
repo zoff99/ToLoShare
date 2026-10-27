@@ -202,7 +202,7 @@ public class BatteryChartView extends View
         canvas.drawText("10% threshold", marginLeft + HelperGeneric.dp2px(10f), y10 - HelperGeneric.dp2px(4f), thresholdPaint);
 
         // X-axis labels (hours)
-        for (int hh = 0; hh <= 10; hh += 2) {
+        for (int hh = 0; hh <= 10; hh += 1) {
             long ts = now - (hh * 60L * 60L * 1000L);
             float x = marginLeft + ((ts - startTs) / 60000f) * minuteWidthPx;
             canvas.drawLine(x, h - marginBottom, x, h - marginBottom + HelperGeneric.dp2px(5f), axisPaint);
