@@ -29,6 +29,9 @@ public class BatteryChartView extends View
     private static final float MIN_DP_PER_MINUTE = 2.0f;
     private static final float MAX_DP_PER_MINUTE = 60.0f;
 
+    // --- CHANGE THIS VALUE TO ADJUST THE THRESHOLD GLOBALLY ---
+    public static final int BATTERY_THRESHOLD_PERCENT = 15;
+
     private float currentDpPerMinute = 6.0f;
 
     // Matrix zoom state
@@ -192,14 +195,14 @@ public class BatteryChartView extends View
             if (i > 0 && i < 100) canvas.drawLine(marginLeft, y, w - marginRight, y, gridPaint);
         }
 
-        // 15% threshold line
-        float y15 = h - marginBottom - (15f / 100f) * chartH;
+        // Threshold line
+        float yThreshold = h - marginBottom - ((float) BATTERY_THRESHOLD_PERCENT / 100f) * chartH;
         Paint thresholdPaint = new Paint(gridPaint);
         thresholdPaint.setColor(Color.RED);
         thresholdPaint.setTextSize(HelperGeneric.dp2px(15f));
         thresholdPaint.setFakeBoldText(true);
-        canvas.drawLine(marginLeft, y15, w - marginRight, y15, thresholdPaint);
-        canvas.drawText("15% threshold", marginLeft + HelperGeneric.dp2px(10f), y15 - HelperGeneric.dp2px(4f), thresholdPaint);
+        canvas.drawLine(marginLeft, yThreshold, w - marginRight, yThreshold, thresholdPaint);
+        canvas.drawText(BATTERY_THRESHOLD_PERCENT + "% threshold", marginLeft + HelperGeneric.dp2px(10f), yThreshold - HelperGeneric.dp2px(4f), thresholdPaint);
 
         // X-axis labels (every hour)
         for (int hh = 0; hh <= 10; hh += 1) {

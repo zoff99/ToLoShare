@@ -138,7 +138,9 @@ public class BatteryChartActivity extends AppCompatActivity
 
     private void updateRemainingTime()
     {
+        final int threshold = BatteryChartView.BATTERY_THRESHOLD_PERCENT;
         float current = global_battery_percent;
+
         if (current <= 0 || current == BATTERY_PERCENT_UNKNOWN) {
             remainingTimeText.setText("Waiting for battery data...");
             return;
@@ -150,10 +152,10 @@ public class BatteryChartActivity extends AppCompatActivity
             remainingTimeText.setText("Phone is charging or idle");
         } else if (rate == BatteryChartView.RATE_INVALID) {
             remainingTimeText.setText("Calculating battery drain rate...");
-        } else if (current <= 15.0f) {
-            remainingTimeText.setText("Battery is already below 15%");
+        } else if (current <= (float) threshold) {
+            remainingTimeText.setText("Battery is already below " + threshold + "%");
         } else if (rate > 0f) {
-            float percentToDrop = current - 15.0f;
+            float percentToDrop = current - (float) threshold;
             float hoursRemaining = percentToDrop / rate;
 
             int totalHours = (int) hoursRemaining;
@@ -164,11 +166,11 @@ public class BatteryChartActivity extends AppCompatActivity
 
             String timeStr;
             if (days > 0) {
-                timeStr = String.format(Locale.US, "Est. time until <15%%: %d days %d hours", days, hours);
+                timeStr = String.format(Locale.US, "Est. time until <" + threshold + "%%: %d days %d hours", days, hours);
             } else if (hours > 0) {
-                timeStr = String.format(Locale.US, "Est. time until <15%%: %d hours %d minutes", hours, minutes);
+                timeStr = String.format(Locale.US, "Est. time until <" + threshold + "%%: %d hours %d minutes", hours, minutes);
             } else {
-                timeStr = String.format(Locale.US, "Est. time until <15%%: %d minutes", minutes);
+                timeStr = String.format(Locale.US, "Est. time until <" + threshold + "%%: %d minutes", minutes);
             }
             remainingTimeText.setText(timeStr);
         } else {
