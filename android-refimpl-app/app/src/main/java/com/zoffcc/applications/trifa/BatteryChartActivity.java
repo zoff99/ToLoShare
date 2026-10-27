@@ -2,18 +2,30 @@ package com.zoffcc.applications.trifa;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_PERCENT_UNKNOWN;
@@ -21,9 +33,16 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.global_battery_percent;
 
 public class BatteryChartActivity extends AppCompatActivity
 {
+    private static final int REQ_PICK_TREE = 0x61;
+    private static final String PREF_TREE_URI_KEY = "battery_chart_export_tree_uri";
+    private static final float EXPORT_DP_PER_MINUTE = 13.0f;
+    private static final int MAX_EXPORT_WIDTH_PX = 70000;
+
     private LockableHorizontalScrollView scrollView;
     private BatteryChartView chartView;
     private TextView remainingTimeText;
+    private DocumentExporter exporter;
+    private volatile boolean exporting = false;
 
     // Track if user has scrolled away from live "now" edge
     private boolean userScrolledAway = false;
@@ -42,20 +61,7 @@ public class BatteryChartActivity extends AppCompatActivity
                 chartView.invalidate();
                 updateRemainingTime();
                 positionRemainingTimeText();
-
-                if (!userScrolledAway)
-                {
-                    scroll_to_now();
-                }
-                else if (!userIsTouching)
-                {
-                    // Keep the viewport glued to targetTimestamp as the 10h window rolls
-                    int newScrollX = (int) chartView.getXForTimestamp(targetTimestamp);
-                    int maxScroll = Math.max(0, chartView.getWidth() - scrollView.getWidth());
-                    if (newScrollX < 0) newScrollX = 0;
-                    if (newScrollX > maxScroll) newScrollX = maxScroll;
-                    scrollXTo(newScrollX);
-                }
+                positionExportFab();
             }
             refreshHandler.postDelayed(this, 60000); // Update every 60 seconds
         }
@@ -71,6 +77,8 @@ public class BatteryChartActivity extends AppCompatActivity
             getSupportActionBar().setTitle("Battery History (10h)");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        exporter = new DocumentExporter(this, PREF_TREE_URI_KEY, REQ_PICK_TREE);
 
         FrameLayout rootLayout = new FrameLayout(this);
         rootLayout.setBackgroundColor(0xFF121212);
@@ -132,44 +140,184 @@ public class BatteryChartActivity extends AppCompatActivity
         textParams.gravity = Gravity.BOTTOM | Gravity.START;
         rootLayout.addView(remainingTimeText, textParams);
 
+        // Export FAB (bottom-right)
+        FloatingActionButton fabExport = new FloatingActionButton(this);
+        fabExport.setImageResource(R.drawable.ic_export);
+        fabExport.setContentDescription("Export chart");
+        fabExport.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF1976D2));
+        fabExport.setImageTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));
+
+        FrameLayout.LayoutParams fabParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        fabParams.gravity = Gravity.END;
+        fabParams.rightMargin = dp(16);
+        fabExport.setLayoutParams(fabParams);
+
+        fabExport.setId(R.id.fab_battery_export);
+        fabExport.setOnClickListener(v -> onExportClicked());
+        fabExport.setOnLongClickListener(v -> {
+            onChangeFolderClicked();
+            return true;
+        });
+
+        rootLayout.addView(fabExport, fabParams);
+
         setContentView(rootLayout);
         scrollView.post(() -> {
             scroll_to_now();
             positionRemainingTimeText();
+            positionExportFab();
         });
         updateRemainingTime();
     }
 
-    private void positionRemainingTimeText()
+    // -------------------------------------------------------------------------
+    // Export logic
+    // -------------------------------------------------------------------------
+
+    private void onExportClicked()
     {
-        if (chartView == null || remainingTimeText == null) return;
+        if (exporting) return;
+        exporting = true;
 
-        int chartH = chartView.getHeight();
-        if (chartH == 0) return;
+        exporter.ensureDirectory(() -> {
+            final Bitmap bmp;
+            try
+            {
+                float density = getResources().getDisplayMetrics().density;
+                int totalSpan = BatteryChartView.getTotalSpanMinutes();
 
-        float marginTop = HelperGeneric.dp2px(20f);
-        float marginBottom = HelperGeneric.dp2px(40f);
-        float drawableChartH = chartH - marginTop - marginBottom;
+                int w = (int) (totalSpan * EXPORT_DP_PER_MINUTE * density);
+                float effDp = EXPORT_DP_PER_MINUTE;
+                if (w > MAX_EXPORT_WIDTH_PX)
+                {
+                    effDp *= (float) MAX_EXPORT_WIDTH_PX / (float) w;
+                    w = MAX_EXPORT_WIDTH_PX;
+                }
+                if (w < 1) w = 1;
 
-        // Y position of the 15% threshold line (from top of view)
-        float yThreshold = marginTop + ((100f - BatteryChartView.BATTERY_THRESHOLD_PERCENT) / 100f) * drawableChartH;
+                // Create an off-screen chart view at export resolution
+                BatteryChartView exportView = new BatteryChartView(this);
+                exportView.setDpPerMinute(effDp);
 
-        // Y position of the X-axis (bottom of drawable area)
-        float yAxis = chartH - marginBottom;
+                // Use the same height as the on-screen chart
+                int contentH = chartView.getHeight();
+                if (contentH < 1) contentH = (int) (600 * density);
 
-        // Exact midpoint between threshold line and X-axis
+                int wSpec = View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY);
+                int hSpec = View.MeasureSpec.makeMeasureSpec(contentH, View.MeasureSpec.EXACTLY);
+                exportView.measure(wSpec, hSpec);
+                exportView.layout(0, 0, w, contentH);
+
+                bmp = Bitmap.createBitmap(w, contentH, Bitmap.Config.ARGB_8888);
+                bmp.eraseColor(0xFF121212);
+                Canvas c = new Canvas(bmp);
+                exportView.draw(c);
+
+                // --- Paint the remaining time text onto the exported bitmap ---
+                paintExportRemainingTime(c, w, contentH, density);
+
+            }
+            catch (OutOfMemoryError oom)
+            {
+                exporting = false;
+                toast("Export failed: not enough memory");
+                return;
+            }
+            catch (Throwable t)
+            {
+                exporting = false;
+                toast("Export failed: " + t.getMessage());
+                return;
+            }
+
+            final String fileName = "battery_chart_" +
+                                    new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".png";
+
+            new Thread(() -> {
+                try
+                {
+                    Uri fileUri = exporter.createFileUri(fileName, "image/png");
+                    if (fileUri == null)
+                    {
+                        postUi(() -> toast("Export failed: cannot create file"));
+                        return;
+                    }
+
+                    try (OutputStream os = getContentResolver().openOutputStream(fileUri, "w"))
+                    {
+                        if (os == null)
+                        {
+                            postUi(() -> toast("Export failed: cannot open output stream"));
+                            return;
+                        }
+                        bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
+                        os.flush();
+                    }
+
+                    postUi(() -> toast("Saved: " + fileName));
+                }
+                catch (Throwable t)
+                {
+                    postUi(() -> toast("Export failed: " + t.getMessage()));
+                }
+                finally
+                {
+                    bmp.recycle();
+                    exporting = false;
+                }
+            }, "battery-chart-export").start();
+
+        }, error -> {
+            exporting = false;
+            toast(error);
+        });
+    }
+
+    /**
+     * Paints the remaining time text onto the export canvas at the exact vertical midpoint
+     * between the threshold line and the X-axis, aligned to the bottom-right.
+     */
+    private void paintExportRemainingTime(Canvas canvas, int w, int h, float density)
+    {
+        String text = remainingTimeText.getText().toString();
+        if (text == null || text.isEmpty()) return;
+
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(HelperGeneric.dp2px(14f));
+        paint.setTextAlign(Paint.Align.RIGHT);
+
+        float yThreshold = BatteryChartView.getThresholdY(h, density);
+        float yAxis = BatteryChartView.getXAxisY(h, density);
         float midY = (yThreshold + yAxis) / 2f;
 
-        // Center the text vertically on that midpoint
-        int textHeight = remainingTimeText.getHeight();
-        float topMargin = midY - (textHeight / 2f);
+        // Vertical center: adjust for font metrics so the text is truly centered on midY
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        float textCenterOffset = (fm.descent + fm.ascent) / 2f;
+        float drawY = midY - textCenterOffset;
 
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) remainingTimeText.getLayoutParams();
-        params.topMargin = Math.max(0, (int) topMargin);
-        params.bottomMargin = 0;
-        params.gravity = Gravity.START;
-        remainingTimeText.setLayoutParams(params);
+        // Horizontal: right-aligned with same padding as the on-screen text
+        float drawX = w - HelperGeneric.dp2px(16f);
+
+        canvas.drawText(text, drawX, drawY, paint);
     }
+
+    private void onChangeFolderClicked()
+    {
+        exporter.changeDirectory(() -> toast("Export folder updated"), error -> toast(error));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (exporter.handleActivityResult(requestCode, resultCode, data)) return;
+    }
+
+    // -------------------------------------------------------------------------
+    // Remaining time + positioning
+    // -------------------------------------------------------------------------
 
     private void updateRemainingTime()
     {
@@ -213,6 +361,60 @@ public class BatteryChartActivity extends AppCompatActivity
         }
     }
 
+    private void positionRemainingTimeText()
+    {
+        if (chartView == null || remainingTimeText == null) return;
+
+        int chartH = chartView.getHeight();
+        if (chartH == 0) return;
+
+        float density = getResources().getDisplayMetrics().density;
+        float yThreshold = BatteryChartView.getThresholdY(chartH, density);
+        float yAxis = BatteryChartView.getXAxisY(chartH, density);
+        float midY = (yThreshold + yAxis) / 2f;
+
+        int textHeight = remainingTimeText.getHeight();
+        float topMargin = midY - (textHeight / 2f);
+
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) remainingTimeText.getLayoutParams();
+        params.topMargin = Math.max(0, (int) topMargin);
+        params.bottomMargin = 0;
+        params.gravity = Gravity.START;
+        remainingTimeText.setLayoutParams(params);
+    }
+
+    private void positionExportFab()
+    {
+        if (chartView == null) return;
+
+        int chartH = chartView.getHeight();
+        if (chartH == 0) return;
+
+        float density = getResources().getDisplayMetrics().density;
+        float yThreshold = BatteryChartView.getThresholdY(chartH, density);
+        float yAxis = BatteryChartView.getXAxisY(chartH, density);
+        float midY = (yThreshold + yAxis) / 2f;
+
+        // Find the FAB from the root layout
+        View fab = findViewById(R.id.fab_battery_export);
+        if (fab == null) return;
+
+        int fabHeight = fab.getHeight();
+        if (fabHeight == 0) return;
+
+        float topMargin = midY - (fabHeight / 2f);
+
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) fab.getLayoutParams();
+        params.topMargin = Math.max(0, (int) topMargin);
+        params.bottomMargin = 0;
+        params.gravity = Gravity.END;
+        fab.setLayoutParams(params);
+    }
+
+    // -------------------------------------------------------------------------
+    // Scroll helpers
+    // -------------------------------------------------------------------------
+
     private void scrollXTo(int x) {
         programmaticScroll = true;
         scrollView.scrollTo(x, 0);
@@ -223,6 +425,14 @@ public class BatteryChartActivity extends AppCompatActivity
         int maxScroll = Math.max(0, chartView.getWidth() - scrollView.getWidth());
         scrollXTo(maxScroll);
     }
+
+    private int dp(int v) {
+        return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    private void postUi(Runnable r) { refreshHandler.post(r); }
+
+    private void toast(String msg) { Toast.makeText(this, msg, Toast.LENGTH_LONG).show(); }
 
     @Override
     protected void onResume() {

@@ -32,6 +32,9 @@ public class BatteryChartView extends View
     // --- CHANGE THIS VALUE TO ADJUST THE THRESHOLD GLOBALLY ---
     public static final int BATTERY_THRESHOLD_PERCENT = 15;
 
+    // --- CHANGE THIS VALUE TO ADJUST THE CHART LINE THICKNESS (in DP) ---
+    public static final float CHART_LINE_THICKNESS_DP = 5.0f;
+
     private float currentDpPerMinute = 6.0f;
 
     // Matrix zoom state
@@ -57,7 +60,7 @@ public class BatteryChartView extends View
     private void init()
     {
         linePaint.setColor(0xFF4CAF50);
-        linePaint.setStrokeWidth(HelperGeneric.dp2px(1.5f));
+        linePaint.setStrokeWidth(HelperGeneric.dp2px(CHART_LINE_THICKNESS_DP));
         linePaint.setStyle(Paint.Style.STROKE);
 
         gridPaint.setColor(Color.parseColor("#444444"));
@@ -73,6 +76,44 @@ public class BatteryChartView extends View
     }
 
     public static int getTotalSpanMinutes() { return 600 + RIGHT_PAD_MINUTES; }
+
+    /** Set the horizontal resolution (dp per minute) used by the NEXT measure/draw. Used for export. */
+    public void setDpPerMinute(float dp)
+    {
+        this.currentDpPerMinute = dp;
+    }
+
+    /** Returns the top margin in px for a given density. Used by both onDraw and export. */
+    public static float getMarginTop(float density) { return 20f * density; }
+
+    /** Returns the bottom margin in px for a given density. Used by both onDraw and export. */
+    public static float getMarginBottom(float density) { return 40f * density; }
+
+    /** Returns the left margin in px for a given density. */
+    public static float getMarginLeft(float density) { return 40f * density; }
+
+    /** Returns the right margin in px for a given density. */
+    public static float getMarginRight(float density) { return 20f * density; }
+
+    /**
+     * Computes the exact Y pixel of the threshold line for a given view height and density.
+     * Same formula used in onDraw() and in the export renderer.
+     */
+    public static float getThresholdY(int viewHeight, float density)
+    {
+        float mt = getMarginTop(density);
+        float mb = getMarginBottom(density);
+        float drawableH = viewHeight - mt - mb;
+        return mt + ((100f - BATTERY_THRESHOLD_PERCENT) / 100f) * drawableH;
+    }
+
+    /**
+     * Computes the exact Y pixel of the X-axis for a given view height and density.
+     */
+    public static float getXAxisY(int viewHeight, float density)
+    {
+        return viewHeight - getMarginBottom(density);
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
@@ -278,7 +319,6 @@ public class BatteryChartView extends View
         int index = battery_history_index;
         int size = BATTERY_HISTORY_SIZE;
 
-        // Need at least 2 data points to compute any rate
         if (count < 2) return RATE_INVALID;
 
         int idxFirst = (index - count + size) % size;
@@ -291,20 +331,16 @@ public class BatteryChartView extends View
         if (tsLast <= tsFirst) return RATE_INVALID;
 
         double hoursElapsed = (tsLast - tsFirst) / (1000.0 * 60.0 * 60.0);
-        // Need at least ~1 minute of elapsed time to avoid division-by-near-zero noise
         if (hoursElapsed < 0.016) return RATE_INVALID;
 
         float pctDrop = pctFirst - pctLast;
 
-        // Battery is charging or perfectly idle (no measurable drop at all)
         if (pctDrop <= 0f) {
             return RATE_CHARGING;
         }
 
-        // Calculate hourly drain rate — even tiny drops like 1% over several minutes are valid
         float rate = (float) (pctDrop / hoursElapsed);
 
-        // Only reject truly impossible sensor glitches (>100% per hour)
         if (rate > 100.0f) {
             return RATE_INVALID;
         }
