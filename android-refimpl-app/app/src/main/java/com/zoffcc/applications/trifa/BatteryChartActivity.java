@@ -41,6 +41,7 @@ public class BatteryChartActivity extends AppCompatActivity
             {
                 chartView.invalidate();
                 updateRemainingTime();
+                positionRemainingTimeText();
 
                 if (!userScrolledAway)
                 {
@@ -119,21 +120,55 @@ public class BatteryChartActivity extends AppCompatActivity
         rootLayout.addView(scrollView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        // Top overlay for remaining time (Added LAST so it draws ON TOP of the ScrollView)
+        // Overlay for remaining time, positioned at exact midpoint between threshold line and X-axis
         remainingTimeText = new TextView(this);
         remainingTimeText.setTextColor(Color.WHITE);
         remainingTimeText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, HelperGeneric.dp2px(14f));
-        remainingTimeText.setPadding((int) HelperGeneric.dp2px(16f), (int) HelperGeneric.dp2px(16f), (int) HelperGeneric.dp2px(16f), (int) HelperGeneric.dp2px(8f));
+        remainingTimeText.setPadding((int) HelperGeneric.dp2px(16f), 0, (int) HelperGeneric.dp2px(16f), 0);
         remainingTimeText.setText("Estimating remaining time...");
 
         FrameLayout.LayoutParams textParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-        textParams.gravity = Gravity.TOP;
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        textParams.gravity = Gravity.BOTTOM | Gravity.START;
         rootLayout.addView(remainingTimeText, textParams);
 
         setContentView(rootLayout);
-        scrollView.post(this::scroll_to_now);
+        scrollView.post(() -> {
+            scroll_to_now();
+            positionRemainingTimeText();
+        });
         updateRemainingTime();
+    }
+
+    private void positionRemainingTimeText()
+    {
+        if (chartView == null || remainingTimeText == null) return;
+
+        int chartH = chartView.getHeight();
+        if (chartH == 0) return;
+
+        float marginTop = HelperGeneric.dp2px(20f);
+        float marginBottom = HelperGeneric.dp2px(40f);
+        float drawableChartH = chartH - marginTop - marginBottom;
+
+        // Y position of the 15% threshold line (from top of view)
+        float yThreshold = marginTop + ((100f - BatteryChartView.BATTERY_THRESHOLD_PERCENT) / 100f) * drawableChartH;
+
+        // Y position of the X-axis (bottom of drawable area)
+        float yAxis = chartH - marginBottom;
+
+        // Exact midpoint between threshold line and X-axis
+        float midY = (yThreshold + yAxis) / 2f;
+
+        // Center the text vertically on that midpoint
+        int textHeight = remainingTimeText.getHeight();
+        float topMargin = midY - (textHeight / 2f);
+
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) remainingTimeText.getLayoutParams();
+        params.topMargin = Math.max(0, (int) topMargin);
+        params.bottomMargin = 0;
+        params.gravity = Gravity.START;
+        remainingTimeText.setLayoutParams(params);
     }
 
     private void updateRemainingTime()
