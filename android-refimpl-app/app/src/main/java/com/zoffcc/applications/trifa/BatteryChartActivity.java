@@ -150,32 +150,27 @@ public class BatteryChartActivity extends AppCompatActivity
             remainingTimeText.setText("Phone is charging or idle");
         } else if (rate == BatteryChartView.RATE_INVALID) {
             remainingTimeText.setText("Calculating battery drain rate...");
-        } else if (current <= 10.0f) {
-            remainingTimeText.setText("Battery is already below 10%");
-        } else if (rate > 0.0001f) {
-            float percentToDrop = current - 10.0f;
+        } else if (current <= 15.0f) {
+            remainingTimeText.setText("Battery is already below 15%");
+        } else if (rate > 0f) {
+            float percentToDrop = current - 15.0f;
             float hoursRemaining = percentToDrop / rate;
 
-            // Sanity Check: If the remaining time is absurdly high (e.g. > 30 days)
-            if (hoursRemaining > 720.0f) {
-                remainingTimeText.setText("Est. time until <10%: > 30 days");
+            int totalHours = (int) hoursRemaining;
+            int minutes = (int) ((hoursRemaining - totalHours) * 60);
+
+            int days = totalHours / 24;
+            int hours = totalHours % 24;
+
+            String timeStr;
+            if (days > 0) {
+                timeStr = String.format(Locale.US, "Est. time until <15%%: %d days %d hours", days, hours);
+            } else if (hours > 0) {
+                timeStr = String.format(Locale.US, "Est. time until <15%%: %d hours %d minutes", hours, minutes);
             } else {
-                int totalHours = (int) hoursRemaining;
-                int minutes = (int) ((hoursRemaining - totalHours) * 60);
-
-                int days = totalHours / 24;
-                int hours = totalHours % 24;
-
-                String timeStr;
-                if (days > 0) {
-                    timeStr = String.format(Locale.US, "Est. time until <10%%: %d days %d hours", days, hours);
-                } else if (hours > 0) {
-                    timeStr = String.format(Locale.US, "Est. time until <10%%: %d hours %d minutes", hours, minutes);
-                } else {
-                    timeStr = String.format(Locale.US, "Est. time until <10%%: %d minutes", minutes);
-                }
-                remainingTimeText.setText(timeStr);
+                timeStr = String.format(Locale.US, "Est. time until <15%%: %d minutes", minutes);
             }
+            remainingTimeText.setText(timeStr);
         } else {
             remainingTimeText.setText("Calculating battery drain rate...");
         }

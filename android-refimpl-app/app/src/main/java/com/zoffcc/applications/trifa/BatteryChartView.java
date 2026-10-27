@@ -192,16 +192,16 @@ public class BatteryChartView extends View
             if (i > 0 && i < 100) canvas.drawLine(marginLeft, y, w - marginRight, y, gridPaint);
         }
 
-        // 10% threshold line
-        float y10 = h - marginBottom - (10f / 100f) * chartH;
+        // 15% threshold line
+        float y15 = h - marginBottom - (15f / 100f) * chartH;
         Paint thresholdPaint = new Paint(gridPaint);
         thresholdPaint.setColor(Color.RED);
         thresholdPaint.setTextSize(HelperGeneric.dp2px(15f));
         thresholdPaint.setFakeBoldText(true);
-        canvas.drawLine(marginLeft, y10, w - marginRight, y10, thresholdPaint);
-        canvas.drawText("10% threshold", marginLeft + HelperGeneric.dp2px(10f), y10 - HelperGeneric.dp2px(4f), thresholdPaint);
+        canvas.drawLine(marginLeft, y15, w - marginRight, y15, thresholdPaint);
+        canvas.drawText("15% threshold", marginLeft + HelperGeneric.dp2px(10f), y15 - HelperGeneric.dp2px(4f), thresholdPaint);
 
-        // X-axis labels (hours)
+        // X-axis labels (every hour)
         for (int hh = 0; hh <= 10; hh += 1) {
             long ts = now - (hh * 60L * 60L * 1000L);
             float x = marginLeft + ((ts - startTs) / 60000f) * minuteWidthPx;
@@ -275,7 +275,7 @@ public class BatteryChartView extends View
         int index = battery_history_index;
         int size = BATTERY_HISTORY_SIZE;
 
-        // Sanity Check: Need at least 2 data points (60 seconds) of history to make a prediction
+        // Need at least 2 data points to compute any rate
         if (count < 2) return RATE_INVALID;
 
         int idxFirst = (index - count + size) % size;
@@ -288,22 +288,22 @@ public class BatteryChartView extends View
         if (tsLast <= tsFirst) return RATE_INVALID;
 
         double hoursElapsed = (tsLast - tsFirst) / (1000.0 * 60.0 * 60.0);
-        // Sanity Check: Need at least ~1 minute (0.016 hours) of elapsed time to avoid noise
+        // Need at least ~1 minute of elapsed time to avoid division-by-near-zero noise
         if (hoursElapsed < 0.016) return RATE_INVALID;
 
         float pctDrop = pctFirst - pctLast;
 
-        // Calculate the hourly drain rate immediately so we can apply scale-invariant sanity checks
-        float rate = (float) (pctDrop / hoursElapsed);
-
-        // Sanity Check: Unrealistically high drain rate (e.g. > 50% per hour usually means a sensor glitch)
-        if (rate > 50.0f) {
-            return RATE_INVALID;
+        // Battery is charging or perfectly idle (no measurable drop at all)
+        if (pctDrop <= 0f) {
+            return RATE_CHARGING;
         }
 
-        // Sanity Check: Phone is charging, idle, or hovering (drain rate < 1% per hour)
-        if (rate < 1.0f) {
-            return RATE_CHARGING;
+        // Calculate hourly drain rate — even tiny drops like 1% over several minutes are valid
+        float rate = (float) (pctDrop / hoursElapsed);
+
+        // Only reject truly impossible sensor glitches (>100% per hour)
+        if (rate > 100.0f) {
+            return RATE_INVALID;
         }
 
         return rate;
