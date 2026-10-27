@@ -103,7 +103,6 @@ import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_loca
 import static com.zoffcc.applications.trifa.MainActivity.cache_pubkey_fnum;
 import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.get_my_toxid;
-import static com.zoffcc.applications.trifa.MainActivity.global_battery_percent;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.own_speed_badge;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_get_connection_status;
@@ -120,6 +119,7 @@ import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_name;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_status_message;
 import static com.zoffcc.applications.trifa.MainActivity.tox_service_fg;
 import static com.zoffcc.applications.trifa.MainActivity.tox_util_friend_resend_message_v2;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_HISTORY_SIZE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP1;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP2;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP3;
@@ -143,8 +143,13 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_BOOTSTRAP_MIN_INTER
 import static com.zoffcc.applications.trifa.TRIFAGlobals.TOX_MIN_NORMAL_ITERATE_DELTA_MS;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.USE_MAX_NUMBER_OF_BOOTSTRAP_NODES;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.USE_MAX_NUMBER_OF_BOOTSTRAP_TCP_RELAYS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_count;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_index;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_ts;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.bootstrap_node_list;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.bootstrapping;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_battery_percent;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_for_battery_savings_ts;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_incoming_ft_ts;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_outgoung_ft_ts;
@@ -1069,6 +1074,14 @@ public class TrifaToxService extends Service
                     {
                         last_check_battery_percent_ms = System.currentTimeMillis();
                         global_battery_percent = get_battery_percent();
+
+                        battery_history_ts[battery_history_index] = last_check_battery_percent_ms;
+                        battery_history[battery_history_index] = global_battery_percent;
+                        battery_history_index = (battery_history_index + 1) % BATTERY_HISTORY_SIZE;
+                        if (battery_history_count < BATTERY_HISTORY_SIZE)
+                        {
+                            battery_history_count++;
+                        }
                     }
                 }
                 // ------- MAIN TOX LOOP ---------------------------------------------------------------

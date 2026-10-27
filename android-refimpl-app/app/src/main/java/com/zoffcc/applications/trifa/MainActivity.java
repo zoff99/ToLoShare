@@ -255,6 +255,8 @@ import static com.zoffcc.applications.trifa.TrifaToxService.vfs;
 import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_CAR;
 import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_FOOT;
 import static org.osmdroid.bonuspack.routing.Road.STATUS_OK;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.global_battery_percent;
+
 
 /*
 
@@ -583,8 +585,6 @@ public class MainActivity extends BaseProtectedActivity
     static String versionName = "";
     static int versionCode = -1;
     static PackageInfo packageInfo_s = null;
-    static final float BATTERY_PERCENT_UNKNOWN = -99f;
-    static float global_battery_percent = BATTERY_PERCENT_UNKNOWN;
     IntentFilter receiverFilter1 = null;
     IntentFilter receiverFilter2 = null;
     IntentFilter receiverFilter3 = null;

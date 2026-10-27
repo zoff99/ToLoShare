@@ -135,6 +135,7 @@ public class MaintenanceActivity extends AppCompatActivity implements StrongBuil
     Button button_test_notification;
     Button button_test_ringtone;
     Button button_iobrowser_start;
+    Button button_netprofiler_start;
     Button button_audio_roundtrip_test_start;
     Button button_export_savedata;
     Button button_export_encrypted_files;
@@ -179,6 +180,7 @@ public class MaintenanceActivity extends AppCompatActivity implements StrongBuil
         button_reset_nodelist = (Button) findViewById(R.id.button_reset_nodelist);
         button_test_notification = (Button) findViewById(R.id.button_test_notification);
         button_test_ringtone = (Button) findViewById(R.id.button_test_ringtone);
+        button_netprofiler_start = (Button) findViewById(R.id.button_netprofiler_start);
         button_iobrowser_start = (Button) findViewById(R.id.button_iobrowser_start);
         button_audio_roundtrip_test_start = (Button) findViewById(R.id.button_audio_roundtrip_test_start);
         button_export_savedata = (Button) findViewById(R.id.button_export_savedata);
@@ -201,6 +203,23 @@ public class MaintenanceActivity extends AppCompatActivity implements StrongBuil
                 try
                 {
                     Intent intent = new Intent(getBaseContext(), IOBrowser.class);
+                    startActivity(intent);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        button_netprofiler_start.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                try
+                {
+                    Intent intent = new Intent(v.getContext(), BatteryChartActivity.class);
                     startActivity(intent);
                 }
                 catch (Exception e)

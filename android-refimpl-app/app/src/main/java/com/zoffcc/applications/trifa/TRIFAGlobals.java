@@ -71,8 +71,17 @@ public class TRIFAGlobals
 
     final static int RESEND_MSGS_DELTA_SECS = 60 * 10; // 10 minutes;
     final static int RESEND_FILETRANSFERS_DELTA_SECS = 5 * 10; // 5 minutes;
-    final static int CHECK_BATTERY_PERCENT_DELTA_SECS = 60 * 2; // 2 minutes;
+    final static int CHECK_BATTERY_PERCENT_DELTA_SECS = 60 * 1; // 1 minutes;
     final static float BATTERY_PERCENT_OFFLINE_THRESHOLD = 20; // if lower than 20% battery then add more sleeps in tox loop
+
+    static final float BATTERY_PERCENT_UNKNOWN = -99f;
+    static float global_battery_percent = BATTERY_PERCENT_UNKNOWN;
+
+    public static final int BATTERY_HISTORY_SIZE = 600; // 10 hours * 60 minutes
+    public static float[] battery_history = new float[BATTERY_HISTORY_SIZE];
+    public static long[] battery_history_ts = new long[BATTERY_HISTORY_SIZE];
+    public static int battery_history_index = 0;
+    public static int battery_history_count = 0;
 
     static int AUTO_ACCEPT_FT_MAX_IMAGE_SIZE_IN_MB = 200;
     static int AUTO_ACCEPT_FT_MAX_VIDEO_SIZE_IN_MB = 20 * 1024;

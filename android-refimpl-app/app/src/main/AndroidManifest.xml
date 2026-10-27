@@ -190,6 +190,13 @@
         </activity>
 
         <activity
+            android:name=".BatteryChartActivity"
+            android:configChanges="screenSize|locale|touchscreen|navigation|orientation|fontScale|keyboard|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+        <activity
             android:name=".WrongCredentials"
             android:label="@string/title_activity_wrong_credentials">
         </activity>
