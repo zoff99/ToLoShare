@@ -1076,6 +1076,9 @@ public class TrifaToxService extends Service
 
                         show_low_batt_warning();
 
+                        tox_notification_change_wrapper(0, ""); // set to offline
+                        set_all_friends_offline();
+
                         // Halt the tox iteration loop indefinitely until stop_me is triggered
                         while (!stop_me)
                         {
