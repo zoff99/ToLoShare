@@ -250,6 +250,7 @@ import static com.zoffcc.applications.trifa.TrifaToxService.TOX_SERVICE_STARTED;
 import static com.zoffcc.applications.trifa.TrifaToxService.is_tox_started;
 import static com.zoffcc.applications.trifa.TrifaToxService.manually_logged_out;
 import static com.zoffcc.applications.trifa.TrifaToxService.orma;
+import static com.zoffcc.applications.trifa.TrifaToxService.show_low_batt_warning;
 import static com.zoffcc.applications.trifa.TrifaToxService.vfs;
 import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_CAR;
 import static org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_FOOT;
@@ -2684,6 +2685,7 @@ public class MainActivity extends BaseProtectedActivity
             friend_locations_reinit();
             f_tracker.repaint_all();
             rebuildAllTrails();
+            show_low_batt_warning();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2760,6 +2762,7 @@ public class MainActivity extends BaseProtectedActivity
                     friend_locations_reinit();
                     f_tracker.repaint_all();
                     rebuildAllTrails();
+                    show_low_batt_warning();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -5094,6 +5097,7 @@ public class MainActivity extends BaseProtectedActivity
             f_tracker.repaint_all();
 
             rebuildAllTrails();
+            show_low_batt_warning();
         }
         else
         {

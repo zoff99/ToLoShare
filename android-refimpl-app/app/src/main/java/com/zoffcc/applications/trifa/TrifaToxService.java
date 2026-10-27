@@ -1074,30 +1074,7 @@ public class TrifaToxService extends Service
                         // Stop the location tracking service completely
                         CaptureService.stopLocationUpdatesGlobally();
 
-                        // Show warning on UI thread
-                        try
-                        {
-                            if (MainActivity.main_handler_s != null)
-                            {
-                                MainActivity.main_handler_s.post(() -> {
-                                    try
-                                    {
-                                        if (lowBatteryWarningContainer != null)
-                                        {
-                                            lowBatteryWarningContainer.setVisibility(View.VISIBLE);
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        e.printStackTrace();
-                                    }
-                                });
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
+                        show_low_batt_warning();
 
                         // Halt the tox iteration loop indefinitely until stop_me is triggered
                         while (!stop_me)
@@ -1159,6 +1136,37 @@ public class TrifaToxService extends Service
         };
 
         ToxServiceThread.start();
+    }
+
+    static void show_low_batt_warning()
+    {
+        if (global_battery_percent < BATTERY_PERCENT_OFFLINE_THRESHOLD)
+        {
+            // Show warning on UI thread
+            try
+            {
+                if (MainActivity.main_handler_s != null)
+                {
+                    MainActivity.main_handler_s.post(() -> {
+                        try
+                        {
+                            if (lowBatteryWarningContainer != null)
+                            {
+                                lowBatteryWarningContainer.setVisibility(View.VISIBLE);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void update_friends_and_groups()
