@@ -563,6 +563,40 @@
 
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:id="@+id/low_battery_warning_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|center_horizontal"
+                        android:layout_marginTop="24dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/icon_low_battery_warning"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:src="@android:drawable/ic_dialog_alert"
+                            android:tint="#FF0000" />
+
+                        <TextView
+                            android:id="@+id/text_low_battery_warning"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Battery Low!\nApp Halted"
+                            android:textColor="#FF0000"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:shadowColor="#000000"
+                            android:shadowDx="2"
+                            android:shadowDy="2"
+                            android:shadowRadius="2"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
                 </FrameLayout>
 
             </LinearLayout>

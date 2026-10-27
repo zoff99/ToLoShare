@@ -33,9 +33,9 @@ import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
 
 import com.zoffcc.applications.sorm.FriendList;
-import com.zoffcc.applications.sorm.Message;
 import com.zoffcc.applications.sorm.OrmaDatabase;
 
 import java.io.File;
@@ -53,19 +53,13 @@ import static com.zoffcc.applications.trifa.BootstrapNodeEntryDB.get_tcprelay_no
 import static com.zoffcc.applications.trifa.BootstrapNodeEntryDB.get_udp_nodelist_from_db;
 import static com.zoffcc.applications.trifa.CombinedFriendsAndConferences.COMBINED_IS_FRIEND;
 import static com.zoffcc.applications.trifa.HelperFiletransfer.set_all_filetransfers_inactive;
-import static com.zoffcc.applications.trifa.HelperFiletransfer.start_outgoing_ft;
 import static com.zoffcc.applications.trifa.HelperFriend.add_friend_real_norequest;
-import static com.zoffcc.applications.trifa.HelperFriend.friend_call_push_url;
 import static com.zoffcc.applications.trifa.HelperFriend.get_friend_msgv3_capability;
-import static com.zoffcc.applications.trifa.HelperFriend.is_friend_online;
-import static com.zoffcc.applications.trifa.HelperFriend.is_friend_online_real;
 import static com.zoffcc.applications.trifa.HelperFriend.main_get_friend;
 import static com.zoffcc.applications.trifa.HelperFriend.set_all_friends_offline;
-import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_by_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperFriend.tox_friend_get_public_key__wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.IPisValid;
 import static com.zoffcc.applications.trifa.HelperGeneric.append_logger_msg;
-import static com.zoffcc.applications.trifa.HelperGeneric.battery_saving_can_sleep;
 import static com.zoffcc.applications.trifa.HelperGeneric.bootstrap_single_wrapper;
 import static com.zoffcc.applications.trifa.HelperGeneric.bytebuffer_to_hexstring;
 import static com.zoffcc.applications.trifa.HelperGeneric.del_g_opts;
@@ -73,29 +67,20 @@ import static com.zoffcc.applications.trifa.HelperGeneric.get_battery_percent;
 import static com.zoffcc.applications.trifa.HelperGeneric.get_combined_connection_status;
 import static com.zoffcc.applications.trifa.HelperGeneric.get_g_opts;
 import static com.zoffcc.applications.trifa.HelperGeneric.get_toxconnection_wrapper;
-import static com.zoffcc.applications.trifa.HelperGeneric.hex_to_bytes;
 import static com.zoffcc.applications.trifa.HelperGeneric.isIPPortValid;
 import static com.zoffcc.applications.trifa.HelperGeneric.is_valid_tox_public_key;
 import static com.zoffcc.applications.trifa.HelperGeneric.long_date_time_format;
 import static com.zoffcc.applications.trifa.HelperGeneric.long_date_time_format_or_empty;
 import static com.zoffcc.applications.trifa.HelperGeneric.set_g_opts;
-import static com.zoffcc.applications.trifa.HelperGeneric.tox_friend_resend_msgv3_wrapper;
-import static com.zoffcc.applications.trifa.HelperGeneric.tox_friend_send_message_wrapper;
-import static com.zoffcc.applications.trifa.HelperGeneric.trigger_proper_wakeup_from_tox_service_thread;
 import static com.zoffcc.applications.trifa.HelperGeneric.trigger_proper_wakeup_outside_tox_service_thread;
 import static com.zoffcc.applications.trifa.HelperGeneric.vfs__unmount;
-import static com.zoffcc.applications.trifa.HelperMessage.update_message_in_db_messageid;
-import static com.zoffcc.applications.trifa.HelperMessage.update_message_in_db_no_read_recvedts;
-import static com.zoffcc.applications.trifa.HelperMessage.update_message_in_db_resend_count;
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_cancel;
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_change;
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_change_wrapper;
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_setup;
 import static com.zoffcc.applications.trifa.MainActivity.DEBUG_BATTERY_OPTIMIZATION_LOGGING;
 import static com.zoffcc.applications.trifa.MainActivity.DEBUG_USE_LOGFRIEND;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__X_battery_saving_mode;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__force_udp_only;
-import static com.zoffcc.applications.trifa.MainActivity.PREF__use_push_service;
 import static com.zoffcc.applications.trifa.MainActivity.SD_CARD_FILES_DEBUG_DIR;
 import static com.zoffcc.applications.trifa.MainActivity.VFS_ENCRYPT;
 import static com.zoffcc.applications.trifa.MainActivity.cache_fnum_pubkey;
@@ -103,10 +88,10 @@ import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_loca
 import static com.zoffcc.applications.trifa.MainActivity.cache_pubkey_fnum;
 import static com.zoffcc.applications.trifa.MainActivity.context_s;
 import static com.zoffcc.applications.trifa.MainActivity.get_my_toxid;
+import static com.zoffcc.applications.trifa.MainActivity.lowBatteryWarningContainer;
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.own_speed_badge;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_get_connection_status;
-import static com.zoffcc.applications.trifa.MainActivity.tox_iterate;
 import static com.zoffcc.applications.trifa.MainActivity.tox_iteration_interval;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_capabilites;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_capabilities;
@@ -118,12 +103,12 @@ import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_status_mes
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_name;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_set_status_message;
 import static com.zoffcc.applications.trifa.MainActivity.tox_service_fg;
-import static com.zoffcc.applications.trifa.MainActivity.tox_util_friend_resend_message_v2;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_HISTORY_SIZE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP1;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP2;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_LAST_SLEEP3;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_OPTIMIZATION_SLEEP_IN_MILLIS;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_PERCENT_OFFLINE_THRESHOLD;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CHECK_BATTERY_PERCENT_DELTA_SECS;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.HAVE_INTERNET_CONNECTIVITY;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.LOGFRIEND_ON_STARTUP_DONE_DB_KEY;
@@ -131,7 +116,6 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.LOGFRIEND_TOXID_DB_KEY;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.LOG_FRIEND_INIT_NAME;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.LOG_FRIEND_INIT_STATUSMSG;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.LOG_FRIEND_TOXID;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.MAX_TEXTMSG_RESEND_COUNT_OLDMSG_VERSION;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_TCP_IP;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_TCP_KEYHEX;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.PREF_KEY_CUSTOM_BOOTSTRAP_TCP_PORT;
@@ -151,8 +135,6 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.bootstrap_node_list;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.bootstrapping;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_battery_percent;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_for_battery_savings_ts;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_incoming_ft_ts;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_activity_outgoung_ft_ts;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_last_bootstrap_ts;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_my_name;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_my_status_message;
@@ -160,11 +142,8 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.global_my_toxid;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_self_connection_status;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_self_last_entered_battery_saving_timestamp;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.global_self_last_went_offline_timestamp;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.global_showing_mainview;
-import static com.zoffcc.applications.trifa.TRIFAGlobals.global_showing_messageview;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.tcprelay_node_list;
 import static com.zoffcc.applications.trifa.ToxVars.TOX_CONNECTION.TOX_CONNECTION_NONE;
-import static com.zoffcc.applications.trifa.ToxVars.TOX_FILE_CONTROL.TOX_FILE_CONTROL_CANCEL;
 import static com.zoffcc.applications.trifa.ToxVars.TOX_HASH_LENGTH;
 
 public class TrifaToxService extends Service
@@ -1081,6 +1060,56 @@ public class TrifaToxService extends Service
                         if (battery_history_count < BATTERY_HISTORY_SIZE)
                         {
                             battery_history_count++;
+                        }
+                    }
+
+                    if (global_battery_percent < BATTERY_PERCENT_OFFLINE_THRESHOLD)
+                    {
+                        // HINT: stop everything in this case
+                        //       stop GPS updates and halt the tox thread
+
+                        // Permanently disable GPS provider flag to prevent any future requests
+                        MainActivity.PREF__loc_provider_GPS = false;
+
+                        // Stop the location tracking service completely
+                        CaptureService.stopLocationUpdatesGlobally();
+
+                        // Show warning on UI thread
+                        try
+                        {
+                            if (MainActivity.main_handler_s != null)
+                            {
+                                MainActivity.main_handler_s.post(() -> {
+                                    try
+                                    {
+                                        if (lowBatteryWarningContainer != null)
+                                        {
+                                            lowBatteryWarningContainer.setVisibility(View.VISIBLE);
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        // Halt the tox iteration loop indefinitely until stop_me is triggered
+                        while (!stop_me)
+                        {
+                            try
+                            {
+                                Thread.sleep(5000);
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }

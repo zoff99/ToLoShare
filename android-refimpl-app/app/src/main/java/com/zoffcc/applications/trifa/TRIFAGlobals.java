@@ -72,7 +72,7 @@ public class TRIFAGlobals
     final static int RESEND_MSGS_DELTA_SECS = 60 * 10; // 10 minutes;
     final static int RESEND_FILETRANSFERS_DELTA_SECS = 5 * 10; // 5 minutes;
     final static int CHECK_BATTERY_PERCENT_DELTA_SECS = 60 * 1; // 1 minutes;
-    final static float BATTERY_PERCENT_OFFLINE_THRESHOLD = 20; // if lower than 20% battery then add more sleeps in tox loop
+    final static float BATTERY_PERCENT_OFFLINE_THRESHOLD = 15; // if lower than 15% battery then stop everything for safety
 
     static final float BATTERY_PERCENT_UNKNOWN = -99f;
     static float global_battery_percent = BATTERY_PERCENT_UNKNOWN;

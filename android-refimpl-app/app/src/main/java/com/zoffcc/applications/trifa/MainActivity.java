@@ -201,7 +201,6 @@ import static com.zoffcc.applications.trifa.HelperRelay.have_own_relay;
 import static com.zoffcc.applications.trifa.HelperRelay.is_any_relay;
 import static com.zoffcc.applications.trifa.HelperRelay.own_push_token_load;
 import static com.zoffcc.applications.trifa.HelperToxNotification.tox_notification_change_wrapper;
-import static com.zoffcc.applications.trifa.MessageListActivity.ml_friend_typing;
 import static com.zoffcc.applications.trifa.NorthingOverlay.set_northing_callback;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONNECTION_STATUS_MANUAL_LOGOUT;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.DELETE_SQL_AND_VFS_ON_ERROR;
@@ -361,6 +360,8 @@ public class MainActivity extends BaseProtectedActivity
     private int hudDragStartHeight = 0;
     private boolean hudDragging = false;
     private android.view.VelocityTracker hudVelocityTracker = null;
+
+    static View lowBatteryWarningContainer = null;
 
     static RoadManager roadManager = null;
     static ExecutorService routing_executor = Executors.newSingleThreadExecutor();
@@ -806,6 +807,8 @@ public class MainActivity extends BaseProtectedActivity
         online_count.removeAll();
         online_count.setTriangleColor(Color.GRAY);
         online_count.setDirection(TriangleTextView.Direction.CIRCLE);
+
+        lowBatteryWarningContainer = findViewById(R.id.low_battery_warning_container);
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);

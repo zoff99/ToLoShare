@@ -85,8 +85,8 @@ public class CaptureService extends Service
     NotificationManager nmn_gps = null;
     NotificationChannel notification_channel_gpsservice = null;
     String channelId_gps = "chl_svc1";
-    LocationManager locationManager = null;
-    LocationListenerCompat mLocationListener = null;
+    static LocationManager locationManager = null;
+    static LocationListenerCompat mLocationListener = null;
     static PowerManager.WakeLock capture_location_wakeLock = null;
     static int ONGOING_GPS_NOTIFICATION_ID = 1491;
     final static String GEO_COORD_PROTO_MAGIC = "TzGeo"; // must be exactly 5 char wide
@@ -795,7 +795,19 @@ public class CaptureService extends Service
     /** @noinspection unused*/
     public void stopLocationTracking()
     {
-        locationManager.removeUpdates(mLocationListener);
+        stopLocationUpdatesGlobally();
+    }
+
+    public static void stopLocationUpdatesGlobally()
+    {
+        try
+        {
+            if (locationManager != null && mLocationListener != null)
+            {
+                locationManager.removeUpdates(mLocationListener);
+            }
+        }
+        catch (Exception ignored) {}
     }
 
     /** Determines whether one Location reading is better than the current Location fix
