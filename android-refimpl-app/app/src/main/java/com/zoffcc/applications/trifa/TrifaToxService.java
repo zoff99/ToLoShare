@@ -92,6 +92,7 @@ import static com.zoffcc.applications.trifa.MainActivity.lowBatteryWarningContai
 import static com.zoffcc.applications.trifa.MainActivity.main_handler_s;
 import static com.zoffcc.applications.trifa.MainActivity.own_speed_badge;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_get_connection_status;
+import static com.zoffcc.applications.trifa.MainActivity.tox_get_estimated_cpu_cycles;
 import static com.zoffcc.applications.trifa.MainActivity.tox_iteration_interval;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_capabilites;
 import static com.zoffcc.applications.trifa.MainActivity.tox_self_get_capabilities;
@@ -1061,6 +1062,26 @@ public class TrifaToxService extends Service
                         {
                             battery_history_count++;
                         }
+
+                        // --- CPU CYCLES DELTA TRACKING ---
+                        long cpuCyclesRaw = MainActivity.tox_get_estimated_cpu_cycles();
+                        long cpuCyclesNow = Math.max(cpuCyclesRaw, 0);
+
+                        if (TRIFAGlobals.last_cpu_cycles_raw > 0)
+                        {
+                            long cpuDelta = cpuCyclesNow - TRIFAGlobals.last_cpu_cycles_raw;
+                            if (cpuDelta < 0) cpuDelta = 0; // counter wrapped or reset
+
+                            TRIFAGlobals.cpu_history_ts[TRIFAGlobals.cpu_history_index] = last_check_battery_percent_ms;
+                            TRIFAGlobals.cpu_history[TRIFAGlobals.cpu_history_index] = cpuDelta;
+                            TRIFAGlobals.cpu_history_index = (TRIFAGlobals.cpu_history_index + 1) % TRIFAGlobals.CPU_HISTORY_SIZE;
+                            if (TRIFAGlobals.cpu_history_count < TRIFAGlobals.CPU_HISTORY_SIZE)
+                            {
+                                TRIFAGlobals.cpu_history_count++;
+                            }
+                        }
+
+                        TRIFAGlobals.last_cpu_cycles_raw = cpuCyclesNow;
                     }
 
                     if (global_battery_percent < BATTERY_PERCENT_OFFLINE_THRESHOLD)

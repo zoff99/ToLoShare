@@ -17,10 +17,15 @@ import java.util.Date;
 import java.util.Locale;
 
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_HISTORY_SIZE;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.CPU_HISTORY_SIZE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_count;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_index;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_ts;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.cpu_history;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.cpu_history_count;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.cpu_history_index;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.cpu_history_ts;
 
 public class BatteryChartView extends View
 {
@@ -32,8 +37,11 @@ public class BatteryChartView extends View
     // --- CHANGE THIS VALUE TO ADJUST THE THRESHOLD GLOBALLY ---
     public static final int BATTERY_THRESHOLD_PERCENT = 15;
 
-    // --- CHANGE THIS VALUE TO ADJUST THE CHART LINE THICKNESS (in DP) ---
+    // --- CHANGE THIS VALUE TO ADJUST THE BATTERY LINE THICKNESS (in DP) ---
     public static final float CHART_LINE_THICKNESS_DP = 5.0f;
+
+    // --- CHANGE THIS VALUE TO ADJUST THE CPU LINE THICKNESS (in DP) ---
+    public static final float CPU_LINE_THICKNESS_DP = 3.0f;
 
     private float currentDpPerMinute = 6.0f;
 
@@ -43,6 +51,7 @@ public class BatteryChartView extends View
     private float livePivotX = 0f;
 
     private final Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint cpuLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gridPaint = new Paint();
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisPaint = new Paint();
@@ -62,6 +71,10 @@ public class BatteryChartView extends View
         linePaint.setColor(0xFF4CAF50);
         linePaint.setStrokeWidth(HelperGeneric.dp2px(CHART_LINE_THICKNESS_DP));
         linePaint.setStyle(Paint.Style.STROKE);
+
+        cpuLinePaint.setColor(0xFF2196F3); // Blue for CPU cycles
+        cpuLinePaint.setStrokeWidth(HelperGeneric.dp2px(CPU_LINE_THICKNESS_DP));
+        cpuLinePaint.setStyle(Paint.Style.STROKE);
 
         gridPaint.setColor(Color.parseColor("#444444"));
         gridPaint.setStrokeWidth(HelperGeneric.dp2px(0.5f));
@@ -254,7 +267,38 @@ public class BatteryChartView extends View
             if (hh > 0 && hh < 10) canvas.drawLine(x, marginTop, x, h - marginBottom, gridPaint);
         }
 
-        // Draw battery history line
+        // --- Draw CPU cycles line (scaled to fit chart height) ---
+        long cpuMax = 1;
+        for (int offset = 0; offset < cpu_history_count; offset++) {
+            int idx = (cpu_history_index - cpu_history_count + offset + CPU_HISTORY_SIZE) % CPU_HISTORY_SIZE;
+            if (cpu_history[idx] > cpuMax) cpuMax = cpu_history[idx];
+        }
+
+        Path cpuPath = new Path();
+        boolean cpuFirstPoint = true;
+        for (int offset = 0; offset < cpu_history_count; offset++) {
+            int idx = (cpu_history_index - cpu_history_count + offset + CPU_HISTORY_SIZE) % CPU_HISTORY_SIZE;
+            long ts = cpu_history_ts[idx];
+            long cycles = cpu_history[idx];
+            if (ts <= 0 || ts < startTs) continue;
+            if (ts > now) break;
+
+            float x = marginLeft + ((ts - startTs) / 60000f) * minuteWidthPx;
+            float normalized = (float) cycles / (float) cpuMax;
+            float y = h - marginBottom - normalized * chartH;
+
+            if (cpuFirstPoint) {
+                cpuPath.moveTo(x, y);
+                cpuFirstPoint = false;
+            } else {
+                cpuPath.lineTo(x, y);
+            }
+        }
+        if (!cpuFirstPoint) {
+            canvas.drawPath(cpuPath, cpuLinePaint);
+        }
+
+        // --- Draw battery history line ---
         Path chartPath = new Path();
         boolean firstPoint = true;
         int count = battery_history_count;
