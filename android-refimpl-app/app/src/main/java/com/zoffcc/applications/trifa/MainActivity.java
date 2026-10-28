@@ -114,6 +114,7 @@ import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.FolderOverlay;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
@@ -391,6 +392,19 @@ public class MainActivity extends BaseProtectedActivity
     static String own_location_txt = "";
     static String own_location_time_txt = "";
     static long own_location_last_ts_millis = 0;
+
+    // --- MAP LAYER FOLDERS (z-order is determined by the order these are added to map.getOverlays()) ---
+    // Order: touch → friendTrails → selfTrail → roads → friendIcons → ownLocation → speedBadge → northing → scaleBar
+    static FolderOverlay folder_touch = null;
+    static FolderOverlay folder_friend_trails = null;
+    static FolderOverlay folder_self_trail = null;
+    static FolderOverlay folder_roads = null;
+    static FolderOverlay folder_friend_icons = null;
+    static FolderOverlay folder_own_location = null;
+    static FolderOverlay folder_speed_badge = null;
+    static FolderOverlay folder_northing = null;
+    static FolderOverlay folder_scalebar = null;
+
     //**MOCK**// private MockLocationSimulator simulator;
     //**MOCK**// static int NUMBER_OF_MOCK_FRIENDS = 3;
     //**MOCK**// private MockFriendLocationSimulator[] friend_simulator;
@@ -2926,7 +2940,7 @@ public class MainActivity extends BaseProtectedActivity
                 {
                     roadOverlay = RoadManager.buildRoadOverlay(road, Color.CYAN, dp_to_px(6));
                 }
-                map.getOverlays().add(roadOverlay);
+                folder_roads.add(roadOverlay);
                 try
                 {
                     set_debug_text_info("route: " + road.getLengthDurationText(context_s, -1));
@@ -2962,14 +2976,10 @@ public class MainActivity extends BaseProtectedActivity
                 {
                     try
                     {
-                        for (Overlay ov : map.getOverlays())
+                        // Clear all routes from the roads folder
+                        if (folder_roads != null)
                         {
-                            Log.i(TAG, "OVXXXX:44:" + ov + " " + ov.getClass());
-                            if (ov.getClass().getName().equals("org.osmdroid.views.overlay.Polyline"))
-                            {
-                                Log.i(TAG, "OVXXXX:44:remove");
-                                map.getOverlays().remove(ov);
-                            }
+                            folder_roads.getItems().clear();
                         }
                         Log.i(TAG, "OVXXXX:35: add trailsOverlay");
                         debug_list_overlays();
@@ -3172,7 +3182,7 @@ public class MainActivity extends BaseProtectedActivity
                     friend_trail = new TrailPolyline();
                     friend_trail.setColor(TRAILS_OVERLAY_COLOR);
                     friend_trail.setWidth(dp_to_px(6));
-                    map.getOverlays().add(friend_trail);
+                    folder_friend_trails.add(friend_trail);
                     friend_trail_overlays.put(key, friend_trail);
                 }
 
@@ -3235,39 +3245,32 @@ public class MainActivity extends BaseProtectedActivity
     {
         try
         {
-            //mIMyLocationProvider.stopLocationProvider();
-        }
-        catch(Exception e)
-        {
-        }
-
-        try
-        {
-            mLocationOverlay.disableMyLocation();
-        }
-        catch(Exception e)
-        {
-        }
-
-        try
-        {
-            friend_trail_overlays.clear();
-        }
-        catch(Exception e)
-        {
-        }
-
-        try
-        {
-            for (Overlay ov : map.getOverlays())
+            if (mLocationOverlay != null)
             {
-                Log.i(TAG, "OVXXXX:1:" + ov);
+                mLocationOverlay.disableMyLocation();
             }
-            map.getOverlays().clear();
         }
         catch(Exception e)
         {
         }
+
+        // Clear each folder's contents (folders themselves stay in the map list)
+        if (folder_touch != null) folder_touch.getItems().clear();
+        if (folder_friend_trails != null) folder_friend_trails.getItems().clear();
+        if (folder_self_trail != null) folder_self_trail.getItems().clear();
+        if (folder_roads != null) folder_roads.getItems().clear();
+        if (folder_friend_icons != null) folder_friend_icons.getItems().clear();
+        if (folder_own_location != null) folder_own_location.getItems().clear();
+        if (folder_speed_badge != null) folder_speed_badge.getItems().clear();
+        if (folder_northing != null) folder_northing.getItems().clear();
+        if (folder_scalebar != null) folder_scalebar.getItems().clear();
+
+        friend_trail_overlays.clear();
+        remote_location_overlays.clear();
+
+        mLocationOverlay = null;
+        own_speed_badge = null;
+        selfTrailsOverlay = null;
     }
 
     void friend_locations_reinit()
@@ -3301,7 +3304,7 @@ public class MainActivity extends BaseProtectedActivity
                                 select_location_icon(re.has_bearing, re.has_bearing, friend.tox_public_key_string,
                                                      f_pubkey_pseudo_num_0, f_pubkey_pseudo_num_1, true, directed_ol);
                                 remote_location_overlays.put(friend.tox_public_key_string, remote_ol);
-                                map.getOverlays().add(directed_ol);
+                                folder_friend_icons.add(directed_ol);
                             }
                             catch(Exception e)
                             {
@@ -3318,6 +3321,54 @@ public class MainActivity extends BaseProtectedActivity
 
     void add_map_overlays()
     {
+        // Create all folders first
+        folder_touch = new FolderOverlay();
+        folder_friend_trails = new FolderOverlay();
+        folder_self_trail = new FolderOverlay();
+        folder_roads = new FolderOverlay();
+        folder_friend_icons = new FolderOverlay();
+        folder_own_location = new FolderOverlay();
+        folder_speed_badge = new FolderOverlay();
+        folder_northing = new FolderOverlay();
+        folder_scalebar = new FolderOverlay();
+
+        // Add folders to map in FIXED z-order (bottom → top)
+        // This order NEVER changes — dynamic overlays go INTO their folder, not into map directly
+        map.getOverlays().add(folder_touch);           // 0: invisible input handler
+        map.getOverlays().add(folder_friend_trails);   // 1: friend trail polylines
+        map.getOverlays().add(folder_self_trail);      // 2: own trail polyline
+        map.getOverlays().add(folder_roads);           // 3: navigation route
+        map.getOverlays().add(folder_friend_icons);    // 4: friend location markers
+        map.getOverlays().add(folder_own_location);    // 5: own location marker
+        map.getOverlays().add(folder_speed_badge);     // 6: own speed badge
+        map.getOverlays().add(folder_northing);        // 7: compass
+        map.getOverlays().add(folder_scalebar);        // 8: scale bar (topmost)
+
+        // --- Touch overlay ---
+        Overlay touchOverlay = new Overlay() {
+            @Override
+            public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+                if (event.getAction() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 1)
+                {
+                    if (mLocationOverlay != null)
+                    {
+                        map_currently_dragging = true;
+                    }
+                    else
+                    {
+                        map_currently_dragging = false;
+                    }
+                }
+                else
+                {
+                    map_currently_dragging = false;
+                }
+                return false;
+            }
+        };
+        folder_touch.add(touchOverlay);
+
+        // --- Scale bar ---
         try
         {
             final DisplayMetrics dm = getResources().getDisplayMetrics();
@@ -3335,26 +3386,13 @@ public class MainActivity extends BaseProtectedActivity
             int move_down_px = hud_handle_height_px + extra_padding_px;
             mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, (int)(10 * density) + move_down_px);
 
-            map.getOverlays().add(mScaleBarOverlay);
+            folder_scalebar.add(mScaleBarOverlay);
         }
         catch(Exception e)
         {
         }
 
-        try
-        {
-            /*
-            RotationGestureOverlay mRotationGestureOverlay = new RotationGestureOverlay(this, map);
-            mRotationGestureOverlay.setEnabled(true);
-            map.setMultiTouchControls(true);
-            map.getOverlays().add(mRotationGestureOverlay);
-            */
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-
+        // --- Northing overlay ---
         try
         {
             NorthingOverlay northing_ov = new NorthingOverlay(this, map);
@@ -3365,22 +3403,21 @@ public class MainActivity extends BaseProtectedActivity
                 public void update_is_northing(boolean value)
                 {
                     map_is_northed = value;
-                    Log.i(TAG, "map_is_northed=" + map_is_northed);
                 }
             });
 
-            map.getOverlays().add(northing_ov);
+            folder_northing.add(northing_ov);
         }
         catch(Exception e)
         {
             e.printStackTrace();
         }
 
+        // --- Own location overlay ---
         try
         {
-            Log.i(TAG, "OOO:x:3");
             enable_mylocation_overlay();
-            map.getOverlays().add(mLocationOverlay);
+            folder_own_location.add(mLocationOverlay);
 
             if (gps_int_own == null)
             {
@@ -3391,8 +3428,9 @@ public class MainActivity extends BaseProtectedActivity
         {
         }
 
+        // --- Speed badge ---
         own_speed_badge = new SpeedBadgeOverlay(map);
-        map.getOverlays().add(own_speed_badge);
+        folder_speed_badge.add(own_speed_badge);
 
         try
         {
@@ -3406,40 +3444,11 @@ public class MainActivity extends BaseProtectedActivity
         {
         }
 
+        // --- Self trail ---
         selfTrailsOverlay = new SelftrailPolyline();
         selfTrailsOverlay.setColor(SELFTRAILS_OVERLAY_COLOR);
         selfTrailsOverlay.setWidth(dp_to_px(6));
-        map.getOverlays().add(selfTrailsOverlay);
-        Log.i(TAG, "OVXXXX:33: add selfTrailsOverlay");
-
-        Overlay touchOverlay = new Overlay() {
-            @Override
-            public boolean onTouchEvent(MotionEvent event, MapView mapView) {
-                Log.i(TAG, "Follow:001");
-                if (event.getAction() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 1)
-                {
-                    // The user is actively dragging the map with one finger
-                    if (mLocationOverlay != null)
-                    {
-                        // HINT: stop map center updates while the user is dragging the map with 1 finger
-                        map_currently_dragging = true;
-                        Log.i(TAG, "map_currently_dragging:1=" + map_currently_dragging);
-                    }
-                    else
-                    {
-                        map_currently_dragging = false;
-                        Log.i(TAG, "map_currently_dragging:2=" + map_currently_dragging);
-                    }
-                }
-                else
-                {
-                    map_currently_dragging = false;
-                    Log.i(TAG, "map_currently_dragging:3=" + map_currently_dragging);
-                }
-                return false; // Return false so the map still moves under the finger
-            }
-        };
-        map.getOverlays().add(touchOverlay);
+        folder_self_trail.add(selfTrailsOverlay);
 
         debug_list_overlays();
     }
@@ -7489,7 +7498,7 @@ public class MainActivity extends BaseProtectedActivity
                                                             friend_trail = new TrailPolyline();
                                                             friend_trail.setColor(TRAILS_OVERLAY_COLOR);
                                                             friend_trail.setWidth(dp_to_px(6));
-                                                            map.getOverlays().add(friend_trail);
+                                                            folder_friend_trails.add(friend_trail);
                                                             friend_trail_overlays.put(f_pubkey, friend_trail);
                                                         }
 
@@ -7554,7 +7563,7 @@ public class MainActivity extends BaseProtectedActivity
                                                                          true, directed_ol);
                                                     remote_ol.remote_location_overlay = directed_ol;
                                                     remote_location_overlays.put(f_pubkey, remote_ol);
-                                                    map.getOverlays().add(directed_ol);
+                                                    folder_friend_icons.add(directed_ol);
                                                 }
                                                 else
                                                 {
