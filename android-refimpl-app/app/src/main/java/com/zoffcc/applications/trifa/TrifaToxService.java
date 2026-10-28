@@ -1082,6 +1082,25 @@ public class TrifaToxService extends Service
                         }
 
                         TRIFAGlobals.last_cpu_cycles_raw = cpuCyclesNow;
+
+                        // --- APP CPU WORK UNIT TRACKING ---
+                        long appWorkNow = MainActivity.consume_app_cpu_work();
+                        if (TRIFAGlobals.last_app_cpu_cycles_raw > 0)
+                        {
+                            TRIFAGlobals.app_cpu_history_ts[TRIFAGlobals.app_cpu_history_index] = last_check_battery_percent_ms;
+                            TRIFAGlobals.app_cpu_history[TRIFAGlobals.app_cpu_history_index] = appWorkNow;
+                            TRIFAGlobals.app_cpu_history_index = (TRIFAGlobals.app_cpu_history_index + 1) % TRIFAGlobals.APP_CPU_HISTORY_SIZE;
+                            if (TRIFAGlobals.app_cpu_history_count < TRIFAGlobals.APP_CPU_HISTORY_SIZE)
+                            {
+                                TRIFAGlobals.app_cpu_history_count++;
+                            }
+                        }
+
+                        // Mark as initialized AFTER first consume so the first interval's stale accumulation is discarded
+                        if (TRIFAGlobals.last_app_cpu_cycles_raw == 0)
+                        {
+                            TRIFAGlobals.last_app_cpu_cycles_raw = 1;
+                        }
                     }
 
                     if (global_battery_percent < BATTERY_PERCENT_OFFLINE_THRESHOLD)

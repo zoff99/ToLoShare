@@ -90,6 +90,13 @@ public class TRIFAGlobals
     public static int cpu_history_count = 0;
     public static long last_cpu_cycles_raw = 0;
 
+    public static final int APP_CPU_HISTORY_SIZE = 600; // 10 hours * 60 minutes
+    public static long[] app_cpu_history = new long[APP_CPU_HISTORY_SIZE];
+    public static long[] app_cpu_history_ts = new long[APP_CPU_HISTORY_SIZE];
+    public static int app_cpu_history_index = 0;
+    public static int app_cpu_history_count = 0;
+    public static long last_app_cpu_cycles_raw = 0;
+
     static int AUTO_ACCEPT_FT_MAX_IMAGE_SIZE_IN_MB = 200;
     static int AUTO_ACCEPT_FT_MAX_VIDEO_SIZE_IN_MB = 20 * 1024;
     static int AUTO_ACCEPT_FT_MAX_ANYKIND_SIZE_IN_MB = 20 * 1024;

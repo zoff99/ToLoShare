@@ -687,6 +687,26 @@ public class MainActivity extends BaseProtectedActivity
         }
     }
 
+    static volatile long app_cpu_work_units = 0;
+
+    /**
+     * Add estimated work units for app-side CPU-intensive operations.
+     * Call this at key code points with a value proportional to actual work done.
+     * Example: 1 unit per friend interpolated, 1 unit per 10 trail points processed.
+     */
+    public static void add_app_cpu_work(long units)
+    {
+        app_cpu_work_units += Math.max(units, 0);
+    }
+
+    /** Called by TrifaToxService every 60s. Returns accumulated work and resets to 0. */
+    public static long consume_app_cpu_work()
+    {
+        long val = app_cpu_work_units;
+        app_cpu_work_units = 0;
+        return val;
+    }
+
     /** @noinspection CommentedOutCode*/
     @SuppressLint("UseCompatLoadingForDrawables")
     @Override

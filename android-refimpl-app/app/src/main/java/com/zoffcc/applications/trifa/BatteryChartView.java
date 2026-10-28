@@ -16,8 +16,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static com.zoffcc.applications.trifa.TRIFAGlobals.APP_CPU_HISTORY_SIZE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.BATTERY_HISTORY_SIZE;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CPU_HISTORY_SIZE;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.app_cpu_history;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.app_cpu_history_count;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.app_cpu_history_index;
+import static com.zoffcc.applications.trifa.TRIFAGlobals.app_cpu_history_ts;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_count;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.battery_history_index;
@@ -29,29 +34,25 @@ import static com.zoffcc.applications.trifa.TRIFAGlobals.cpu_history_ts;
 
 public class BatteryChartView extends View
 {
-    private static final long WINDOW_MS = 10L * 60L * 60L * 1000L; // 10 hours
+    private static final long WINDOW_MS = 10L * 60L * 60L * 1000L;
     private static final int RIGHT_PAD_MINUTES = 5;
     private static final float MIN_DP_PER_MINUTE = 2.0f;
     private static final float MAX_DP_PER_MINUTE = 60.0f;
 
-    // --- CHANGE THIS VALUE TO ADJUST THE THRESHOLD GLOBALLY ---
     public static final int BATTERY_THRESHOLD_PERCENT = 15;
-
-    // --- CHANGE THIS VALUE TO ADJUST THE BATTERY LINE THICKNESS (in DP) ---
     public static final float CHART_LINE_THICKNESS_DP = 5.0f;
-
-    // --- CHANGE THIS VALUE TO ADJUST THE CPU LINE THICKNESS (in DP) ---
     public static final float CPU_LINE_THICKNESS_DP = 3.0f;
+    public static final float APP_CPU_LINE_THICKNESS_DP = 3.0f;
 
     private float currentDpPerMinute = 6.0f;
 
-    // Matrix zoom state
     private boolean isZooming = false;
     private float liveScaleFactor = 1f;
     private float livePivotX = 0f;
 
     private final Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint cpuLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint appCpuLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gridPaint = new Paint();
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisPaint = new Paint();
@@ -59,7 +60,6 @@ public class BatteryChartView extends View
     private final SimpleDateFormat hourFmt = new SimpleDateFormat("HH:mm", Locale.US);
     private ScaleGestureDetector scaleGestureDetector;
 
-    // --- SANITY CHECK CONSTANTS ---
     public static final float RATE_CHARGING = -1f;
     public static final float RATE_INVALID = 0f;
 
@@ -75,6 +75,10 @@ public class BatteryChartView extends View
         cpuLinePaint.setColor(0xFF2196F3); // Blue for CPU cycles
         cpuLinePaint.setStrokeWidth(HelperGeneric.dp2px(CPU_LINE_THICKNESS_DP));
         cpuLinePaint.setStyle(Paint.Style.STROKE);
+
+        appCpuLinePaint.setColor(0xFFFF9800); // Orange for app CPU
+        appCpuLinePaint.setStrokeWidth(HelperGeneric.dp2px(APP_CPU_LINE_THICKNESS_DP));
+        appCpuLinePaint.setStyle(Paint.Style.STROKE);
 
         gridPaint.setColor(Color.parseColor("#444444"));
         gridPaint.setStrokeWidth(HelperGeneric.dp2px(0.5f));
@@ -267,7 +271,7 @@ public class BatteryChartView extends View
             if (hh > 0 && hh < 10) canvas.drawLine(x, marginTop, x, h - marginBottom, gridPaint);
         }
 
-        // --- Draw CPU cycles line (scaled to fit chart height) ---
+        // --- Draw Tox CPU cycles line (blue, auto-scaled) ---
         long cpuMax = 1;
         for (int offset = 0; offset < cpu_history_count; offset++) {
             int idx = (cpu_history_index - cpu_history_count + offset + CPU_HISTORY_SIZE) % CPU_HISTORY_SIZE;
@@ -287,18 +291,37 @@ public class BatteryChartView extends View
             float normalized = (float) cycles / (float) cpuMax;
             float y = h - marginBottom - normalized * chartH;
 
-            if (cpuFirstPoint) {
-                cpuPath.moveTo(x, y);
-                cpuFirstPoint = false;
-            } else {
-                cpuPath.lineTo(x, y);
-            }
+            if (cpuFirstPoint) { cpuPath.moveTo(x, y); cpuFirstPoint = false; }
+            else { cpuPath.lineTo(x, y); }
         }
-        if (!cpuFirstPoint) {
-            canvas.drawPath(cpuPath, cpuLinePaint);
+        if (!cpuFirstPoint) canvas.drawPath(cpuPath, cpuLinePaint);
+
+        // --- Draw App CPU cycles line (orange, auto-scaled independently) ---
+        long appCpuMax = 1;
+        for (int offset = 0; offset < app_cpu_history_count; offset++) {
+            int idx = (app_cpu_history_index - app_cpu_history_count + offset + APP_CPU_HISTORY_SIZE) % APP_CPU_HISTORY_SIZE;
+            if (app_cpu_history[idx] > appCpuMax) appCpuMax = app_cpu_history[idx];
         }
 
-        // --- Draw battery history line ---
+        Path appCpuPath = new Path();
+        boolean appCpuFirstPoint = true;
+        for (int offset = 0; offset < app_cpu_history_count; offset++) {
+            int idx = (app_cpu_history_index - app_cpu_history_count + offset + APP_CPU_HISTORY_SIZE) % APP_CPU_HISTORY_SIZE;
+            long ts = app_cpu_history_ts[idx];
+            long cycles = app_cpu_history[idx];
+            if (ts <= 0 || ts < startTs) continue;
+            if (ts > now) break;
+
+            float x = marginLeft + ((ts - startTs) / 60000f) * minuteWidthPx;
+            float normalized = (float) cycles / (float) appCpuMax;
+            float y = h - marginBottom - normalized * chartH;
+
+            if (appCpuFirstPoint) { appCpuPath.moveTo(x, y); appCpuFirstPoint = false; }
+            else { appCpuPath.lineTo(x, y); }
+        }
+        if (!appCpuFirstPoint) canvas.drawPath(appCpuPath, appCpuLinePaint);
+
+        // --- Draw battery history line (green) ---
         Path chartPath = new Path();
         boolean firstPoint = true;
         int count = battery_history_count;
@@ -315,12 +338,8 @@ public class BatteryChartView extends View
             float x = marginLeft + ((ts - startTs) / 60000f) * minuteWidthPx;
             float y = h - marginBottom - (pct / 100f) * chartH;
 
-            if (firstPoint) {
-                chartPath.moveTo(x, y);
-                firstPoint = false;
-            } else {
-                chartPath.lineTo(x, y);
-            }
+            if (firstPoint) { chartPath.moveTo(x, y); firstPoint = false; }
+            else { chartPath.lineTo(x, y); }
         }
 
         if (!firstPoint) {
