@@ -543,25 +543,57 @@
                     </LinearLayout>
 
                     <!-- Modern pull-handle: OVERLAYS the map at the top, semi-transparent background -->
-                    <LinearLayout
+                    <RelativeLayout
                         android:id="@+id/hud_handle"
                         android:layout_width="match_parent"
                         android:layout_height="20dp"
-                        android:orientation="horizontal"
-                        android:gravity="center"
                         android:layout_gravity="top"
                         android:background="#99F5F5F5"
                         android:clickable="true"
                         android:focusable="true"
                         android:tooltipText="show / hide map info panel">
 
+                        <!-- Chevron: perfectly centered horizontally and vertically -->
                         <View
                             android:id="@+id/hud_handle_chevron"
                             android:layout_width="40dp"
                             android:layout_height="4dp"
+                            android:layout_centerInParent="true"
                             android:background="@drawable/hud_grabber" />
 
-                    </LinearLayout>
+                        <!-- Circles container: pinned to right edge, vertically centered -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_alignParentEnd="true"
+                            android:layout_marginEnd="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:id="@+id/hud_circle_1"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:background="@drawable/hud_status_circle_green" />
+
+                            <View
+                                android:id="@+id/hud_circle_2"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:layout_marginStart="6dp"
+                                android:background="@drawable/hud_status_circle_yellow" />
+
+                            <View
+                                android:id="@+id/hud_circle_3"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:layout_marginStart="6dp"
+                                android:background="@drawable/hud_status_circle_red" />
+
+                        </LinearLayout>
+
+                    </RelativeLayout>
+
 
                     <LinearLayout
                         android:id="@+id/low_battery_warning_container"
