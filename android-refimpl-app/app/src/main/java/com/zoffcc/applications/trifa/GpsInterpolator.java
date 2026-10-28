@@ -44,6 +44,8 @@ public class GpsInterpolator
                     {
                         float speed_kmh = speed_meters_per_second * 3.6f;
                         fade_ol.setSpeedIndicator(speed_kmh, true);
+                        // Speed indicator update: text formatting + paint invalidation
+                        MainActivity.add_app_cpu_work(2);
                     }
                 }
 
@@ -54,6 +56,8 @@ public class GpsInterpolator
                         remote_ol.remote_location_overlay.setLocation(new GeoPoint(newLat, newLon));
                         remote_ol.remote_location_overlay.setAccuracy(Math.round(acc));
                         remote_ol.remote_location_overlay.setBearing((float)newBearing);
+                        // Overlay position/accuracy/bearing update: GeoPoint alloc + 3 setter calls + map invalidation
+                        MainActivity.add_app_cpu_work(4);
                     }
                 }
             }
@@ -82,6 +86,8 @@ public class GpsInterpolator
                 {
                     re.remoteBestLocation.removeBearing();
                 }
+                // Location object update: 4 setter calls (lightweight, no UI)
+                MainActivity.add_app_cpu_work(1);
             }
         }
         catch(Exception ignored)
@@ -94,6 +100,8 @@ public class GpsInterpolator
             if (!TrailPlaybackState.isPlaybackActive())
             {
                 follow_friend_on_map(f_pubkey);
+                // Map follow: coordinate projection + map center animation + potential bearing rotation
+                MainActivity.add_app_cpu_work(3);
             }
         }
         catch(Exception ignored)
@@ -147,6 +155,8 @@ public class GpsInterpolator
             lastBearing = newBearing;
             isFirstFix = false;
             push_geo_pos(newLat, newLon, newBearing, acc, has_bearing, f_pubkey, speed_meters_per_second);
+            // Direct push: 1 coordinate transform + 1 overlay update
+            MainActivity.add_app_cpu_work(2);
             // Log.i(TAG, "onGpsUpdate: return 1");
             return;
         }
@@ -206,6 +216,8 @@ public class GpsInterpolator
                 // Log.i(TAG, "Step "+i+": Lat "+interpolatedLat+
                 //            ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, acc, has_bearing, f_pubkey, speed_meters_per_second);
+                // Each interpolation step: 3 math ops (lat, lon, bearing) + 1 coordinate transform + 1 overlay update
+                MainActivity.add_app_cpu_work(5);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
                 Log.i(TAG, "currentThread_interrupt");

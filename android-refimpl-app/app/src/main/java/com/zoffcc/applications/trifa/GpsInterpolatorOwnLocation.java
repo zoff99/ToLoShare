@@ -58,6 +58,8 @@ public class GpsInterpolatorOwnLocation
             if (!playback_active)
             {
                 myLocationNewOverlay2.onLocationChanged_real(interpolated_location, null);
+                // Own location overlay update: GeoPoint alloc + marker redraw + map invalidation
+                MainActivity.add_app_cpu_work(4);
 
                 // ONLY update UI and follow map if we are in LIVE mode
                 if (!TrailPlaybackState.isPlaybackActive())
@@ -65,6 +67,8 @@ public class GpsInterpolatorOwnLocation
                     if (PREF__map_follow_mode == MAP_FOLLOW_MODE_SELF.value)
                     {
                         set_map_center_to_proxy_uithread(interpolated_location);
+                        // Map follow: coordinate projection + center animation + optional bearing rotation
+                        MainActivity.add_app_cpu_work(3);
                     }
                 }
             }
@@ -89,6 +93,8 @@ public class GpsInterpolatorOwnLocation
                 }
 
                 MainActivity.own_speed_badge.setSpeed(speed_kmh, has_speed);
+                // Speed badge: GeoPoint alloc + position update + speed text formatting + repaint
+                MainActivity.add_app_cpu_work(3);
             }
         }
         catch(Exception ignored)
@@ -131,6 +137,8 @@ public class GpsInterpolatorOwnLocation
             lastHasBearing = location.hasBearing();
             isFirstFix = false;
             push_geo_pos(lastLat, lastLon, lastBearing, lastAcc, location.hasBearing(), myLocationNewOverlay2, location);
+            // Direct push: 1 Location object creation + overlay update (no interpolation math)
+            MainActivity.add_app_cpu_work(2);
             // Log.i(TAG, "** RETURN **");
             return;
         }
@@ -191,6 +199,8 @@ public class GpsInterpolatorOwnLocation
                 //           ", Lon "+interpolatedLon+", Bearing "+interpolatedBearing+" delta_t " + timeDelta);
                 push_geo_pos(interpolatedLat, interpolatedLon, interpolatedBearing, location.getAccuracy(),
                              location.hasBearing(), myLocationNewOverlay2, location);
+                // Each interpolation step: 3 math ops (lat, lon, bearing) + 1 Location alloc + push_geo_pos internals
+                MainActivity.add_app_cpu_work(5);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
                 // Log.i(TAG, "** BREAK **");
