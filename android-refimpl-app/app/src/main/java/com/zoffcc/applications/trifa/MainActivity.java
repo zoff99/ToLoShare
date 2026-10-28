@@ -2893,7 +2893,7 @@ public class MainActivity extends BaseProtectedActivity
 
     static void inject_own_location()
     {
-        if (mLocationOverlay.isMyLocationEnabled())
+        if (mLocationOverlay != null && mLocationOverlay.isMyLocationEnabled())
         {
             try
             {
@@ -3254,19 +3254,20 @@ public class MainActivity extends BaseProtectedActivity
         {
         }
 
-        // Clear each folder's contents (folders themselves stay in the map list)
-        if (folder_touch != null) folder_touch.getItems().clear();
-        if (folder_friend_trails != null) folder_friend_trails.getItems().clear();
-        if (folder_self_trail != null) folder_self_trail.getItems().clear();
-        if (folder_roads != null) folder_roads.getItems().clear();
-        if (folder_friend_icons != null) folder_friend_icons.getItems().clear();
-        if (folder_own_location != null) folder_own_location.getItems().clear();
-        if (folder_speed_badge != null) folder_speed_badge.getItems().clear();
-        if (folder_northing != null) folder_northing.getItems().clear();
-        if (folder_scalebar != null) folder_scalebar.getItems().clear();
+        // Safely clear each folder's contents
+        // Null-check both the folder AND its items list (getItems() can return null after onDetach)
+        try { if (folder_touch != null && folder_touch.getItems() != null) folder_touch.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_friend_trails != null && folder_friend_trails.getItems() != null) folder_friend_trails.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_self_trail != null && folder_self_trail.getItems() != null) folder_self_trail.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_roads != null && folder_roads.getItems() != null) folder_roads.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_friend_icons != null && folder_friend_icons.getItems() != null) folder_friend_icons.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_own_location != null && folder_own_location.getItems() != null) folder_own_location.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_speed_badge != null && folder_speed_badge.getItems() != null) folder_speed_badge.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_northing != null && folder_northing.getItems() != null) folder_northing.getItems().clear(); } catch (Exception ignored) {}
+        try { if (folder_scalebar != null && folder_scalebar.getItems() != null) folder_scalebar.getItems().clear(); } catch (Exception ignored) {}
 
-        friend_trail_overlays.clear();
-        remote_location_overlays.clear();
+        try { friend_trail_overlays.clear(); } catch (Exception ignored) {}
+        try { remote_location_overlays.clear(); } catch (Exception ignored) {}
 
         mLocationOverlay = null;
         own_speed_badge = null;
@@ -3321,7 +3322,7 @@ public class MainActivity extends BaseProtectedActivity
 
     void add_map_overlays()
     {
-        // Create all folders first
+        // Always create FRESH folders — old ones may be detached (mOverlayManager == null)
         folder_touch = new FolderOverlay();
         folder_friend_trails = new FolderOverlay();
         folder_self_trail = new FolderOverlay();
@@ -3332,8 +3333,11 @@ public class MainActivity extends BaseProtectedActivity
         folder_northing = new FolderOverlay();
         folder_scalebar = new FolderOverlay();
 
-        // Add folders to map in FIXED z-order (bottom → top)
-        // This order NEVER changes — dynamic overlays go INTO their folder, not into map directly
+        // Safe to clear here: the map's overlay list only ever contains our 9 folders
+        // This removes any stale/detached folders from previous cycles
+        map.getOverlays().clear();
+
+        // Add folders in FIXED z-order (bottom → top). This order NEVER changes.
         map.getOverlays().add(folder_touch);           // 0: invisible input handler
         map.getOverlays().add(folder_friend_trails);   // 1: friend trail polylines
         map.getOverlays().add(folder_self_trail);      // 2: own trail polyline
