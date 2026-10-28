@@ -358,6 +358,7 @@ public class MainActivity extends BaseProtectedActivity
     private boolean isHudVisible = true;
     private int hudBarsFullHeight = 0;
     private android.animation.ValueAnimator hudAnimator = null;
+    static final String PREF_HUD_COLLAPSED = "hud_panel_collapsed";
 
     // HUD drag support
     private View hudBarsView = null;
@@ -2823,6 +2824,28 @@ public class MainActivity extends BaseProtectedActivity
         //**MOCK**//     friend_simulator[j].startSimulation();
         //**MOCK**// }
 
+        // Restore HUD panel state from preferences AFTER layout is complete
+        hudBarsView = findViewById(R.id.top_hud_bars);
+        if (hudBarsView != null)
+        {
+            hudBarsView.post(() -> {
+                // Capture the full expanded height first
+                if (hudBarsFullHeight == 0 && hudBarsView.getHeight() > 0)
+                {
+                    hudBarsFullHeight = hudBarsView.getHeight();
+                }
+
+                // Now read the saved state and apply it
+                isHudVisible = getSharedPreferences("trifa_prefs", 0).getBoolean("hud_panel_visible", true);
+
+                if (!isHudVisible)
+                {
+                    setHudHeight(0);
+                }
+                // If visible, the HUD is already at full height from layout — nothing to do
+            });
+        }
+
         Log.i(TAG, "M:STARTUP:-- DONE --");
     }
 
@@ -2996,9 +3019,17 @@ public class MainActivity extends BaseProtectedActivity
                 setHudHeight((Integer) animation.getAnimatedValue());
             }
         });
+        hudAnimator.addListener(new android.animation.AnimatorListenerAdapter()
+        {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation)
+            {
+                hudAnimator = null;
+                isHudVisible = (targetHeight == hudBarsFullHeight);
+                getSharedPreferences("trifa_prefs", 0).edit().putBoolean("hud_panel_visible", isHudVisible).apply();
+            }
+        });
         hudAnimator.start();
-
-        isHudVisible = (targetHeight == hudBarsFullHeight);
     }
 
     // Simple tap/click toggle: snap to the opposite state
