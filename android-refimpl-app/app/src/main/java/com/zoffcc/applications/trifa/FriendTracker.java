@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.zoffcc.applications.trifa.MainActivity.in_count_view;
 import static com.zoffcc.applications.trifa.MainActivity.out_count_view;
+import static com.zoffcc.applications.trifa.MainActivity.syncHudCirclesToTriangles;
 
 public class FriendTracker {
     /** @noinspection unused*/
@@ -146,6 +147,7 @@ public class FriendTracker {
                         for (String key : friendsMap_in.keySet()) {
                             in_count_view.addKey(key);
                         }
+                        syncHudCirclesToTriangles();
                     }
                     catch (Exception ignored)
                     {
@@ -172,6 +174,7 @@ public class FriendTracker {
                         for (String key : friendsMap_out.keySet()) {
                             out_count_view.addKey(key);
                         }
+                        syncHudCirclesToTriangles();
                     }
                     catch (Exception ignored)
                     {

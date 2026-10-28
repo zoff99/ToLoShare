@@ -350,6 +350,10 @@ public class MainActivity extends BaseProtectedActivity
     static TriangleTextView in_count_view = null;
     static TriangleTextView online_count = null;
 
+    static View hud_circle_1 = null; // mirrors online_count (green/grey)
+    static View hud_circle_2 = null; // mirrors out_count_view (blue)
+    static View hud_circle_3 = null; // mirrors in_count_view (red)
+
     // HUD collapse state (the 4 grey info bars above the map)
     private boolean isHudVisible = true;
     private int hudBarsFullHeight = 0;
@@ -808,6 +812,12 @@ public class MainActivity extends BaseProtectedActivity
         online_count.removeAll();
         online_count.setTriangleColor(Color.GRAY);
         online_count.setDirection(TriangleTextView.Direction.CIRCLE);
+
+        hud_circle_1 = findViewById(R.id.hud_circle_1);
+        hud_circle_2 = findViewById(R.id.hud_circle_2);
+        hud_circle_3 = findViewById(R.id.hud_circle_3);
+
+        syncHudCirclesToTriangles();
 
         lowBatteryWarningContainer = findViewById(R.id.low_battery_warning_container);
 
@@ -2686,6 +2696,7 @@ public class MainActivity extends BaseProtectedActivity
             f_tracker.repaint_all();
             rebuildAllTrails();
             show_low_batt_warning();
+            syncHudCirclesToTriangles();
         }
 
         PREF__gps_smooth_own = settings.getBoolean("gps_smooth_own", false);
@@ -2763,6 +2774,7 @@ public class MainActivity extends BaseProtectedActivity
                     f_tracker.repaint_all();
                     rebuildAllTrails();
                     show_low_batt_warning();
+                    syncHudCirclesToTriangles();
                 } else {
                     waiting_container.setVisibility(View.VISIBLE);
                     main_gallery_container.setVisibility(View.GONE);
@@ -3009,6 +3021,43 @@ public class MainActivity extends BaseProtectedActivity
         }
 
         animateHudTo(isHudVisible ? 0 : hudBarsFullHeight);
+    }
+
+    static void syncHudCirclesToTriangles()
+    {
+        try
+        {
+            if (hud_circle_1 != null && online_count != null)
+            {
+                hud_circle_1.setVisibility(online_count.getCount() > 0 ? View.VISIBLE : View.INVISIBLE);
+                hud_circle_1.setBackground(getCircleDrawable(online_count.getTriangleColor()));
+            }
+
+            if (hud_circle_2 != null && out_count_view != null)
+            {
+                hud_circle_2.setVisibility(out_count_view.getCount() > 0 ? View.VISIBLE : View.INVISIBLE);
+                hud_circle_2.setBackground(getCircleDrawable(out_count_view.getTriangleColor()));
+            }
+
+            if (hud_circle_3 != null && in_count_view != null)
+            {
+                hud_circle_3.setVisibility(in_count_view.getCount() > 0 ? View.VISIBLE : View.INVISIBLE);
+                hud_circle_3.setBackground(getCircleDrawable(in_count_view.getTriangleColor()));
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static android.graphics.drawable.GradientDrawable getCircleDrawable(int color)
+    {
+        android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
+        d.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        d.setColor(color);
+        d.setStroke((int) HelperGeneric.dp2px(1f), 0xFF000000);
+        return d;
     }
 
     private void rebuildAllTrails()
@@ -5868,6 +5917,8 @@ public class MainActivity extends BaseProtectedActivity
             {
             }
         }
+
+        syncHudCirclesToTriangles();
     }
 
     private static void set_follow_button_ui()
@@ -6995,6 +7046,7 @@ public class MainActivity extends BaseProtectedActivity
                         {
                             online_count.removeAll();
                             online_count.setTriangleColor(Color.GRAY);
+                            syncHudCirclesToTriangles();
                         }
                         catch (Exception e)
                         {
@@ -7017,6 +7069,7 @@ public class MainActivity extends BaseProtectedActivity
                         {
                             online_count.removeAll();
                             online_count.setTriangleColor(Color.GREEN);
+                            syncHudCirclesToTriangles();
                         }
                         catch (Exception e)
                         {
@@ -7052,6 +7105,7 @@ public class MainActivity extends BaseProtectedActivity
                             try
                             {
                                 online_count.setTriangleColor(Color.GRAY);
+                                syncHudCirclesToTriangles();
                             }
                             catch (Exception e)
                             {
@@ -7090,6 +7144,7 @@ public class MainActivity extends BaseProtectedActivity
                         {
                             online_count.setTriangleColor(Color.GRAY);
                         }
+                        syncHudCirclesToTriangles();
                     }
                     catch (Exception e)
                     {
@@ -7119,6 +7174,7 @@ public class MainActivity extends BaseProtectedActivity
                     {
                         online_count.addKey(f.tox_public_key_string);
                         online_count.setTriangleColor(Color.GREEN);
+                        syncHudCirclesToTriangles();
                     }
                     catch (Exception e)
                     {

@@ -580,20 +580,19 @@
                                 android:id="@+id/hud_circle_2"
                                 android:layout_width="10dp"
                                 android:layout_height="10dp"
-                                android:layout_marginStart="6dp"
+                                android:layout_marginStart="10dp"
                                 android:background="@drawable/hud_status_circle_yellow" />
 
                             <View
                                 android:id="@+id/hud_circle_3"
                                 android:layout_width="10dp"
                                 android:layout_height="10dp"
-                                android:layout_marginStart="6dp"
+                                android:layout_marginStart="10dp"
                                 android:background="@drawable/hud_status_circle_red" />
 
                         </LinearLayout>
 
                     </RelativeLayout>
-
 
                     <LinearLayout
                         android:id="@+id/low_battery_warning_container"

@@ -65,6 +65,7 @@ import static com.zoffcc.applications.trifa.MainActivity.cache_fnum_pubkey;
 import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_location;
 import static com.zoffcc.applications.trifa.MainActivity.cache_pubkey_fnum;
 import static com.zoffcc.applications.trifa.MainActivity.friend_list_fragment;
+import static com.zoffcc.applications.trifa.MainActivity.syncHudCirclesToTriangles;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_delete;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.FL_NOTIFICATION_ICON_ALPHA_NOT_SELECTED;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.FL_NOTIFICATION_ICON_ALPHA_SELECTED;
@@ -514,11 +515,13 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
                     unread_count.setText("" + new_messages_count);
                 }
                 unread_count.setVisibility(View.VISIBLE);
+                syncHudCirclesToTriangles();
             }
             else
             {
                 unread_count.setText("");
                 unread_count.setVisibility(View.INVISIBLE);
+                syncHudCirclesToTriangles();
             }
         }
         catch (Exception e)
@@ -527,6 +530,7 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
 
             unread_count.setText("");
             unread_count.setVisibility(View.INVISIBLE);
+            syncHudCirclesToTriangles();
         }
 
         int drawable_id = R.drawable.transparent;

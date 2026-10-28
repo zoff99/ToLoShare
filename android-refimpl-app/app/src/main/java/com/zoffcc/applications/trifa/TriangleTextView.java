@@ -76,6 +76,11 @@ public class TriangleTextView extends View
         invalidate();
     }
 
+    public int getTriangleColor()
+    {
+        return this.triangleColor;
+    }
+
     public void setTriangleColor(int color)
     {
         this.triangleColor = color;
