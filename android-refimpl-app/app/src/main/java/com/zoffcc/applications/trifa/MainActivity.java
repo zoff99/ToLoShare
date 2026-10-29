@@ -7560,9 +7560,22 @@ public class MainActivity extends BaseProtectedActivity
                                                             friend_trail_overlays.put(f_pubkey, friend_trail);
                                                         }
 
-                                                        // 6. Update the overlay and redraw
-                                                        friend_trail.setPoints(geoPointsList);
-                                                        MapPaintWrapper.invalidate();
+                                                        // 6. Update the overlay on the UI thread with a defensive copy
+                                                        final java.util.List<GeoPoint> ptsCopy = new java.util.ArrayList<>(geoPointsList);
+                                                        final TrailPolyline trailRef = friend_trail;
+                                                        if (map != null)
+                                                        {
+                                                            map.post(() -> {
+                                                                try {
+                                                                    if (ptsCopy.size() >= 2) {
+                                                                        trailRef.setPoints(ptsCopy);
+                                                                    } else {
+                                                                        trailRef.setPoints(new java.util.ArrayList<>());
+                                                                    }
+                                                                    MapPaintWrapper.invalidate();
+                                                                } catch (Exception ignored) {}
+                                                            });
+                                                        }
                                                     }
                                                     catch (Exception e)
                                                     {
