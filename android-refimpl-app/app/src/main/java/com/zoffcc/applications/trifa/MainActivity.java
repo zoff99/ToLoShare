@@ -3154,12 +3154,30 @@ public class MainActivity extends BaseProtectedActivity
             for (int i = self_trails_list.size() - 1; i >= 0; i--)
             {
                 Location loc = self_trails_list.get(i);
-                self_trail_geo_points.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                if (loc != null)
+                {
+                    self_trail_geo_points.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                }
             }
 
             if (selfTrailsOverlay != null)
             {
-                selfTrailsOverlay.setPoints(self_trail_geo_points);
+                // Build clean defensive copy, filter nulls, post to UI thread
+                java.util.List<GeoPoint> safePts = new java.util.ArrayList<>();
+                for (GeoPoint gp : self_trail_geo_points)
+                {
+                    if (gp != null) safePts.add(gp);
+                }
+                final java.util.List<GeoPoint> ptsCopy = new java.util.ArrayList<>(safePts);
+                map.post(() -> {
+                    try {
+                        if (ptsCopy.size() >= 2) {
+                            selfTrailsOverlay.setPoints(ptsCopy);
+                        } else {
+                            selfTrailsOverlay.setPoints(new java.util.ArrayList<>());
+                        }
+                    } catch (Exception ignored) {}
+                });
             }
         }
         catch (Exception e)
@@ -3190,7 +3208,10 @@ public class MainActivity extends BaseProtectedActivity
                 for (int i = trails.size() - 1; i >= 0; i--)
                 {
                     Location loc = trails.get(i);
-                    geoPointsList.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                    if (loc != null)
+                    {
+                        geoPointsList.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                    }
                 }
 
                 // Get or create the polyline overlay
@@ -3204,8 +3225,23 @@ public class MainActivity extends BaseProtectedActivity
                     friend_trail_overlays.put(key, friend_trail);
                 }
 
-                // Update the points in the existing overlay
-                friend_trail.setPoints(geoPointsList);
+                // Build clean defensive copy, filter nulls, post to UI thread
+                java.util.List<GeoPoint> safePts = new java.util.ArrayList<>();
+                for (GeoPoint gp : geoPointsList)
+                {
+                    if (gp != null) safePts.add(gp);
+                }
+                final java.util.List<GeoPoint> ptsCopy = new java.util.ArrayList<>(safePts);
+                final TrailPolyline trailRef = friend_trail;
+                map.post(() -> {
+                    try {
+                        if (ptsCopy.size() >= 2) {
+                            trailRef.setPoints(ptsCopy);
+                        } else {
+                            trailRef.setPoints(new java.util.ArrayList<>());
+                        }
+                    } catch (Exception ignored) {}
+                });
             }
             catch (Exception e)
             {
