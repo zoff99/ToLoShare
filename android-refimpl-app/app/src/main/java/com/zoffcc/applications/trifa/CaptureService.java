@@ -287,9 +287,21 @@ public class CaptureService extends Service
                     self_trail_geo_points.remove(0); // Remove the oldest point
                 }
 
-                // 4. Update the map overlay and redraw
-                selfTrailsOverlay.setPoints(self_trail_geo_points);
-                MapPaintWrapper.invalidate();
+                // 4. Update the map overlay on the UI thread with a defensive copy
+                final java.util.List<GeoPoint> ptsCopy = new java.util.ArrayList<>(self_trail_geo_points);
+                if (MainActivity.map != null)
+                {
+                    MainActivity.map.post(() -> {
+                        try {
+                            if (ptsCopy.size() >= 2) {
+                                selfTrailsOverlay.setPoints(ptsCopy);
+                            } else {
+                                selfTrailsOverlay.setPoints(new java.util.ArrayList<>());
+                            }
+                            MapPaintWrapper.invalidate();
+                        } catch (Exception ignored) {}
+                    });
+                }
             }
         }
         catch (Exception e)
