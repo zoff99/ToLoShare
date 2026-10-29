@@ -1016,15 +1016,20 @@ public class MainActivity extends BaseProtectedActivity
                                     pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
                                 }
                             }
-                            // Only set points if we have at least 2 valid points
-                            if (pts.size() >= 2)
+                            // Post to UI thread with defensive copy
+                            final java.util.List<GeoPoint> ptsCopy = new java.util.ArrayList<>(pts);
+                            final TrailPolyline trailRef = friend_trail;
+                            if (map != null)
                             {
-                                friend_trail.setPoints(pts);
-                            }
-                            else
-                            {
-                                // Clear the polyline if we don't have enough points
-                                friend_trail.setPoints(new java.util.ArrayList<>());
+                                map.post(() -> {
+                                    try {
+                                        if (ptsCopy.size() >= 2) {
+                                            trailRef.setPoints(ptsCopy);
+                                        } else {
+                                            trailRef.setPoints(new java.util.ArrayList<>());
+                                        }
+                                    } catch (Exception ignored) {}
+                                });
                             }
                         }
 
@@ -1106,7 +1111,20 @@ public class MainActivity extends BaseProtectedActivity
                     {
                         pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
                     }
-                    selfTrailsOverlay.setPoints(pts);
+                    // Post to UI thread with defensive copy
+                    final java.util.List<GeoPoint> ptsCopy = new java.util.ArrayList<>(pts);
+                    if (map != null)
+                    {
+                        map.post(() -> {
+                            try {
+                                if (ptsCopy.size() >= 2) {
+                                    selfTrailsOverlay.setPoints(ptsCopy);
+                                } else {
+                                    selfTrailsOverlay.setPoints(new java.util.ArrayList<>());
+                                }
+                            } catch (Exception ignored) {}
+                        });
+                    }
 
                     int count = trails.size();
                     Location target_pos;
