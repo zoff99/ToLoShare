@@ -1011,13 +1011,25 @@ public class MainActivity extends BaseProtectedActivity
                             java.util.List<GeoPoint> pts = new java.util.ArrayList<>();
                             for (Location loc : trails)
                             {
-                                pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                                if (loc != null)
+                                {
+                                    pts.add(new GeoPoint(loc.getLatitude(), loc.getLongitude()));
+                                }
                             }
-                            friend_trail.setPoints(pts);
+                            // Only set points if we have at least 2 valid points
+                            if (pts.size() >= 2)
+                            {
+                                friend_trail.setPoints(pts);
+                            }
+                            else
+                            {
+                                // Clear the polyline if we don't have enough points
+                                friend_trail.setPoints(new java.util.ArrayList<>());
+                            }
                         }
 
                         int count = trails.size();
-                        Location target_pos;
+                        Location target_pos = null;
 
                         if ((progress >= seekBar.getMax()) || (count == 1))
                         {
@@ -1032,6 +1044,12 @@ public class MainActivity extends BaseProtectedActivity
                             if (idx >= count) idx = count - 1;
 
                             target_pos = trails.get(idx);
+                        }
+
+                        // Skip if target_pos is null
+                        if (target_pos == null)
+                        {
+                            continue;
                         }
 
                         CaptureService.remote_location_overlay_entry remote_ol = CaptureService.remote_location_overlays.get(key);
