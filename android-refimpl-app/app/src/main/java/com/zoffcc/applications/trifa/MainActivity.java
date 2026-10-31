@@ -3001,9 +3001,9 @@ public class MainActivity extends BaseProtectedActivity
             java.util.List<Overlay> rootOverlays = map.getOverlays();
             int total = 0;
             StringBuilder sb = new StringBuilder();
-            sb.append("\n╔══════════════════════════════════════╗\n");
-            sb.append("║       MAP OVERLAY TREE DUMP          ║\n");
-            sb.append("╚══════════════════════════════════════╝\n");
+            sb.append("\n+----------------------------------------------+\n");
+            sb.append("|          MAP OVERLAY TREE DUMP              |\n");
+            sb.append("+----------------------------------------------+\n");
 
             for (int i = 0; i < rootOverlays.size(); i++)
             {
@@ -3015,28 +3015,28 @@ public class MainActivity extends BaseProtectedActivity
                     int childCount = (children != null) ? children.size() : 0;
                     total += 1 + childCount;
 
-                    sb.append(String.format("[%d]   FolderOverlay (%s) — %d children\n",
-                                            i, folder.getName().isEmpty() ? "unnamed" : folder.getName(), childCount));
+                    String name = folder.getName().isEmpty() ? "unnamed" : folder.getName();
+                    sb.append(String.format("[%d] [DIR] %-12s %2d children\n", i, name, childCount));
 
                     if (children != null)
                     {
                         for (int j = 0; j < children.size(); j++)
                         {
                             Overlay child = children.get(j);
-                            sb.append(String.format("    └─[%d] %s\n", j, child.getClass().getSimpleName()));
+                            sb.append(String.format("      +--[%d] %s\n", j, child.getClass().getSimpleName()));
                         }
                     }
                 }
                 else
                 {
                     total++;
-                    sb.append(String.format("[%d]  ️  UNFOLDERED: %s\n", i, ov.getClass().getSimpleName()));
+                    sb.append(String.format("[%d] [!] UNFOLDERED   %s\n", i, ov.getClass().getSimpleName()));
                 }
             }
 
-            sb.append("──────────────────────────────────────\n");
-            sb.append(String.format("Total overlays: %d (root entries: %d)\n", total, rootOverlays.size()));
-            sb.append("══════════════════════════════════════\n");
+            sb.append("----------------------------------------------\n");
+            sb.append(String.format("Total: %d overlays | %d root entries\n", total, rootOverlays.size()));
+            sb.append("+----------------------------------------------+\n");
 
             Log.i(TAG, sb.toString());
 
