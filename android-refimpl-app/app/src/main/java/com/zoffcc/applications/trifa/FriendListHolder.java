@@ -533,35 +533,25 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
             syncHudCirclesToTriangles();
         }
 
+        int hudSlot = MainActivity.getHudSlotForPubkey(fl.tox_public_key_string);
         int drawable_id = R.drawable.transparent;
-        try
+        if (hudSlot == 0)
         {
-            if (fl.is_default_ft_contact)
-            {
-                drawable_id = R.drawable.rounded_default_ft_contact_bg_with_border;
-            }
-
-            final int sdk = android.os.Build.VERSION.SDK_INT;
-            if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN)
-            {
-                friend_container_rounded_bg.setBackgroundDrawable(ContextCompat.getDrawable(context, drawable_id));
-            }
-            else
-            {
-                friend_container_rounded_bg.setBackground(ContextCompat.getDrawable(context, drawable_id));
-            }
+            drawable_id = R.drawable.friend_list_border_slot0;
         }
-        catch (Exception e)
+        else if (hudSlot == 1)
         {
-            final int sdk = android.os.Build.VERSION.SDK_INT;
-            if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN)
-            {
-                friend_container_rounded_bg.setBackgroundDrawable(ContextCompat.getDrawable(context, drawable_id));
-            }
-            else
-            {
-                friend_container_rounded_bg.setBackground(ContextCompat.getDrawable(context, drawable_id));
-            }
+            drawable_id = R.drawable.friend_list_border_slot1;
+        }
+
+        final int sdk = android.os.Build.VERSION.SDK_INT;
+        if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN)
+        {
+            friend_container_rounded_bg.setBackgroundDrawable(ContextCompat.getDrawable(context, drawable_id));
+        }
+        else
+        {
+            friend_container_rounded_bg.setBackground(ContextCompat.getDrawable(context, drawable_id));
         }
     }
 
@@ -758,8 +748,11 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
                         break;
                     case R.id.item_dummy02:
                         break;
-                    case R.id.item_add_default_ft_contact:
-                        show_confirm_adddefaultft_dialog(v, f2);
+                    case R.id.item_hud_slot_0:
+                        MainActivity.showHudSlotPicker(f2.tox_public_key_string, f2.name, 0);
+                        break;
+                    case R.id.item_hud_slot_1:
+                        MainActivity.showHudSlotPicker(f2.tox_public_key_string, f2.name, 1);
                         break;
                     case R.id.item_delete:
                         // delete friend -----------------
@@ -874,64 +867,5 @@ public class FriendListHolder extends RecyclerView.ViewHolder implements View.On
         intent.putExtra("friendnum", tox_friend_by_public_key__wrapper(friend_pubkey));
         c.startActivity(intent);
          */
-    }
-
-    public void show_confirm_adddefaultft_dialog(final View view, final FriendList f2)
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-        builder.setTitle("add as Default Contact?");
-        builder.setMessage("Do you want to add this Friend as Default Contact for Filetransfers?");
-
-        builder.setNegativeButton("Cancel", null);
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                Runnable myRunnable = new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            if ((f2 != null) && (f2.tox_public_key_string != null) && (f2.tox_public_key_string.length() == (TOX_PUBLIC_KEY_SIZE * 2)))
-                            {
-                                get_set_is_default_ft_contact(f2.tox_public_key_string, true);
-                                Log.i(TAG, "show_confirm_adddefaultft_dialog:6");
-                                try
-                                {
-                                    if (friend_list_fragment != null)
-                                    {
-                                        // reload friendlist
-                                        friend_list_fragment.add_all_friends_clear(0);
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    e.printStackTrace();
-                                }
-
-                                Log.i(TAG, "show_confirm_adddefaultft_dialog:7");
-                                // load all friends into data list ---
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                            Log.i(TAG, "show_confirm_adddefaultft_dialog:8:EE:" + e.getMessage());
-                        }
-                    }
-                };
-                // TODO: use own handler
-                if (view.getHandler() != null)
-                {
-                    view.getHandler().post(myRunnable);
-                }
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
     }
 }

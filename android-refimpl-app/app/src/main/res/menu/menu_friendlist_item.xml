@@ -15,9 +15,16 @@
         android:visible="true"
         app:showAsAction="ifRoom|withText"/>
     <item
-        android:id="@+id/item_add_default_ft_contact"
+        android:id="@+id/item_hud_slot_0"
         android:icon="@drawable/ic_content_copy_white_24dp"
-        android:title="@string/layout___add_as_default_ft_contact"
+        android:title="Assign to HUD Slot 1 (green)"
+        android:visible="true"
+        app:showAsAction="ifRoom|withText"/>
+
+    <item
+        android:id="@+id/item_hud_slot_1"
+        android:icon="@drawable/ic_content_copy_white_24dp"
+        android:title="Assign to HUD Slot 2 (blue)"
         android:visible="true"
         app:showAsAction="ifRoom|withText"/>
     <item

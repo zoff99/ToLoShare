@@ -52,6 +52,7 @@ import static com.zoffcc.applications.trifa.MainActivity.PREF__orbot_enabled;
 import static com.zoffcc.applications.trifa.MainActivity.PREF__use_push_service;
 import static com.zoffcc.applications.trifa.MainActivity.cache_friend_share_location;
 import static com.zoffcc.applications.trifa.MainActivity.context_s;
+import static com.zoffcc.applications.trifa.MainActivity.get_hud_friend_pubkey;
 import static com.zoffcc.applications.trifa.MainActivity.tox_friend_send_lossless_packet;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.CONTROL_PROXY_MESSAGE_TYPE.CONTROL_PROXY_MESSAGE_TYPE_PUSH_URL_FOR_FRIEND;
 import static com.zoffcc.applications.trifa.TRIFAGlobals.GENERIC_TOR_USERAGENT;
@@ -137,19 +138,8 @@ public class HelperFriend
 
     static String get_friend_pubkey_sorted_by_pubkey_num(int num)
     {
-        FriendList f = null;
-
-        try
-        {
-            f = orma.selectFromFriendList().
-                    orderByTox_public_key_stringAsc().get(num);
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-
-        return f.tox_public_key_string;
+        // Now delegates to HUD slot system
+        return get_hud_friend_pubkey(num);
     }
 
     static int is_friend_online(long friendnum)

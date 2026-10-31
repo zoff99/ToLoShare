@@ -642,6 +642,10 @@ public class MainActivity extends BaseProtectedActivity
     ProfileDrawerItem profile_d_item = null;
     // main drawer ----------
 
+    static String hud_slot_0_pubkey = null;
+    static String hud_slot_1_pubkey = null;
+    static boolean hud_slots_configured = false;
+
     // Cache for "share location with friend" settings (notification_silent field)
     // Key: friend pubkey, Value: notification_silent (true = don't share, false = share)
     public static Map<String, Boolean> cache_friend_share_location = new HashMap<>();
@@ -2922,6 +2926,71 @@ public class MainActivity extends BaseProtectedActivity
         }
 
         Log.i(TAG, "M:STARTUP:-- DONE --");
+    }
+
+    static String get_hud_friend_pubkey(int slot)
+    {
+        try
+        {
+            if (slot == 0)
+            {
+                return hud_slot_0_pubkey;
+            }
+            if (slot == 1)
+            {
+                return hud_slot_1_pubkey;
+            }
+            return null;
+        }
+        catch(Exception e)
+        {
+            return null;
+        }
+    }
+
+    static int getHudSlotForPubkey(String pubkey)
+    {
+        if (pubkey == null) return -1;
+        if (pubkey.equals(hud_slot_0_pubkey)) return 0;
+        if (pubkey.equals(hud_slot_1_pubkey)) return 1;
+        return -1;
+    }
+
+    static void showHudSlotPicker(String pubkey, String name, int slot)
+    {
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context_s);
+        SharedPreferences.Editor editor = settings.edit();
+
+        // Clear the other slot if this friend was already there
+        if (slot == 0)
+        {
+            if (pubkey.equals(hud_slot_1_pubkey))
+            {
+                editor.remove("hud_slot_1_pubkey");
+                hud_slot_1_pubkey = null;
+            }
+            editor.putString("hud_slot_0_pubkey", pubkey);
+            hud_slot_0_pubkey = pubkey;
+            android.widget.Toast.makeText(context_s, name + " → HUD Slot 1 (green)", android.widget.Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            if (pubkey.equals(hud_slot_0_pubkey))
+            {
+                editor.remove("hud_slot_0_pubkey");
+                hud_slot_0_pubkey = null;
+            }
+            editor.putString("hud_slot_1_pubkey", pubkey);
+            hud_slot_1_pubkey = pubkey;
+            android.widget.Toast.makeText(context_s, name + " → HUD Slot 2 (blue)", android.widget.Toast.LENGTH_SHORT).show();
+        }
+
+        editor.apply();
+        hud_slots_configured = (hud_slot_0_pubkey != null || hud_slot_1_pubkey != null);
+        if (friend_list_fragment != null)
+        {
+            friend_list_fragment.add_all_friends_clear(0);
+        }
     }
 
     static void move_map_to_own_location()
@@ -5303,6 +5372,47 @@ public class MainActivity extends BaseProtectedActivity
         Log.i(TAG, "onResume");
         super.onResume();
 
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // --- ONE-TIME MIGRATION: default friend → hud_slot_0 ---
+        boolean hud_migrated = settings.getBoolean("hud_migration_done", false);
+        if (!hud_migrated)
+        {
+            try
+            {
+                // Calling with set=false returns the pubkey of the actual default friend
+                String oldDefault = get_set_is_default_ft_contact(null, false);
+                if (oldDefault != null && !oldDefault.isEmpty())
+                {
+                    settings.edit().putString("hud_slot_0_pubkey", oldDefault).apply();
+                }
+            }
+            catch (Exception ignored) {}
+            settings.edit().putBoolean("hud_migration_done", true).apply();
+        }
+        // --- END MIGRATION ---
+
+        hud_slot_0_pubkey = settings.getString("hud_slot_0_pubkey", null);
+        hud_slot_1_pubkey = settings.getString("hud_slot_1_pubkey", null);
+        hud_slots_configured = (hud_slot_0_pubkey != null || hud_slot_1_pubkey != null);
+
+        // Show setup banner if HUD slots are not configured but friends exist
+        try
+        {
+            boolean has_friends = !orma.selectFromFriendList().toList().isEmpty();
+            if (!hud_slots_configured && has_friends && map != null)
+            {
+                Log.i(TAG, "xxx " + hud_slots_configured + " " +  has_friends + " 0:" + hud_slot_0_pubkey + " 1:" + hud_slot_1_pubkey + " " + (hud_slot_0_pubkey != null && hud_slot_1_pubkey != null));
+
+                com.google.android.material.snackbar.Snackbar.make(map,
+                                                                   "Long-press a friend to assign HUD slots",
+                                                                   com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Dismiss", v -> {})
+                        .show();
+            }
+        }
+        catch (Exception ignored) {}
+
         global_showing_mainview = true;
         if (!PREF__normal_main_view)
         {
@@ -5315,7 +5425,6 @@ public class MainActivity extends BaseProtectedActivity
 
             try
             {
-                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
                 PREF__map_last_zoom_level = settings.getFloat("map_last_zoom_level", DEFAULT_ZOOM_LEVEL);
                 mapController.setZoom(PREF__map_last_zoom_level);
 
@@ -5517,8 +5626,6 @@ public class MainActivity extends BaseProtectedActivity
          */
 
         // prefs ----------
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        PREF__UV_reversed = settings.getBoolean("video_uv_reversed", true);
         PREF__notification_sound = settings.getBoolean("notifications_new_message_sound", true);
         PREF__notification_vibrate = settings.getBoolean("notifications_new_message_vibrate", true);
         PREF__notification_show_content = settings.getBoolean("notification_show_content", false);
