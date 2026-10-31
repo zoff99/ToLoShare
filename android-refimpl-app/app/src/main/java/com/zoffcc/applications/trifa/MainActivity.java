@@ -3449,14 +3449,23 @@ public class MainActivity extends BaseProtectedActivity
     {
         // Always create FRESH folders — old ones may be detached (mOverlayManager == null)
         folder_touch = new FolderOverlay();
+        folder_touch.setName("touch");
         folder_friend_trails = new FolderOverlay();
+        folder_friend_trails.setName("f_trails");
         folder_self_trail = new FolderOverlay();
+        folder_self_trail.setName("self_trail");
         folder_roads = new FolderOverlay();
+        folder_roads.setName("roads");
         folder_friend_icons = new FolderOverlay();
+        folder_friend_icons.setName("f_icons");
         folder_own_location = new FolderOverlay();
+        folder_own_location.setName("own_loc");
         folder_speed_badge = new FolderOverlay();
+        folder_speed_badge.setName("speed");
         folder_northing = new FolderOverlay();
+        folder_northing.setName("north");
         folder_scalebar = new FolderOverlay();
+        folder_scalebar.setName("scale");
 
         // Safe to clear here: the map's overlay list only ever contains our 9 folders
         // This removes any stale/detached folders from previous cycles
