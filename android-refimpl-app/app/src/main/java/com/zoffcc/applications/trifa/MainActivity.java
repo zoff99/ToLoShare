@@ -355,6 +355,9 @@ public class MainActivity extends BaseProtectedActivity
     static View hud_circle_2 = null; // mirrors out_count_view (blue)
     static View hud_circle_3 = null; // mirrors in_count_view (red)
 
+    static int debug_overlay_total_count = 0;
+    static TextView hud_overlay_count_text = null;
+
     // HUD collapse state (the 4 grey info bars above the map)
     private boolean isHudVisible = true;
     private int hudBarsFullHeight = 0;
@@ -851,6 +854,8 @@ public class MainActivity extends BaseProtectedActivity
         hud_circle_1 = findViewById(R.id.hud_circle_1);
         hud_circle_2 = findViewById(R.id.hud_circle_2);
         hud_circle_3 = findViewById(R.id.hud_circle_3);
+
+        hud_overlay_count_text = findViewById(R.id.hud_overlay_count);
 
         syncHudCirclesToTriangles();
 
@@ -2993,13 +2998,61 @@ public class MainActivity extends BaseProtectedActivity
     {
         try
         {
-            for (Overlay ov : map.getOverlays())
+            java.util.List<Overlay> rootOverlays = map.getOverlays();
+            int total = 0;
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n╔══════════════════════════════════════╗\n");
+            sb.append("║       MAP OVERLAY TREE DUMP          ║\n");
+            sb.append("╚══════════════════════════════════════╝\n");
+
+            for (int i = 0; i < rootOverlays.size(); i++)
             {
-                Log.i(TAG, "OVXXXX:debug_list_overlays:" + ov + " " + ov.getClass());
+                Overlay ov = rootOverlays.get(i);
+                if (ov instanceof FolderOverlay)
+                {
+                    FolderOverlay folder = (FolderOverlay) ov;
+                    java.util.List<Overlay> children = folder.getItems();
+                    int childCount = (children != null) ? children.size() : 0;
+                    total += 1 + childCount;
+
+                    sb.append(String.format("[%d]   FolderOverlay (%s) — %d children\n",
+                                            i, folder.getName().isEmpty() ? "unnamed" : folder.getName(), childCount));
+
+                    if (children != null)
+                    {
+                        for (int j = 0; j < children.size(); j++)
+                        {
+                            Overlay child = children.get(j);
+                            sb.append(String.format("    └─[%d] %s\n", j, child.getClass().getSimpleName()));
+                        }
+                    }
+                }
+                else
+                {
+                    total++;
+                    sb.append(String.format("[%d]  ️  UNFOLDERED: %s\n", i, ov.getClass().getSimpleName()));
+                }
+            }
+
+            sb.append("──────────────────────────────────────\n");
+            sb.append(String.format("Total overlays: %d (root entries: %d)\n", total, rootOverlays.size()));
+            sb.append("══════════════════════════════════════\n");
+
+            Log.i(TAG, sb.toString());
+
+            // Update global count and HUD text
+            debug_overlay_total_count = total;
+            if (hud_overlay_count_text != null)
+            {
+                final String countText = total + "/" + rootOverlays.size();
+                hud_overlay_count_text.post(() -> {
+                    try { hud_overlay_count_text.setText(countText); } catch (Exception ignored) {}
+                });
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
+            Log.e(TAG, "debug_list_overlays failed", e);
         }
     }
 

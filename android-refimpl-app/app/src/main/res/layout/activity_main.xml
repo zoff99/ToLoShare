@@ -561,8 +561,21 @@
                             android:layout_centerInParent="true"
                             android:background="@drawable/hud_grabber" />
 
+                        <TextView
+                            android:id="@+id/hud_overlay_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_toStartOf="@id/hud_circles_container"
+                            android:layout_marginEnd="8dp"
+                            android:gravity="center_vertical"
+                            android:textColor="#5F5F5F"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:text="0" />
+
                         <!-- Circles container: pinned to right edge, vertically centered -->
                         <LinearLayout
+                            android:id="@+id/hud_circles_container"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:layout_alignParentEnd="true"
