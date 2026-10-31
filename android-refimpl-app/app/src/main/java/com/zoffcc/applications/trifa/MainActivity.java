@@ -3023,14 +3023,18 @@ public class MainActivity extends BaseProtectedActivity
                         for (int j = 0; j < children.size(); j++)
                         {
                             Overlay child = children.get(j);
-                            sb.append(String.format("      +--[%d] %s\n", j, child.getClass().getSimpleName()));
+                            String childName = child.getClass().getSimpleName();
+                            if (childName.isEmpty()) childName = child.toString();
+                            sb.append(String.format("      +--[%d] %s\n", j, childName));
                         }
                     }
                 }
                 else
                 {
                     total++;
-                    sb.append(String.format("[%d] [!] UNFOLDERED   %s\n", i, ov.getClass().getSimpleName()));
+                    String ovName = ov.getClass().getSimpleName();
+                    if (ovName.isEmpty()) ovName = ov.toString();
+                    sb.append(String.format("[%d] [!] UNFOLDERED   %s\n", i, ovName));
                 }
             }
 
@@ -3484,6 +3488,9 @@ public class MainActivity extends BaseProtectedActivity
 
         // --- Touch overlay ---
         Overlay touchOverlay = new Overlay() {
+            @Override
+            public String toString() { return "TouchHandler"; }
+
             @Override
             public boolean onTouchEvent(MotionEvent event, MapView mapView) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 1)
