@@ -358,6 +358,8 @@ public class MainActivity extends BaseProtectedActivity
     static int debug_overlay_total_count = 0;
     static TextView hud_overlay_count_text = null;
 
+    static Thread t_geo_time_thread = null;
+
     // HUD collapse state (the 4 grey info bars above the map)
     private boolean isHudVisible = true;
     private int hudBarsFullHeight = 0;
@@ -2991,6 +2993,14 @@ public class MainActivity extends BaseProtectedActivity
         {
             friend_list_fragment.add_all_friends_clear(0);
         }
+
+        try
+        {
+            t_geo_time_thread.interrupt();
+        }
+        catch(Exception e)
+        {
+        }
     }
 
     static void move_map_to_own_location()
@@ -5468,10 +5478,10 @@ public class MainActivity extends BaseProtectedActivity
         }
 
 
-        if (!GEO_TIME_THREAD_STARTED)
+        if ((!GEO_TIME_THREAD_STARTED) && (t_geo_time_thread == null))
         {
             GEO_TIME_THREAD_STARTED = true;
-            final Thread t_geo_time_thread = new Thread()
+            t_geo_time_thread = new Thread()
             {
                 @Override
                 public void run()
@@ -5482,13 +5492,38 @@ public class MainActivity extends BaseProtectedActivity
                         {
                             try
                             {
-                                // HINT: for this textfield we always use friend #0
+                                // HINT: for this textfield we always use HUD slot 0
                                 String f_pubkey = get_friend_pubkey_sorted_by_pubkey_num(0);
                                 if (f_pubkey != null)
                                 {
                                     CaptureService.remote_location_entry re = remote_location_data.get(f_pubkey);
-                                    set_debug_text_2(location_info_text(re.remote_location_last_ts_millis,
-                                                                        re.remote_location_txt));
+                                    String loc_text = null;
+                                    if (re != null)
+                                    {
+                                        loc_text = location_info_text(re.remote_location_last_ts_millis,
+                                                                      re.remote_location_txt);
+                                    }
+
+                                    if (loc_text == null)
+                                    {
+                                        String fname = "Unknown";
+                                        try
+                                        {
+                                            FriendList fl = orma.selectFromFriendList()
+                                                    .tox_public_key_stringEq(f_pubkey).get(0);
+                                            if (fl != null && fl.name != null)
+                                            {
+                                                fname = fl.name;
+                                            }
+                                        }
+                                        catch (Exception ignored) {}
+                                        set_debug_text_2("name: " + fname + "\n" + "no location");
+                                    }
+                                    else
+                                    {
+                                        set_debug_text_2(loc_text);
+                                    }
+
                                     final long current_ts_millis = System.currentTimeMillis();
                                     if (re.remote_location_last_ts_millis > 0)
                                     {
@@ -5510,13 +5545,38 @@ public class MainActivity extends BaseProtectedActivity
 
                             try
                             {
-                                // HINT: for this textfield we always use friend #1
+                                // HINT: for this textfield we always use HUD slot 1
                                 String f_pubkey_1 = get_friend_pubkey_sorted_by_pubkey_num(1);
                                 if (f_pubkey_1 != null)
                                 {
                                     CaptureService.remote_location_entry re1 = remote_location_data.get(f_pubkey_1);
-                                    set_debug_text_3(location_info_text(re1.remote_location_last_ts_millis,
-                                                                        re1.remote_location_txt));
+                                    String loc_text = null;
+                                    if (re1 != null)
+                                    {
+                                        loc_text = location_info_text(re1.remote_location_last_ts_millis,
+                                                                      re1.remote_location_txt);
+                                    }
+
+                                    if (loc_text == null)
+                                    {
+                                        String fname = "Unknown";
+                                        try
+                                        {
+                                            FriendList fl = orma.selectFromFriendList()
+                                                    .tox_public_key_stringEq(f_pubkey_1).get(0);
+                                            if (fl != null && fl.name != null)
+                                            {
+                                                fname = fl.name;
+                                            }
+                                        }
+                                        catch (Exception ignored) {}
+                                        set_debug_text_3("name: " + fname + "\n" + "no location");
+                                    }
+                                    else
+                                    {
+                                        set_debug_text_3(loc_text);
+                                    }
+
                                     final long current_ts_millis = System.currentTimeMillis();
                                     if (re1.remote_location_last_ts_millis > 0)
                                     {
@@ -5603,12 +5663,19 @@ public class MainActivity extends BaseProtectedActivity
                             {
                             }
 
-                            Thread.sleep(30 * 1000);
+                            try
+                            {
+                                Thread.sleep(30 * 1000);
+                            }
+                            catch(Exception e1)
+                            {
+                            }
                         }
                     }
                     catch (Exception e)
                     {
                         e.printStackTrace();
+                        Log.i(TAG, "GGGGGGGG:087:EE:" + e.getMessage());
                     }
                 }
             };
