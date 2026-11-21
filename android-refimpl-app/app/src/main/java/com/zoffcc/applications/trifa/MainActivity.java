@@ -862,6 +862,8 @@ public class MainActivity extends BaseProtectedActivity
         hud_circle_3 = findViewById(R.id.hud_circle_3);
 
         hud_overlay_count_text = findViewById(R.id.hud_overlay_count);
+        // HINT: disable the HUD overlay count text. its only needed for debugging
+        hud_overlay_count_text.setVisibility(View.GONE);
 
         syncHudCirclesToTriangles();
 
