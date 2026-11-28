@@ -119,7 +119,8 @@ A **compass widget** is rendered in the **top-left corner of the map**.
 Tapping anywhere within the compass circle area (approximately the top-left corner of the map) triggers the toggle.
 
 
-#### 🚀 Featured Applications
+🚀 Featured Applications
+=
 
 Join a growing community of security-conscious people. Check out these featured applications:
 
